@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -8,15 +8,20 @@ import {
   TouchableOpacity,
   useColorScheme,
   LayoutChangeEvent,
+  ActivityIndicator,
 } from 'react-native';
 import Svg, { Polyline, Line, Text as SvgText, Circle } from 'react-native-svg';
 import { useTranslation } from 'react-i18next';
+import { useRouter } from 'expo-router';
 
 import { Colors } from '@/constants/colors';
 import { FontSize, Spacing, BorderRadius } from '@/constants/theme';
 import { useAuth } from '@/contexts/AuthContext';
+import { useProfile } from '@/contexts/ProfileContext';
 import { getDailyLogs, getFlares, getStreak } from '@/services/database';
-import { DailyLog, Flare, Mood } from '@/types';
+import { generateWeeklyInsight } from '@/services/aiInsights';
+import { useSubscription } from '@/hooks/useSubscription';
+import { DailyLog, Flare, Mood, UserProfile } from '@/types';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -66,12 +71,10 @@ function TrendChart({
       .join(' ');
   }
 
-  // Y-axis grid lines at 0, 5, 10 (or min, mid, max)
   const ySteps = [minVal, (minVal + maxVal) / 2, maxVal];
 
   return (
     <Svg width={width} height={height}>
-      {/* Y-axis grid lines + labels */}
       {ySteps.map((val) => {
         const y = yForValue(val);
         return (
@@ -98,7 +101,6 @@ function TrendChart({
         );
       })}
 
-      {/* X-axis labels — every 2 points */}
       {labels.map((label, i) => {
         if (i % 2 !== 0) return null;
         return (
@@ -115,7 +117,6 @@ function TrendChart({
         );
       })}
 
-      {/* Data lines */}
       {series.map((s) => {
         if (s.data.length < 2) return null;
         return (
@@ -131,7 +132,6 @@ function TrendChart({
         );
       })}
 
-      {/* Data dots — last point only */}
       {series.map((s) => {
         if (s.data.length === 0) return null;
         const lastIdx = s.data.length - 1;
@@ -149,6 +149,162 @@ function TrendChart({
   );
 }
 
+// ─── AIInsightCard component ──────────────────────────────────────────────────
+
+interface AIInsightCardProps {
+  logs: DailyLog[];
+  flares: Flare[];
+  profile: UserProfile | null;
+  isDark: boolean;
+}
+
+function AIInsightCard({ logs, flares, profile, isDark }: AIInsightCardProps) {
+  const { t } = useTranslation();
+  const { user } = useAuth();
+  const router = useRouter();
+
+  const cardBg = isDark ? Colors.surfaceDark : Colors.surface;
+  const cardBorder = isDark ? Colors.borderDark : Colors.border;
+  const textPrimary = isDark ? Colors.textPrimaryDark : Colors.textPrimary;
+  const textSecondary = isDark ? Colors.textSecondaryDark : Colors.textSecondary;
+
+  const [insight, setInsight] = useState<string | null>(null);
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const generate = useCallback(async () => {
+    if (!user || isGenerating) return;
+    setIsGenerating(true);
+    setError(null);
+    try {
+      // We need the profile — pull from context via hook not available here,
+      // so we build a minimal profile shape from what we know
+      // The profile is passed via the parent; here we call generateWeeklyInsight
+      // with placeholder profile since we don't have it — the parent should pass it
+      // For now, use logs/flares which are passed in
+      const result = await generateWeeklyInsight({
+        logs,
+        flares,
+        profile: profile ?? {
+          user_id: user.id,
+          age_range: null,
+          diagnosis_years: null,
+          severity: null,
+          medications: [],
+          pain_locations: [],
+          pain_types: [],
+          conditions: [],
+          morning_stiffness: null,
+          challenges: [],
+          notification_time: '20:00',
+          ai_context: '',
+          onboarding_complete: true,
+        },
+      });
+      setInsight(result);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : t('insights.ai_insight_error');
+      setError(msg);
+    } finally {
+      setIsGenerating(false);
+    }
+  }, [user, logs, flares, isGenerating, t]);
+
+  return (
+    <View style={[styles.card, { backgroundColor: cardBg, borderColor: cardBorder }]}>
+      {/* Card header */}
+      <View style={styles.aiCardHeader}>
+        <View style={styles.aiTitleRow}>
+          <Text style={[styles.cardTitle, { color: textPrimary }]}>
+            {t('insights.ai_insight_card_title')}
+          </Text>
+          <View style={styles.premiumBadge}>
+            <Text style={styles.premiumBadgeText}>Premium</Text>
+          </View>
+        </View>
+        <TouchableOpacity
+          onPress={generate}
+          disabled={isGenerating}
+          activeOpacity={0.8}
+          style={[styles.refreshBtn, { borderColor: Colors.primary, opacity: isGenerating ? 0.5 : 1 }]}
+        >
+          <Text style={styles.refreshBtnText}>{t('insights.ai_insight_refresh')}</Text>
+        </TouchableOpacity>
+      </View>
+
+      {isGenerating ? (
+        <View style={styles.generatingRow}>
+          <ActivityIndicator color={Colors.primary} size="small" />
+          <Text style={[styles.generatingText, { color: textSecondary }]}>
+            {t('insights.ai_insight_generating')}
+          </Text>
+        </View>
+      ) : error ? (
+        <View>
+          <Text style={[styles.errorText, { color: Colors.error }]}>{error}</Text>
+          <TouchableOpacity onPress={generate} activeOpacity={0.8} style={styles.retryBtn}>
+            <Text style={styles.retryBtnText}>{t('common.retry')}</Text>
+          </TouchableOpacity>
+        </View>
+      ) : insight ? (
+        <Text style={[styles.insightText, { color: textPrimary }]}>{insight}</Text>
+      ) : (
+        <View>
+          <Text style={[styles.teaserText, { color: textSecondary }]}>
+            {t('insights.ai_insight_teaser')}
+          </Text>
+          <TouchableOpacity onPress={generate} activeOpacity={0.8} style={styles.ctaBtn}>
+            <Text style={styles.ctaBtnText}>{t('insights.ai_insight_refresh')}</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
+      {/* Chat CTA */}
+      <TouchableOpacity
+        onPress={() => router.push('/ai-chat')}
+        activeOpacity={0.8}
+        style={styles.chatCtaBtn}
+      >
+        <Text style={styles.chatCtaText}>{t('insights.chat_cta')}</Text>
+      </TouchableOpacity>
+    </View>
+  );
+}
+
+// ─── TrialPromptCard ──────────────────────────────────────────────────────────
+
+interface TrialPromptCardProps {
+  isDark: boolean;
+  onStartTrial: () => void;
+}
+
+function TrialPromptCard({ isDark, onStartTrial }: TrialPromptCardProps) {
+  const { t } = useTranslation();
+  const cardBg = isDark ? Colors.surfaceDark : Colors.surface;
+  const cardBorder = isDark ? Colors.borderDark : Colors.border;
+  const textPrimary = isDark ? Colors.textPrimaryDark : Colors.textPrimary;
+  const textSecondary = isDark ? Colors.textSecondaryDark : Colors.textSecondary;
+
+  return (
+    <View style={[styles.card, { backgroundColor: cardBg, borderColor: Colors.primary }]}>
+      <View style={styles.aiTitleRow}>
+        <Text style={[styles.cardTitle, { color: textPrimary }]}>
+          {t('insights.trial_prompt_title')}
+        </Text>
+        <View style={styles.premiumBadge}>
+          <Text style={styles.premiumBadgeText}>Premium</Text>
+        </View>
+      </View>
+      <Text style={[styles.teaserText, { color: textSecondary }]}>
+        {t('insights.trial_prompt_body')}
+      </Text>
+      <TouchableOpacity onPress={onStartTrial} activeOpacity={0.8} style={styles.ctaBtn}>
+        <Text style={styles.ctaBtnText}>{t('insights.trial_prompt_cta')}</Text>
+      </TouchableOpacity>
+    </View>
+  );
+}
+
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function moodToScore(mood: Mood | null): number {
@@ -160,14 +316,6 @@ function moodToScore(mood: Mood | null): number {
     case 'very_low': return 1;
     default: return 0;
   }
-}
-
-function moodLabel(score: number): string {
-  if (score >= 4.5) return 'great';
-  if (score >= 3.5) return 'good';
-  if (score >= 2.5) return 'okay';
-  if (score >= 1.5) return 'low';
-  return 'very low';
 }
 
 function dayLabel(dateStr: string): string {
@@ -190,16 +338,20 @@ function flareDays(flare: Flare): number {
 
 // ─── Main screen ──────────────────────────────────────────────────────────────
 
-type Period = 14 | 28;
+type Period = 7 | 30 | 90 | 180;
 
 export default function InsightsScreen() {
   const { t } = useTranslation();
   const { user } = useAuth();
+  const { profile } = useProfile();
+  const router = useRouter();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
+  const { isSubscribed, isLoading: subLoading, purchase } = useSubscription();
 
-  const [period, setPeriod] = useState<Period>(28);
+  const [period, setPeriod] = useState<Period>(30);
   const [logs, setLogs] = useState<DailyLog[]>([]);
+  const [allLogs, setAllLogs] = useState<DailyLog[]>([]); // 28-day for AI
   const [flares, setFlares] = useState<Flare[]>([]);
   const [streak, setStreak] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
@@ -212,14 +364,15 @@ export default function InsightsScreen() {
     }
     setIsLoading(true);
     try {
-      const [periodLogs, allFlares, currentStreak] = await Promise.all([
+      const [periodLogs, logs30, allFlares, currentStreak] = await Promise.all([
         getDailyLogs(user.id, period),
+        getDailyLogs(user.id, 30),
         getFlares(user.id),
         getStreak(user.id),
       ]);
       setLogs(periodLogs);
+      setAllLogs(logs30);
 
-      // Filter flares to those that overlap with the current period
       const since = new Date();
       since.setDate(since.getDate() - period);
       const sinceStr = since.toISOString().split('T')[0];
@@ -241,7 +394,8 @@ export default function InsightsScreen() {
     if (w > 0) setChartWidth(w);
   }
 
-  // ── Computed values ──────────────────────────────────────────────────────
+  // Determine if user has tracked >= 14 days (for trial prompt)
+  const hasEnoughDataForTrialPrompt = allLogs.length >= 14;
 
   const painData = logs.map((l) => l.pain_score);
   const fatigueData = logs.map((l) => l.fatigue_score);
@@ -261,7 +415,6 @@ export default function InsightsScreen() {
       ? (fatigueData.reduce((a, b) => a + b, 0) / fatigueData.length).toFixed(1)
       : null;
 
-  // Best day of week — day with lowest average pain
   let bestDay: string | null = null;
   if (logs.length >= 7) {
     const dayMap: Record<string, number[]> = {};
@@ -280,8 +433,6 @@ export default function InsightsScreen() {
     }
   }
 
-  // ── Styles (dark-aware) ───────────────────────────────────────────────────
-
   const bg = isDark ? Colors.backgroundDark : Colors.background;
   const cardBg = isDark ? Colors.surfaceDark : Colors.surface;
   const cardBorder = isDark ? Colors.borderDark : Colors.border;
@@ -299,32 +450,46 @@ export default function InsightsScreen() {
           {t('insights.title')}
         </Text>
 
+        {/* ── AI Insight section — above period selector ── */}
+        {!subLoading && (
+          isSubscribed ? (
+            <AIInsightCard logs={allLogs} flares={flares} profile={profile} isDark={isDark} />
+          ) : hasEnoughDataForTrialPrompt ? (
+            <TrialPromptCard
+              isDark={isDark}
+              onStartTrial={purchase}
+            />
+          ) : null
+        )}
+
         {/* Period selector */}
         <View style={styles.periodRow}>
-          {([14, 28] as Period[]).map((p) => (
-            <TouchableOpacity
-              key={p}
-              onPress={() => setPeriod(p)}
-              activeOpacity={0.8}
-              style={[
-                styles.periodBtn,
-                {
-                  backgroundColor:
-                    period === p ? Colors.primary : cardBg,
-                  borderColor: period === p ? Colors.primary : cardBorder,
-                },
-              ]}
-            >
-              <Text
+          {([7, 30, 90, 180] as Period[]).map((p) => {
+            const label = p === 7 ? '7d' : p === 30 ? '1m' : p === 90 ? '3m' : '6m';
+            return (
+              <TouchableOpacity
+                key={p}
+                onPress={() => setPeriod(p)}
+                activeOpacity={0.8}
                 style={[
-                  styles.periodBtnText,
-                  { color: period === p ? '#FFFFFF' : textSecondary },
+                  styles.periodBtn,
+                  {
+                    backgroundColor: period === p ? Colors.primary : cardBg,
+                    borderColor: period === p ? Colors.primary : cardBorder,
+                  },
                 ]}
               >
-                {p === 14 ? t('insights.two_weeks') : t('insights.four_weeks')}
-              </Text>
-            </TouchableOpacity>
-          ))}
+                <Text
+                  style={[
+                    styles.periodBtnText,
+                    { color: period === p ? '#FFFFFF' : textSecondary },
+                  ]}
+                >
+                  {label}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
         </View>
 
         {isLoading ? (
@@ -358,9 +523,8 @@ export default function InsightsScreen() {
                 height={120}
                 minVal={0}
                 maxVal={10}
-                width={chartWidth}
+                width={Math.max(10, chartWidth - Spacing.md * 2)}
               />
-              {/* Legend */}
               <View style={styles.legend}>
                 <View style={styles.legendItem}>
                   <View style={[styles.legendDot, { backgroundColor: Colors.error }]} />
@@ -393,7 +557,7 @@ export default function InsightsScreen() {
                   height={80}
                   minVal={1}
                   maxVal={5}
-                  width={chartWidth}
+                  width={Math.max(10, chartWidth - Spacing.md * 2)}
                 />
                 <View style={styles.moodYLabels}>
                   <Text style={[styles.moodYLabel, { color: textSecondary }]}>very low</Text>
@@ -486,27 +650,44 @@ export default function InsightsScreen() {
           </>
         )}
 
-        {/* AI Insight card — shown to all */}
-        <View style={[styles.card, { backgroundColor: cardBg, borderColor: cardBorder }]}>
-          <View style={styles.aiHeader}>
-            <Text style={[styles.cardTitle, { color: textPrimary }]}>
-              {t('insights.ai_insight_title')}
-            </Text>
-            <View style={styles.premiumBadge}>
-              <Text style={styles.premiumBadgeText}>Premium</Text>
+        {/* Chat CTA for non-subscribers — shown below when not subscribed */}
+        {!subLoading && !isSubscribed && (
+          <View style={[styles.card, { backgroundColor: cardBg, borderColor: cardBorder }]}>
+            <View style={styles.aiCardHeader}>
+              <View style={styles.aiTitleRow}>
+                <Text style={[styles.cardTitle, { color: textPrimary }]}>
+                  {t('insights.ai_insight_title')}
+                </Text>
+                <View style={styles.premiumBadge}>
+                  <Text style={styles.premiumBadgeText}>Premium</Text>
+                </View>
+              </View>
             </View>
+            <Text style={[styles.teaserText, { color: textSecondary }]}>
+              {t('insights.ai_insight_teaser')}
+            </Text>
+            <TouchableOpacity
+              style={styles.ctaBtn}
+              activeOpacity={0.8}
+              onPress={purchase}
+            >
+              <Text style={styles.ctaBtnText}>{t('insights.unlock_ai_cta')}</Text>
+            </TouchableOpacity>
           </View>
-          <Text style={[styles.teaserText, { color: textSecondary }]}>
-            {t('insights.ai_insight_teaser')}
-          </Text>
+        )}
+
+        {/* Chat button for subscribers */}
+        {!subLoading && isSubscribed && (
           <TouchableOpacity
-            style={styles.ctaBtn}
+            onPress={() => router.push('/ai-chat')}
             activeOpacity={0.8}
-            onPress={() => {}}
+            style={[styles.chatNavBtn, { backgroundColor: cardBg, borderColor: cardBorder }]}
           >
-            <Text style={styles.ctaBtnText}>{t('insights.unlock_ai_cta')}</Text>
+            <Text style={[styles.chatNavText, { color: Colors.primary }]}>
+              {t('insights.chat_cta')}
+            </Text>
           </TouchableOpacity>
-        </View>
+        )}
       </ScrollView>
     </SafeAreaView>
   );
@@ -653,11 +834,18 @@ const styles = StyleSheet.create({
     fontSize: FontSize.sm,
     fontWeight: '700',
   },
-  aiHeader: {
+  // AI card styles
+  aiCardHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: Spacing.sm,
+  },
+  aiTitleRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.sm,
-    marginBottom: Spacing.sm,
+    flex: 1,
   },
   premiumBadge: {
     backgroundColor: Colors.primary,
@@ -669,6 +857,48 @@ const styles = StyleSheet.create({
     fontSize: FontSize.xs,
     color: '#FFFFFF',
     fontWeight: '700',
+  },
+  refreshBtn: {
+    borderWidth: 1.5,
+    borderRadius: BorderRadius.full,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 4,
+  },
+  refreshBtnText: {
+    fontSize: FontSize.xs,
+    color: Colors.primary,
+    fontWeight: '600',
+  },
+  generatingRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    paddingVertical: Spacing.sm,
+  },
+  generatingText: {
+    fontSize: FontSize.sm,
+  },
+  errorText: {
+    fontSize: FontSize.sm,
+    lineHeight: 20,
+    marginBottom: Spacing.sm,
+  },
+  retryBtn: {
+    alignSelf: 'flex-start',
+    borderWidth: 1,
+    borderColor: Colors.error,
+    borderRadius: BorderRadius.sm,
+    paddingHorizontal: Spacing.md,
+    paddingVertical: Spacing.xs,
+  },
+  retryBtnText: {
+    fontSize: FontSize.sm,
+    color: Colors.error,
+    fontWeight: '600',
+  },
+  insightText: {
+    fontSize: FontSize.sm,
+    lineHeight: 22,
   },
   teaserText: {
     fontSize: FontSize.sm,
@@ -686,5 +916,31 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: FontSize.sm,
     fontWeight: '700',
+  },
+  chatCtaBtn: {
+    marginTop: Spacing.md,
+    alignItems: 'center',
+  },
+  chatCtaText: {
+    fontSize: FontSize.sm,
+    color: Colors.primary,
+    fontWeight: '700',
+  },
+  chatNavBtn: {
+    borderRadius: BorderRadius.lg,
+    borderWidth: 1,
+    padding: Spacing.md,
+    marginBottom: Spacing.md,
+    alignItems: 'center',
+  },
+  chatNavText: {
+    fontSize: FontSize.md,
+    fontWeight: '700',
+  },
+  aiHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    marginBottom: Spacing.sm,
   },
 });

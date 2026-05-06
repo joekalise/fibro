@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
@@ -36,21 +36,23 @@ export function ProfileReadyScreen() {
 
   const [isSaving, setIsSaving] = useState(false);
 
-  // Save onboarding_complete flag on mount
-  useEffect(() => {
+  // Mark onboarding complete only when the user taps the button — not on mount.
+  // Saving on mount triggers the nav guard in _layout.tsx to redirect immediately,
+  // causing the screen to flash and disappear before the user reads anything.
+  const handleEnterApp = async () => {
     if (!user) return;
     setIsSaving(true);
-    saveProfile({
-      user_id: user.id,
-      onboarding_complete: true,
-      welcome_message: welcomeMessage,
-    })
-      .catch(err => console.error('Failed to mark onboarding complete:', err))
-      .finally(() => setIsSaving(false));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  const handleEnterApp = () => {
+    try {
+      await saveProfile({
+        user_id: user.id,
+        onboarding_complete: true,
+        welcome_message: welcomeMessage,
+      });
+    } catch (err) {
+      console.error('Failed to mark onboarding complete:', err);
+    } finally {
+      setIsSaving(false);
+    }
     router.replace('/(tabs)');
   };
 

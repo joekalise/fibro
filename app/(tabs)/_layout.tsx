@@ -1,12 +1,9 @@
 import { Tabs } from 'expo-router';
 import { useColorScheme } from 'react-native';
 import { useTranslation } from 'react-i18next';
+import { Ionicons } from '@expo/vector-icons';
 import { Colors } from '@/constants/colors';
 import { FontSize } from '@/constants/theme';
-
-function TabBarIcon({ symbol }: { symbol: string }) {
-  return null; // Placeholder — replace with SVG icons in Phase 2
-}
 
 export default function TabsLayout() {
   const colorScheme = useColorScheme();
@@ -39,35 +36,45 @@ export default function TabsLayout() {
         name="index"
         options={{
           title: t('tabs.home'),
-          tabBarIcon: () => <TabBarIcon symbol="house" />,
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons name={focused ? 'home' : 'home-outline'} size={22} color={color} />
+          ),
         }}
       />
       <Tabs.Screen
         name="track"
         options={{
           title: t('tabs.track'),
-          tabBarIcon: () => <TabBarIcon symbol="plus.circle" />,
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons name={focused ? 'add-circle' : 'add-circle-outline'} size={24} color={color} />
+          ),
         }}
       />
       <Tabs.Screen
         name="flares"
         options={{
           title: t('tabs.flares'),
-          tabBarIcon: () => <TabBarIcon symbol="flame" />,
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons name={focused ? 'flame' : 'flame-outline'} size={22} color={color} />
+          ),
         }}
       />
       <Tabs.Screen
         name="insights"
         options={{
           title: t('tabs.insights'),
-          tabBarIcon: () => <TabBarIcon symbol="chart.line.uptrend.xyaxis" />,
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons name={focused ? 'stats-chart' : 'stats-chart-outline'} size={22} color={color} />
+          ),
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
           title: t('tabs.profile'),
-          tabBarIcon: () => <TabBarIcon symbol="person.circle" />,
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons name={focused ? 'person' : 'person-outline'} size={22} color={color} />
+          ),
         }}
       />
     </Tabs>

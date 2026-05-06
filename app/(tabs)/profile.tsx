@@ -871,7 +871,7 @@ export default function ProfileScreen() {
             variant="outline"
             isLoading={isSigningOut}
             textStyle={{ color: Colors.error }}
-            style={{ borderColor: Colors.error }}
+            style={{ borderColor: Colors.error, marginTop: Spacing.sm }}
           />
         </View>
 
