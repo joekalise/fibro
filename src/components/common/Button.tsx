@@ -37,24 +37,24 @@ export function Button({
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
 
-  const containerStyle: ViewStyle[] = [
+  const containerStyle = [
     styles.base,
-    fullWidth && styles.fullWidth,
-    variant === 'primary' && styles.primary,
-    variant === 'secondary' && styles.secondary,
-    variant === 'outline' && (isDark ? styles.outlineDark : styles.outline),
-    variant === 'ghost' && styles.ghost,
-    disabled && styles.disabled,
-    style ?? {},
+    fullWidth ? styles.fullWidth : null,
+    variant === 'primary' ? styles.primary : null,
+    variant === 'secondary' ? styles.secondary : null,
+    variant === 'outline' ? (isDark ? styles.outlineDark : styles.outline) : null,
+    variant === 'ghost' ? styles.ghost : null,
+    disabled ? styles.disabled : null,
+    style ?? null,
   ];
 
-  const labelStyle: TextStyle[] = [
+  const labelStyle = [
     styles.label,
-    variant === 'primary' && styles.labelPrimary,
-    variant === 'secondary' && styles.labelSecondary,
-    variant === 'outline' && (isDark ? styles.labelOutlineDark : styles.labelOutline),
-    variant === 'ghost' && (isDark ? styles.labelGhostDark : styles.labelGhost),
-    textStyle ?? {},
+    variant === 'primary' ? styles.labelPrimary : null,
+    variant === 'secondary' ? styles.labelSecondary : null,
+    variant === 'outline' ? (isDark ? styles.labelOutlineDark : styles.labelOutline) : null,
+    variant === 'ghost' ? (isDark ? styles.labelGhostDark : styles.labelGhost) : null,
+    textStyle ?? null,
   ];
 
   return (
