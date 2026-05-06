@@ -1,5 +1,5 @@
 import { supabase } from '@/services/supabase';
-import { DailyLog, Flare, FlareSeverity, PainLocation } from '@/types';
+import { DailyLog, Flare, FlareSeverity, MedicationReminder, PainLocation } from '@/types';
 
 // ─── Daily Logs ─────────────────────────────────────────────────────────────
 
@@ -143,6 +143,109 @@ export async function getActiveFlare(userId: string): Promise<Flare | null> {
     return data as Flare;
   } catch (err) {
     console.error('getActiveFlare error:', err);
+    throw err;
+  }
+}
+
+// ─── Medications ─────────────────────────────────────────────────────────────
+
+export async function getMedications(userId: string): Promise<MedicationReminder[]> {
+  try {
+    const { data, error } = await supabase
+      .from('medications')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: true });
+
+    if (error) throw error;
+    return (data ?? []) as MedicationReminder[];
+  } catch (err) {
+    console.error('getMedications error:', err);
+    throw err;
+  }
+}
+
+export async function addMedication(
+  med: Omit<MedicationReminder, 'id'>
+): Promise<MedicationReminder> {
+  try {
+    const { data, error } = await supabase
+      .from('medications')
+      .insert(med)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data as MedicationReminder;
+  } catch (err) {
+    console.error('addMedication error:', err);
+    throw err;
+  }
+}
+
+export async function updateMedication(
+  id: string,
+  updates: Partial<MedicationReminder>
+): Promise<MedicationReminder> {
+  try {
+    const { data, error } = await supabase
+      .from('medications')
+      .update(updates)
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) throw error;
+    return data as MedicationReminder;
+  } catch (err) {
+    console.error('updateMedication error:', err);
+    throw err;
+  }
+}
+
+export async function deleteMedication(id: string): Promise<void> {
+  try {
+    const { error } = await supabase.from('medications').delete().eq('id', id);
+    if (error) throw error;
+  } catch (err) {
+    console.error('deleteMedication error:', err);
+    throw err;
+  }
+}
+
+// ─── Nudges ───────────────────────────────────────────────────────────────────
+
+export async function getTodayNudgeCount(userId: string): Promise<number> {
+  try {
+    const today = new Date().toISOString().split('T')[0];
+    const { count, error } = await supabase
+      .from('nudges')
+      .select('*', { count: 'exact', head: true })
+      .eq('user_id', userId)
+      .gte('sent_at', `${today}T00:00:00.000Z`);
+
+    if (error) return 0;
+    return count ?? 0;
+  } catch {
+    return 0;
+  }
+}
+
+export async function saveNudge(
+  userId: string,
+  triggerType: string,
+  message: string
+): Promise<void> {
+  try {
+    const { error } = await supabase.from('nudges').insert({
+      user_id: userId,
+      sent_at: new Date().toISOString(),
+      trigger_type: triggerType,
+      message,
+    });
+    if (error) throw error;
+  } catch (err) {
+    console.error('saveNudge error:', err);
     throw err;
   }
 }
