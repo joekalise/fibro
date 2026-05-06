@@ -14,6 +14,7 @@ import { useTranslation } from 'react-i18next';
 import { Colors } from '@/constants/colors';
 import { FontSize, Spacing, BorderRadius } from '@/constants/theme';
 import { useDailyLog } from '@/hooks/useDailyLog';
+import { useHealthData } from '@/hooks/useHealthData';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { ErrorMessage } from '@/components/common/ErrorMessage';
 import { Button } from '@/components/common/Button';
@@ -161,6 +162,7 @@ export default function TrackScreen() {
   const isDark = colorScheme === 'dark';
 
   const { todayLog, todayLogged, streak, isLoading, error, saveLog, refresh } = useDailyLog();
+  const { isConnected: healthConnected, todayData: healthData } = useHealthData();
 
   const [editing, setEditing] = useState(false);
   const [painScore, setPainScore] = useState(todayLog?.pain_score ?? 0);
@@ -249,6 +251,32 @@ export default function TrackScreen() {
             {todayLabel}
           </Text>
         </View>
+
+        {/* Health context strip */}
+        {healthConnected && healthData && (
+          <View style={[styles.healthStrip, isDark && styles.healthStripDark]}>
+            <Text style={[styles.healthStripLabel, isDark && styles.textSecDark]}>
+              {t('health.today_context')}
+            </Text>
+            <View style={styles.healthStripStats}>
+              {healthData.steps !== null && (
+                <Text style={[styles.healthStat, isDark && styles.textSecDark]}>
+                  👟 {healthData.steps.toLocaleString()} {t('health.steps_unit')}
+                </Text>
+              )}
+              {healthData.sleep_duration !== null && (
+                <Text style={[styles.healthStat, isDark && styles.textSecDark]}>
+                  💤 {healthData.sleep_duration}{t('health.sleep_unit')}
+                </Text>
+              )}
+              {healthData.hrv !== null && (
+                <Text style={[styles.healthStat, isDark && styles.textSecDark]}>
+                  💓 {healthData.hrv} {t('health.hrv_unit')}
+                </Text>
+              )}
+            </View>
+          </View>
+        )}
 
         {error && (
           <ErrorMessage message={error} onRetry={refresh} retryLabel={t('common.retry')} />
@@ -444,6 +472,36 @@ const styles = StyleSheet.create({
     padding: Spacing.lg,
     gap: Spacing.md,
   },
+  // Health strip
+  healthStrip: {
+    backgroundColor: Colors.surface,
+    borderRadius: BorderRadius.md,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    padding: Spacing.sm,
+    gap: Spacing.xs,
+  },
+  healthStripDark: {
+    backgroundColor: Colors.surfaceDark,
+    borderColor: Colors.borderDark,
+  },
+  healthStripLabel: {
+    fontSize: FontSize.xs,
+    fontWeight: '600',
+    color: Colors.textSecondary,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  healthStripStats: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.md,
+  },
+  healthStat: {
+    fontSize: FontSize.sm,
+    color: Colors.textSecondary,
+  },
+
   header: {
     marginBottom: Spacing.xs,
   },

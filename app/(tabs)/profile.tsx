@@ -12,6 +12,7 @@ import {
   Alert,
   useColorScheme,
   ActivityIndicator,
+  Linking,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import Constants from 'expo-constants';
@@ -22,7 +23,12 @@ import { FontSize, Spacing, BorderRadius } from '@/constants/theme';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/contexts/ProfileContext';
 import { useMedications } from '@/hooks/useMedications';
+import { useSubscription } from '@/hooks/useSubscription';
+import { useFlares } from '@/hooks/useFlares';
+import { useHealthData } from '@/hooks/useHealthData';
 import { scheduleDailyCheckIn } from '@/services/notifications';
+import { generateAndShareReport } from '@/services/pdfExport';
+import { getDailyLogs } from '@/services/database';
 import { MedicationReminder } from '@/types';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -265,6 +271,17 @@ export default function ProfileScreen() {
     addMedication,
     deleteMedication,
   } = useMedications();
+  const { flares } = useFlares();
+  const { isSubscribed, isLoading: subLoading, purchase, restore } = useSubscription();
+  const {
+    isAvailable: healthAvailable,
+    isConnected: healthConnected,
+    isLoading: healthLoading,
+    todayData: healthData,
+    connect: connectHealth,
+    sync: syncHealth,
+    disconnect: disconnectHealthData,
+  } = useHealthData();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
 
@@ -275,6 +292,9 @@ export default function ProfileScreen() {
   const [aiContext, setAiContext] = useState(profile?.ai_context ?? '');
   const [isSavingAiContext, setIsSavingAiContext] = useState(false);
   const [showAddMed, setShowAddMed] = useState(false);
+  const [isGeneratingReport, setIsGeneratingReport] = useState(false);
+  const [isPurchasing, setIsPurchasing] = useState(false);
+  const [isRestoring, setIsRestoring] = useState(false);
 
   // Sync aiContext when profile loads
   React.useEffect(() => {
@@ -388,6 +408,54 @@ export default function ProfileScreen() {
     }
   };
 
+  const handleGenerateReport = useCallback(async () => {
+    if (!user || !profile) return;
+    setIsGeneratingReport(true);
+    try {
+      const logs = await getDailyLogs(user.id, 90);
+      await generateAndShareReport({
+        logs,
+        flares,
+        medications,
+        profile,
+      });
+    } catch (err) {
+      console.error('Generate report error:', err);
+      Alert.alert('', t('errors.save_failed'));
+    } finally {
+      setIsGeneratingReport(false);
+    }
+  }, [user, profile, flares, medications, t]);
+
+  const handlePurchase = useCallback(async () => {
+    setIsPurchasing(true);
+    try {
+      await purchase();
+    } catch (err) {
+      console.error('Purchase error:', err);
+    } finally {
+      setIsPurchasing(false);
+    }
+  }, [purchase]);
+
+  const handleRestore = useCallback(async () => {
+    setIsRestoring(true);
+    try {
+      const success = await restore();
+      if (!success) {
+        Alert.alert('', 'No previous purchases found.');
+      }
+    } catch (err) {
+      console.error('Restore error:', err);
+    } finally {
+      setIsRestoring(false);
+    }
+  }, [restore]);
+
+  const handleManageSubscription = useCallback(() => {
+    Linking.openURL('https://apps.apple.com/account/subscriptions');
+  }, []);
+
   return (
     <SafeAreaView style={[styles.screen, { backgroundColor: bg }]}>
       <ScrollView
@@ -441,6 +509,143 @@ export default function ProfileScreen() {
             value={profile?.severity ? capitalize(profile.severity) : '—'}
             isDark={isDark}
           />
+        </View>
+
+        {/* ── Apple Health ─────────────────────────────────────────────────── */}
+        {healthAvailable && (
+          <View style={[styles.card, { backgroundColor: cardBg, borderColor: cardBorder }]}>
+            <View style={styles.cardHeader}>
+              <Text style={[styles.cardTitle, { color: textPrimary }]}>
+                {healthConnected ? t('health.connected') : t('health.connect_title')}
+              </Text>
+              {healthConnected && (
+                <View style={[styles.freqBadge, { backgroundColor: Colors.success + '22' }]}>
+                  <Text style={[styles.freqBadgeText, { color: Colors.success }]}>✓</Text>
+                </View>
+              )}
+            </View>
+
+            {!healthConnected ? (
+              <>
+                <Text style={[styles.subtitleText, { color: textSecondary }]}>
+                  {t('health.connect_subtitle')}
+                </Text>
+                <TouchableOpacity
+                  onPress={connectHealth}
+                  disabled={healthLoading}
+                  activeOpacity={0.8}
+                  style={[styles.reportBtn, { opacity: healthLoading ? 0.6 : 1 }]}
+                >
+                  {healthLoading ? (
+                    <ActivityIndicator color="#FFFFFF" size="small" />
+                  ) : (
+                    <Text style={styles.reportBtnText}>{t('health.connect')}</Text>
+                  )}
+                </TouchableOpacity>
+              </>
+            ) : (
+              <>
+                {healthData && (
+                  <View style={styles.healthMetricsRow}>
+                    {healthData.steps !== null && (
+                      <View style={styles.healthMetric}>
+                        <Text style={[styles.healthMetricValue, { color: textPrimary }]}>
+                          {healthData.steps.toLocaleString()}
+                        </Text>
+                        <Text style={[styles.healthMetricLabel, { color: textSecondary }]}>
+                          {t('health.steps_unit')}
+                        </Text>
+                      </View>
+                    )}
+                    {healthData.sleep_duration !== null && (
+                      <View style={styles.healthMetric}>
+                        <Text style={[styles.healthMetricValue, { color: textPrimary }]}>
+                          {healthData.sleep_duration}h
+                        </Text>
+                        <Text style={[styles.healthMetricLabel, { color: textSecondary }]}>
+                          {t('health.sleep')}
+                        </Text>
+                      </View>
+                    )}
+                    {healthData.hrv !== null && (
+                      <View style={styles.healthMetric}>
+                        <Text style={[styles.healthMetricValue, { color: textPrimary }]}>
+                          {healthData.hrv}ms
+                        </Text>
+                        <Text style={[styles.healthMetricLabel, { color: textSecondary }]}>
+                          {t('health.hrv')}
+                        </Text>
+                      </View>
+                    )}
+                    {healthData.resting_heart_rate !== null && (
+                      <View style={styles.healthMetric}>
+                        <Text style={[styles.healthMetricValue, { color: textPrimary }]}>
+                          {healthData.resting_heart_rate}
+                        </Text>
+                        <Text style={[styles.healthMetricLabel, { color: textSecondary }]}>
+                          {t('health.hr_unit')}
+                        </Text>
+                      </View>
+                    )}
+                  </View>
+                )}
+                <View style={styles.healthActions}>
+                  <TouchableOpacity
+                    onPress={syncHealth}
+                    disabled={healthLoading}
+                    activeOpacity={0.8}
+                    style={[styles.healthSyncBtn, { borderColor: Colors.primary, opacity: healthLoading ? 0.6 : 1 }]}
+                  >
+                    {healthLoading ? (
+                      <ActivityIndicator color={Colors.primary} size="small" />
+                    ) : (
+                      <Text style={[styles.healthSyncText, { color: Colors.primary }]}>
+                        {t('health.sync_now')}
+                      </Text>
+                    )}
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    onPress={disconnectHealthData}
+                    activeOpacity={0.8}
+                    style={styles.healthDisconnectBtn}
+                  >
+                    <Text style={[styles.healthDisconnectText, { color: Colors.error }]}>
+                      {t('health.disconnect')}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              </>
+            )}
+          </View>
+        )}
+
+        {/* ── Share with my doctor ────────────────────────────────────────── */}
+        <View style={[styles.card, { backgroundColor: cardBg, borderColor: cardBorder }]}>
+          <Text style={[styles.cardTitle, { color: textPrimary }]}>
+            {t('profile.share_report_title')}
+          </Text>
+          <Text style={[styles.subtitleText, { color: textSecondary }]}>
+            {t('profile.share_report_subtitle')}
+          </Text>
+          <TouchableOpacity
+            onPress={handleGenerateReport}
+            disabled={isGeneratingReport}
+            activeOpacity={0.8}
+            style={[styles.reportBtn, { opacity: isGeneratingReport ? 0.6 : 1 }]}
+          >
+            {isGeneratingReport ? (
+              <View style={styles.reportBtnRow}>
+                <ActivityIndicator color="#FFFFFF" size="small" />
+                <Text style={styles.reportBtnText}>
+                  {t('profile.share_report_generating')}
+                </Text>
+              </View>
+            ) : (
+              <Text style={styles.reportBtnText}>
+                {t('profile.share_report_cta')}
+              </Text>
+            )}
+          </TouchableOpacity>
         </View>
 
         {/* ── Notifications ────────────────────────────────────────────────── */}
@@ -577,6 +782,83 @@ export default function ProfileScreen() {
             )}
           </TouchableOpacity>
         </View>
+
+        {/* ── Subscription card ────────────────────────────────────────────── */}
+        {!subLoading && (
+          isSubscribed ? (
+            <View style={[styles.card, { backgroundColor: cardBg, borderColor: Colors.primary }]}>
+              <View style={styles.subActiveRow}>
+                <Text style={[styles.cardTitle, { color: textPrimary }]}>
+                  {t('profile.subscription_active')}
+                </Text>
+                <View style={styles.premiumBadge}>
+                  <Text style={styles.premiumBadgeText}>Premium</Text>
+                </View>
+              </View>
+              <TouchableOpacity
+                onPress={handleManageSubscription}
+                activeOpacity={0.8}
+                style={styles.manageSubBtn}
+              >
+                <Text style={styles.manageSubText}>{t('profile.subscription_manage')}</Text>
+              </TouchableOpacity>
+            </View>
+          ) : (
+            <View style={[styles.card, { backgroundColor: cardBg, borderColor: cardBorder }]}>
+              <View style={styles.subHeader}>
+                <Text style={[styles.cardTitle, { color: textPrimary }]}>
+                  {t('profile.subscription_card_title')}
+                </Text>
+                <View style={styles.premiumBadge}>
+                  <Text style={styles.premiumBadgeText}>Premium</Text>
+                </View>
+              </View>
+              <Text style={[styles.subPrice, { color: textSecondary }]}>
+                {t('profile.subscription_card_price')}
+              </Text>
+
+              {/* Feature list */}
+              {[1, 2, 3, 4].map((n) => (
+                <View key={n} style={styles.featureRow}>
+                  <Text style={{ color: Colors.primary, fontSize: FontSize.md }}>✓</Text>
+                  <Text style={[styles.featureText, { color: textPrimary }]}>
+                    {t(`profile.subscription_feature_${n}` as Parameters<typeof t>[0])}
+                  </Text>
+                </View>
+              ))}
+
+              <TouchableOpacity
+                onPress={handlePurchase}
+                disabled={isPurchasing}
+                activeOpacity={0.8}
+                style={[styles.purchaseBtn, { opacity: isPurchasing ? 0.6 : 1 }]}
+              >
+                {isPurchasing ? (
+                  <ActivityIndicator color="#FFFFFF" size="small" />
+                ) : (
+                  <Text style={styles.purchaseBtnText}>
+                    {t('subscription.trial_cta')}
+                  </Text>
+                )}
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                onPress={handleRestore}
+                disabled={isRestoring}
+                activeOpacity={0.8}
+                style={styles.restoreBtn}
+              >
+                {isRestoring ? (
+                  <ActivityIndicator color={Colors.primary} size="small" />
+                ) : (
+                  <Text style={[styles.restoreBtnText, { color: Colors.primary }]}>
+                    {t('profile.subscription_restore')}
+                  </Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          )
+        )}
 
         {/* ── Account ──────────────────────────────────────────────────────── */}
         <View style={[styles.card, { backgroundColor: cardBg, borderColor: cardBorder }]}>
@@ -808,6 +1090,140 @@ const styles = StyleSheet.create({
     fontSize: FontSize.xs,
     textAlign: 'center',
     marginTop: Spacing.sm,
+  },
+  // Health card
+  healthMetricsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Spacing.md,
+    marginBottom: Spacing.md,
+  },
+  healthMetric: {
+    alignItems: 'center',
+    minWidth: 64,
+  },
+  healthMetricValue: {
+    fontSize: FontSize.lg,
+    fontWeight: '700',
+  },
+  healthMetricLabel: {
+    fontSize: FontSize.xs,
+    marginTop: 2,
+  },
+  healthActions: {
+    flexDirection: 'row',
+    gap: Spacing.sm,
+  },
+  healthSyncBtn: {
+    flex: 1,
+    borderWidth: 1,
+    borderRadius: BorderRadius.md,
+    paddingVertical: Spacing.sm,
+    alignItems: 'center',
+  },
+  healthSyncText: {
+    fontSize: FontSize.sm,
+    fontWeight: '600',
+  },
+  healthDisconnectBtn: {
+    paddingVertical: Spacing.sm,
+    paddingHorizontal: Spacing.md,
+    alignItems: 'center',
+  },
+  healthDisconnectText: {
+    fontSize: FontSize.sm,
+    fontWeight: '600',
+  },
+
+  // Share report card
+  subtitleText: {
+    fontSize: FontSize.sm,
+    lineHeight: 20,
+    marginBottom: Spacing.md,
+  },
+  reportBtn: {
+    backgroundColor: Colors.primary,
+    borderRadius: BorderRadius.md,
+    paddingVertical: Spacing.sm,
+    alignItems: 'center',
+  },
+  reportBtnRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+  },
+  reportBtnText: {
+    color: '#FFFFFF',
+    fontSize: FontSize.sm,
+    fontWeight: '700',
+  },
+  // Subscription card
+  subHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    marginBottom: Spacing.xs,
+  },
+  subActiveRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.sm,
+    marginBottom: Spacing.sm,
+  },
+  premiumBadge: {
+    backgroundColor: Colors.primary,
+    paddingHorizontal: Spacing.sm,
+    paddingVertical: 2,
+    borderRadius: BorderRadius.full,
+  },
+  premiumBadgeText: {
+    fontSize: FontSize.xs,
+    color: '#FFFFFF',
+    fontWeight: '700',
+  },
+  subPrice: {
+    fontSize: FontSize.sm,
+    marginBottom: Spacing.md,
+  },
+  featureRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: Spacing.sm,
+    marginBottom: Spacing.xs,
+  },
+  featureText: {
+    fontSize: FontSize.sm,
+    flex: 1,
+    lineHeight: 20,
+  },
+  purchaseBtn: {
+    backgroundColor: Colors.primary,
+    borderRadius: BorderRadius.md,
+    paddingVertical: Spacing.md,
+    alignItems: 'center',
+    marginTop: Spacing.md,
+  },
+  purchaseBtnText: {
+    color: '#FFFFFF',
+    fontSize: FontSize.sm,
+    fontWeight: '700',
+  },
+  restoreBtn: {
+    paddingVertical: Spacing.sm,
+    alignItems: 'center',
+    marginTop: Spacing.xs,
+  },
+  restoreBtnText: {
+    fontSize: FontSize.sm,
+    fontWeight: '600',
+  },
+  manageSubBtn: {
+    paddingVertical: Spacing.xs,
+  },
+  manageSubText: {
+    fontSize: FontSize.sm,
+    color: Colors.primary,
+    fontWeight: '600',
   },
   // Modal
   modalOverlay: {

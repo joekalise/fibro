@@ -47,7 +47,8 @@
       ],
       [
         "expo-apple-authentication"
-      ]
+      ],
+      "react-native-health"
     ],
     "scheme": "spondy",
     "extra": {

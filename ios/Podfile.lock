@@ -1816,6 +1816,8 @@ PODS:
     - React-perflogger (= 0.79.6)
     - React-utils (= 0.79.6)
   - RevenueCat (5.70.0)
+  - RNAppleHealthKit (1.7.0):
+    - React
   - RNCAsyncStorage (2.1.2):
     - DoubleConversion
     - glog
@@ -2037,6 +2039,7 @@ DEPENDENCIES:
   - ReactAppDependencyProvider (from `build/generated/ios`)
   - ReactCodegen (from `build/generated/ios`)
   - ReactCommon/turbomodule/core (from `../node_modules/react-native/ReactCommon`)
+  - RNAppleHealthKit (from `../node_modules/react-native-health`)
   - "RNCAsyncStorage (from `../node_modules/@react-native-async-storage/async-storage`)"
   - RNPurchases (from `../node_modules/react-native-purchases`)
   - RNScreens (from `../node_modules/react-native-screens`)
@@ -2227,6 +2230,8 @@ EXTERNAL SOURCES:
     :path: build/generated/ios
   ReactCommon:
     :path: "../node_modules/react-native/ReactCommon"
+  RNAppleHealthKit:
+    :path: "../node_modules/react-native-health"
   RNCAsyncStorage:
     :path: "../node_modules/@react-native-async-storage/async-storage"
   RNPurchases:
@@ -2329,6 +2334,7 @@ SPEC CHECKSUMS:
   ReactCodegen: 06cf663b23a161f42a2e14087269753f422885c0
   ReactCommon: 44c86ec3ace664c0f33b7a2ac89aced8304ef25e
   RevenueCat: f30d8ee4fd36ce56afa40923d314239761eb58a2
+  RNAppleHealthKit: 86ef7ab70f762b802f5c5289372de360cca701f9
   RNCAsyncStorage: 39c42c1e478e1f5166d1db52b5055e090e85ad66
   RNPurchases: 61c3361bbbe87a0c6a1b8a5ad92c413943757a90
   RNScreens: 482e9707f9826230810c92e765751af53826d509
