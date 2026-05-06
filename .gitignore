@@ -8,8 +8,7 @@ web-build/
 .env.local
 .env.*.local
 
-# iOS / Android build artifacts
-ios/
+# Android build artifacts
 android/
 
 # macOS
