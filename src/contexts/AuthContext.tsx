@@ -127,16 +127,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     const result = await WebBrowser.openAuthSessionAsync(data.url, redirectUrl);
 
     if (result.type === 'success' && result.url) {
+      // Try PKCE flow first (code in query params)
       const urlParams = new URL(result.url);
-      const accessToken = urlParams.searchParams.get('access_token');
-      const refreshToken = urlParams.searchParams.get('refresh_token');
+      const code = urlParams.searchParams.get('code');
 
-      if (accessToken && refreshToken) {
-        const { error: sessionError } = await supabase.auth.setSession({
-          access_token: accessToken,
-          refresh_token: refreshToken,
-        });
+      if (code) {
+        const { error: sessionError } = await supabase.auth.exchangeCodeForSession(code);
         if (sessionError) throw sessionError;
+      } else {
+        // Fall back to implicit flow (tokens in URL fragment)
+        const fragment = result.url.split('#')[1] ?? '';
+        const params = new URLSearchParams(fragment);
+        const accessToken = params.get('access_token');
+        const refreshToken = params.get('refresh_token');
+        if (accessToken && refreshToken) {
+          const { error: sessionError } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken,
+          });
+          if (sessionError) throw sessionError;
+        }
       }
     }
   }, []);
