@@ -1,23 +1,35 @@
 import Purchases, { LOG_LEVEL } from 'react-native-purchases';
 import { Platform } from 'react-native';
 
-const IOS_KEY = process.env.EXPO_PUBLIC_REVENUECAT_IOS_KEY || 'appl_FDnYALlJtpZOVLglvgPEmWBxlHx';
-const ANDROID_KEY = process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_KEY || 'test_cmkTTrSkBGUWhtFodQGnqIwKCMo';
+const IOS_KEY = 'appl_FDnYALlJtpZOVLglvgPEmWBxlHx';
+const ANDROID_KEY = 'test_cmkTTrSkBGUWhtFodQGnqIwKCMo';
+
+let _configureError: string | null = null;
 
 export function configureRevenueCat(): void {
+  if (__DEV__) return; // dev builds mock subscription
   const apiKey = Platform.OS === 'ios' ? IOS_KEY : ANDROID_KEY;
-  if (!apiKey || (apiKey.startsWith('test_') && !__DEV__)) return;
+  if (apiKey.startsWith('test_')) return;
   try {
     if (__DEV__) Purchases.setLogLevel(LOG_LEVEL.DEBUG);
     Purchases.configure({ apiKey });
-  } catch {
-    // Already configured — safe to ignore
+    _configureError = null;
+  } catch (e) {
+    _configureError = e instanceof Error ? e.message : String(e);
   }
 }
 
+export function getConfigureError(): string | null {
+  return _configureError;
+}
+
 export async function loginRevenueCat(userId: string): Promise<void> {
-  if (!Purchases.isConfigured) return;
-  await Purchases.logIn(userId);
+  if (_configureError) return;
+  try {
+    await Purchases.logIn(userId);
+  } catch {
+    // login failure is non-fatal
+  }
 }
 
 export async function initializeRevenueCat(userId?: string): Promise<void> {
@@ -29,7 +41,7 @@ export async function getSubscriptionStatus(): Promise<{
   isSubscribed: boolean;
   isInTrial: boolean;
 }> {
-  configureRevenueCat();
+  if (_configureError) return { isSubscribed: false, isInTrial: false };
   try {
     const customerInfo = await Purchases.getCustomerInfo();
     const isSubscribed =
@@ -45,7 +57,7 @@ export async function getSubscriptionStatus(): Promise<{
 }
 
 export async function purchasePremium(): Promise<boolean> {
-  configureRevenueCat();
+  if (_configureError) throw new Error(`RevenueCat setup error: ${_configureError}`);
   try {
     const offerings = await Purchases.getOfferings();
     const currentOffering = offerings.current;
@@ -70,7 +82,7 @@ export async function purchasePremium(): Promise<boolean> {
 }
 
 export async function getMonthlyPriceString(): Promise<string | null> {
-  configureRevenueCat();
+  if (_configureError) return null;
   try {
     const offerings = await Purchases.getOfferings();
     const pkg = offerings.current?.monthly;
@@ -81,7 +93,7 @@ export async function getMonthlyPriceString(): Promise<string | null> {
 }
 
 export async function restorePurchases(): Promise<boolean> {
-  configureRevenueCat();
+  if (_configureError) return false;
   try {
     const customerInfo = await Purchases.restorePurchases();
     return Object.keys(customerInfo.entitlements.active).length > 0;
