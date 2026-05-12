@@ -5,7 +5,11 @@ import { useColorScheme } from 'react-native';
 import * as Notifications from 'expo-notifications';
 
 import '@/i18n';
+import { configureRevenueCat } from '@/services/revenuecat';
 import { AuthProvider, useAuth } from '@/contexts/AuthContext';
+
+// Configure RevenueCat immediately — before auth resolves
+configureRevenueCat();
 import { ProfileProvider, useProfile } from '@/contexts/ProfileContext';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { registerBackgroundHealthSync, triggerHealthSyncNow } from '@/services/backgroundHealthSync';

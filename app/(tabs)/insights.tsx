@@ -761,9 +761,14 @@ export default function InsightsScreen() {
   const hasEnoughDataForTrialPrompt = allLogs.length >= 14;
 
   const handlePurchase = useCallback(async () => {
-    const success = await purchase();
-    if (!success) {
-      Alert.alert('', t('profile.purchase_unavailable'));
+    try {
+      const success = await purchase();
+      if (!success) {
+        Alert.alert('', t('profile.purchase_unavailable'));
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      Alert.alert('Purchase error', msg);
     }
   }, [purchase, t]);
 

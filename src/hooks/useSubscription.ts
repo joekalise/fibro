@@ -43,19 +43,13 @@ export function useSubscription(): {
   }, [loadStatus]);
 
   const purchase = useCallback(async (): Promise<boolean> => {
-    try {
-      const success = await purchasePremium();
-      if (success) {
-        // Re-fetch status after purchase to reflect latest state
-        const status = await getSubscriptionStatus();
-        setIsSubscribed(status.isSubscribed);
-        setIsInTrial(status.isInTrial);
-      }
-      return success;
-    } catch (err) {
-      console.error('useSubscription: purchase failed', err);
-      return false;
+    const success = await purchasePremium();
+    if (success) {
+      const status = await getSubscriptionStatus();
+      setIsSubscribed(status.isSubscribed);
+      setIsInTrial(status.isInTrial);
     }
+    return success;
   }, []);
 
   const restore = useCallback(async (): Promise<boolean> => {

@@ -1067,8 +1067,8 @@ export default function ProfileScreen() {
         Alert.alert('', t('profile.purchase_unavailable'));
       }
     } catch (err) {
-      console.error('Purchase error:', err);
-      Alert.alert('', t('errors.save_failed'));
+      const msg = err instanceof Error ? err.message : String(err);
+      Alert.alert('Purchase error', msg);
     } finally {
       setIsPurchasing(false);
     }

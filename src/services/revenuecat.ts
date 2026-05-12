@@ -1,24 +1,25 @@
 import Purchases, { LOG_LEVEL } from 'react-native-purchases';
 import { Platform } from 'react-native';
 
-export async function initializeRevenueCat(userId?: string): Promise<void> {
-  if (__DEV__) {
-    Purchases.setLogLevel(LOG_LEVEL.DEBUG);
-  }
+const IOS_KEY = process.env.EXPO_PUBLIC_REVENUECAT_IOS_KEY || 'appl_FDnYALlJtpZOVLglvgPEmWBxlHx';
+const ANDROID_KEY = process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_KEY || 'test_cmkTTrSkBGUWhtFodQGnqIwKCMo';
 
-  const apiKey =
-    Platform.OS === 'ios'
-      ? (process.env.EXPO_PUBLIC_REVENUECAT_IOS_KEY || 'appl_FDnYALlJtpZOVLglvgPEmWBxlHx')
-      : (process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_KEY || 'test_cmkTTrSkBGUWhtFodQGnqIwKCMo');
-
-  // Skip initialisation if no key or test key on a real device build
+export function configureRevenueCat(): void {
+  const apiKey = Platform.OS === 'ios' ? IOS_KEY : ANDROID_KEY;
   if (!apiKey || (apiKey.startsWith('test_') && !__DEV__)) return;
+  if (Purchases.isConfigured) return;
+  if (__DEV__) Purchases.setLogLevel(LOG_LEVEL.DEBUG);
+  Purchases.configure({ apiKey });
+}
 
-  await Purchases.configure({ apiKey });
+export async function loginRevenueCat(userId: string): Promise<void> {
+  if (!Purchases.isConfigured) return;
+  await Purchases.logIn(userId);
+}
 
-  if (userId) {
-    await Purchases.logIn(userId);
-  }
+export async function initializeRevenueCat(userId?: string): Promise<void> {
+  configureRevenueCat();
+  if (userId) await loginRevenueCat(userId);
 }
 
 export async function getSubscriptionStatus(): Promise<{
@@ -43,10 +44,10 @@ export async function purchasePremium(): Promise<boolean> {
   try {
     const offerings = await Purchases.getOfferings();
     const currentOffering = offerings.current;
-    if (!currentOffering) return false;
+    if (!currentOffering) throw new Error('RC: no current offering');
 
     const monthlyPackage = currentOffering.monthly;
-    if (!monthlyPackage) return false;
+    if (!monthlyPackage) throw new Error('RC: no monthly package');
 
     await Purchases.purchasePackage(monthlyPackage);
     return true;
@@ -55,11 +56,11 @@ export async function purchasePremium(): Promise<boolean> {
       error !== null &&
       typeof error === 'object' &&
       'userCancelled' in error &&
-      !(error as { userCancelled: boolean }).userCancelled
+      (error as { userCancelled: boolean }).userCancelled
     ) {
-      throw error;
+      return false;
     }
-    return false;
+    throw error;
   }
 }
 
