@@ -812,7 +812,7 @@ export default function ProfileScreen() {
     deleteMedication,
   } = useMedications();
   const { flares } = useFlares();
-  const { isSubscribed, isLoading: subLoading, purchase, restore } = useSubscription();
+  const { isSubscribed, isLoading: subLoading, monthlyPrice, purchase, restore } = useSubscription();
   const { tracks: tracksMedication, setTracks: setTracksMedication } = useMedicationTracking();
   const { injections: biologicInjections, logInjection, deleteInjection: deleteBiologicInj } = useBiologicInjections();
   const {
@@ -1341,9 +1341,11 @@ export default function ProfileScreen() {
                   <Text style={styles.premiumBadgeText}>Premium</Text>
                 </View>
               </View>
-              <Text style={[styles.subPrice, { color: textSecondary }]}>
-                {t('profile.subscription_card_price')}
-              </Text>
+              {monthlyPrice && (
+                <Text style={[styles.subPrice, { color: textSecondary }]}>
+                  {monthlyPrice} / month after free trial
+                </Text>
+              )}
 
               {/* Feature list */}
               {[1, 2, 3, 4].map((n) => (

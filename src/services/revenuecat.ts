@@ -69,6 +69,17 @@ export async function purchasePremium(): Promise<boolean> {
   }
 }
 
+export async function getMonthlyPriceString(): Promise<string | null> {
+  configureRevenueCat();
+  try {
+    const offerings = await Purchases.getOfferings();
+    const pkg = offerings.current?.monthly;
+    return pkg?.product.priceString ?? null;
+  } catch {
+    return null;
+  }
+}
+
 export async function restorePurchases(): Promise<boolean> {
   configureRevenueCat();
   try {
