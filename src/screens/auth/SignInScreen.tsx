@@ -22,6 +22,7 @@ import { ErrorMessage } from '@/components/common/ErrorMessage';
 import { Colors } from '@/constants/colors';
 import { FontSize, Spacing, BorderRadius } from '@/constants/theme';
 import { useAuth } from '@/contexts/AuthContext';
+import { logEvent, Events } from '@/services/analytics';
 
 export function SignInScreen() {
   const { t } = useTranslation();
@@ -75,6 +76,7 @@ export function SignInScreen() {
     setIsLoading(true);
     try {
       await signInWithEmail(email.trim(), password);
+      logEvent(Events.SIGN_IN, { method: 'email' }).catch(() => {});
     } catch (err: unknown) {
       const message =
         err instanceof Error ? err.message : t('auth.auth_failed');
@@ -89,6 +91,7 @@ export function SignInScreen() {
     setIsAppleLoading(true);
     try {
       await signInWithApple();
+      logEvent(Events.SIGN_IN, { method: 'apple' }).catch(() => {});
     } catch (err: unknown) {
       const message =
         err instanceof Error ? err.message : t('errors.auth_failed');
@@ -103,6 +106,7 @@ export function SignInScreen() {
     setIsGoogleLoading(true);
     try {
       await signInWithGoogle();
+      logEvent(Events.SIGN_IN, { method: 'google' }).catch(() => {});
     } catch (err: unknown) {
       const message =
         err instanceof Error ? err.message : t('errors.auth_failed');

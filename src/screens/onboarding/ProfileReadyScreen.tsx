@@ -19,6 +19,7 @@ import { FontSize, Spacing, BorderRadius } from '@/constants/theme';
 import { useProfile } from '@/contexts/ProfileContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { saveDailyLog } from '@/services/database';
+import { logEvent, Events } from '@/services/analytics';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -119,6 +120,7 @@ export function ProfileReadyScreen() {
       }
 
       await Promise.all(tasks);
+      logEvent(Events.ONBOARDING_COMPLETE).catch(() => {});
     } catch (err) {
       console.error('ProfileReadyScreen save error:', err);
     } finally {

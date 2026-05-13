@@ -43,6 +43,7 @@ import {
   LifestyleChallenge,
   WelcomeContent,
 } from '@/types';
+import { logEvent, Events } from '@/services/analytics';
 
 const TOTAL_STEPS = 11;
 
@@ -747,7 +748,7 @@ export function OnboardingScreen() {
 
           <Button
             label="Get started"
-            onPress={() => setShowWelcome(false)}
+            onPress={() => { logEvent(Events.ONBOARDING_STARTED).catch(() => {}); setShowWelcome(false); }}
             style={styles.welcomeButton}
           />
         </ScrollView>

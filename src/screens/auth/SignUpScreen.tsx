@@ -20,6 +20,7 @@ import { ErrorMessage } from '@/components/common/ErrorMessage';
 import { Colors } from '@/constants/colors';
 import { FontSize, Spacing, BorderRadius } from '@/constants/theme';
 import { useAuth } from '@/contexts/AuthContext';
+import { logEvent, Events } from '@/services/analytics';
 
 export function SignUpScreen() {
   const { t } = useTranslation();
@@ -57,6 +58,7 @@ export function SignUpScreen() {
     setIsLoading(true);
     try {
       await signUpWithEmail(email.trim(), password);
+      logEvent(Events.SIGN_UP, { method: 'email' }).catch(() => {});
       setSuccess(true);
     } catch (err: unknown) {
       const message =

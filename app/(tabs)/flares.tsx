@@ -22,6 +22,7 @@ import { ErrorMessage } from '@/components/common/ErrorMessage';
 import { Button } from '@/components/common/Button';
 import { ProfileButton } from '@/components/common/ProfileButton';
 import { FlareSeverity, Flare, FlareType, UveitisEpisode, UveitisEye, UveitisSymptom } from '@/types';
+import { logEvent, Events } from '@/services/analytics';
 
 // ─── Severity badge ──────────────────────────────────────────────────────────
 
@@ -1052,7 +1053,7 @@ export default function FlaresScreen() {
       <StartFlareModal
         visible={modalVisible}
         onClose={() => setModalVisible(false)}
-        onConfirm={startFlare}
+        onConfirm={async (sev, areas, notes) => { await startFlare(sev, areas, notes); logEvent(Events.FLARE_LOGGED, { type: 'as' }).catch(() => {}); }}
         isDark={isDark}
         title="Log AS flare"
         locationOptions={AS_LOCATIONS}
@@ -1060,7 +1061,7 @@ export default function FlaresScreen() {
       <StartFlareModal
         visible={showEnthesitisModal}
         onClose={() => setShowEnthesitisModal(false)}
-        onConfirm={startEnthesitis}
+        onConfirm={async (sev, areas, notes) => { await startEnthesitis(sev, areas, notes); logEvent(Events.FLARE_LOGGED, { type: 'enthesitis' }).catch(() => {}); }}
         isDark={isDark}
         title="Log enthesitis flare"
         locationOptions={ENTHESITIS_LOCATIONS}
@@ -1068,7 +1069,7 @@ export default function FlaresScreen() {
       <StartFlareModal
         visible={showPeripheralModal}
         onClose={() => setShowPeripheralModal(false)}
-        onConfirm={startPeripheral}
+        onConfirm={async (sev, areas, notes) => { await startPeripheral(sev, areas, notes); logEvent(Events.FLARE_LOGGED, { type: 'peripheral' }).catch(() => {}); }}
         isDark={isDark}
         title="Log peripheral joint flare"
         locationOptions={PERIPHERAL_LOCATIONS}
@@ -1076,7 +1077,7 @@ export default function FlaresScreen() {
       <StartUveitisModal
         visible={showUveitisModal}
         onClose={() => setShowUveitisModal(false)}
-        onConfirm={startEpisode}
+        onConfirm={async (ep) => { await startEpisode(ep); logEvent(Events.FLARE_LOGGED, { type: 'uveitis' }).catch(() => {}); }}
         isDark={isDark}
       />
       <EditUveitisModal

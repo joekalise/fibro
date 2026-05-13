@@ -27,6 +27,7 @@ import { useProfile } from '@/contexts/ProfileContext';
 import { useHealthHistory } from '@/hooks/useHealthHistory';
 import { sendChatMessage } from '@/services/aiInsights';
 import { getDailyLogs } from '@/services/database';
+import { logEvent, Events } from '@/services/analytics';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -212,6 +213,11 @@ export default function AIChatScreen() {
   const { isSubscribed, isLoading: subLoading, purchase } = useSubscription();
   const { history: healthHistory } = useHealthHistory(28);
 
+  // Log screen open once on mount
+  useEffect(() => {
+    logEvent(Events.AI_CHAT_OPENED).catch(() => {});
+  }, []);
+
   // 28 days of logs for richer chat context (same window as weekly insight)
   const [logs, setLogs] = useState<import('@/types').DailyLog[]>([]);
   useEffect(() => {
@@ -305,6 +311,7 @@ export default function AIChatScreen() {
     setMessages(nextMessages);
     setInputText('');
     setIsSending(true);
+    logEvent(Events.AI_CHAT_MESSAGE_SENT).catch(() => {});
     await saveHistory(nextMessages);
 
     try {

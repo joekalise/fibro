@@ -13,6 +13,8 @@ install! 'cocoapods',
 
 prepare_react_native_project!
 
+$RNFirebaseAsStaticFramework = true
+
 target 'Spondy' do
   use_expo_modules!
 

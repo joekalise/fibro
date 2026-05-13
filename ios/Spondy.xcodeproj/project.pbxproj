@@ -11,6 +11,7 @@
 		3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */; };
 		A2BAC92CD764103DC30B4641 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 3E3EA92E24779A4E61F9B6D6 /* PrivacyInfo.xcprivacy */; };
 		BB2F792D24A3F905000567C9 /* Expo.plist in Resources */ = {isa = PBXBuildFile; fileRef = BB2F792C24A3F905000567C9 /* Expo.plist */; };
+		CF9A1B2C3D4E5F6A7B8C9D0E /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = CF9A1B2C3D4E5F6A7B8C9D0F /* GoogleService-Info.plist */; };
 		E7E20CB70151F87627CB39E4 /* ExpoModulesProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01514D40D9B1B900574FD640 /* ExpoModulesProvider.swift */; };
 		F0D37BA5DEAC6AAEC24AED81 /* libPods-Spondy.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 40B50DD60F28441DCB15E3BA /* libPods-Spondy.a */; };
 		F11748422D0307B40044C1D9 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = F11748412D0307B40044C1D9 /* AppDelegate.swift */; };
@@ -27,6 +28,7 @@
 		8F14CE5BC20E723930F242B9 /* Pods-Spondy.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Spondy.release.xcconfig"; path = "Target Support Files/Pods-Spondy/Pods-Spondy.release.xcconfig"; sourceTree = "<group>"; };
 		AA286B85B6C04FC6940260E9 /* SplashScreen.storyboard */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.storyboard; name = SplashScreen.storyboard; path = Spondy/SplashScreen.storyboard; sourceTree = "<group>"; };
 		BB2F792C24A3F905000567C9 /* Expo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Expo.plist; sourceTree = "<group>"; };
+		CF9A1B2C3D4E5F6A7B8C9D0F /* GoogleService-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = "GoogleService-Info.plist"; path = "Spondy/GoogleService-Info.plist"; sourceTree = "<group>"; };
 		ED297162215061F000B7C4FE /* JavaScriptCore.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = JavaScriptCore.framework; path = System/Library/Frameworks/JavaScriptCore.framework; sourceTree = SDKROOT; };
 		F11748412D0307B40044C1D9 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = AppDelegate.swift; path = Spondy/AppDelegate.swift; sourceTree = "<group>"; };
 		F11748442D0722820044C1D9 /* Spondy-Bridging-Header.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = "Spondy-Bridging-Header.h"; path = "Spondy/Spondy-Bridging-Header.h"; sourceTree = "<group>"; };
@@ -57,6 +59,7 @@
 			children = (
 				F11748412D0307B40044C1D9 /* AppDelegate.swift */,
 				F11748442D0722820044C1D9 /* Spondy-Bridging-Header.h */,
+				CF9A1B2C3D4E5F6A7B8C9D0F /* GoogleService-Info.plist */,
 				BB2F792B24A3F905000567C9 /* Supporting */,
 				13B07FB51A68108700A75B9A /* Images.xcassets */,
 				13B07FB61A68108700A75B9A /* Info.plist */,
@@ -195,6 +198,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				BB2F792D24A3F905000567C9 /* Expo.plist in Resources */,
+				CF9A1B2C3D4E5F6A7B8C9D0E /* GoogleService-Info.plist in Resources */,
 				13B07FBF1A68108700A75B9A /* Images.xcassets in Resources */,
 				3E461D99554A48A4959DE609 /* SplashScreen.storyboard in Resources */,
 				A2BAC92CD764103DC30B4641 /* PrivacyInfo.xcprivacy in Resources */,

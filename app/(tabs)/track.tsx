@@ -28,6 +28,7 @@ import { ErrorMessage } from '@/components/common/ErrorMessage';
 import { Button } from '@/components/common/Button';
 import { ProfileButton } from '@/components/common/ProfileButton';
 import { DailyLog, Mood, MorningStiffness, DietQuality, DietTrigger } from '@/types';
+import { logEvent, Events } from '@/services/analytics';
 
 // ─── Date helpers ─────────────────────────────────────────────────────────────
 
@@ -516,7 +517,10 @@ function DayLogModal({ date, initialLog, userId, tracksMedication, isFemale, isD
         exercise_minutes: exerciseMinutes,
         period_active: isFemale ? periodActive : null,
       });
-      if (saved) onSaved(saved);
+      if (saved) {
+        logEvent(Events.DAY_LOGGED, { date }).catch(() => {});
+        onSaved(saved);
+      }
       onClose();
     } catch {
       Alert.alert(t('errors.save_failed'));
@@ -830,6 +834,7 @@ export default function TrackScreen() {
     setSaved(false);
     try {
       await saveLog({ pain_score: painScore, fatigue_score: fatigueScore, stiffness_duration: stiffness, mood, medications_taken: medsTaken, notes, diet_quality: dietQuality, diet_triggers: dietTriggers, exercise_done: exerciseDone, exercise_type: exerciseType, exercise_minutes: exerciseMinutes, period_active: isFemale ? periodActive : null });
+      logEvent(Events.DAY_LOGGED, { date: localDateString() }).catch(() => {});
       setEditing(false);
       setSaved(true);
     } catch {

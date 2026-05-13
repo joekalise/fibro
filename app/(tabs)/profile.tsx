@@ -494,6 +494,7 @@ function AddMedicationModal({
         reminder_time: reminderTime,
         active: true,
       });
+      logEvent(Events.MEDICATION_ADDED).catch(() => {});
       reset();
       onClose();
     } catch (err) {
@@ -1066,6 +1067,7 @@ export default function ProfileScreen() {
         basdaiScores,
         fromDate: reportFromDate || undefined,
       });
+      logEvent(Events.REPORT_GENERATED).catch(() => {});
     } catch (err) {
       console.error('Generate report error:', err);
       Alert.alert('', t('errors.save_failed'));
@@ -1720,7 +1722,14 @@ export default function ProfileScreen() {
           </Text>
         </View>
 
-        {/* Version */}
+        {/* Privacy policy + version */}
+        <TouchableOpacity
+          onPress={() => Linking.openURL('https://gist.github.com/joekalise/fb689414dba7ade9f6d7383ccad9cf1f')}
+          activeOpacity={0.7}
+          style={styles.privacyLink}
+        >
+          <Text style={[styles.privacyLinkText, { color: textSecondary }]}>Privacy Policy</Text>
+        </TouchableOpacity>
         <Text style={[styles.version, { color: textSecondary }]}>
           {t('profile.version', { version })}
         </Text>
@@ -2167,6 +2176,15 @@ const styles = StyleSheet.create({
     fontSize: FontSize.xs,
     textAlign: 'center',
     marginTop: Spacing.sm,
+  },
+  privacyLink: {
+    alignItems: 'center',
+    paddingVertical: Spacing.xs,
+    marginTop: Spacing.sm,
+  },
+  privacyLinkText: {
+    fontSize: FontSize.xs,
+    textDecorationLine: 'underline',
   },
   // Welcome content card
 
