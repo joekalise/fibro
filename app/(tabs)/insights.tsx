@@ -30,6 +30,7 @@ import { DailyLog, Flare, Mood, UserProfile, HealthData, BasdaiScore } from '@/t
 import { ProfileButton } from '@/components/common/ProfileButton';
 import { InfoButton } from '@/components/common/InfoButton';
 import { DragSlider } from '@/components/common/DragSlider';
+import { PremiumModal } from '@/components/common/PremiumModal';
 
 // ─── Insight cache helpers ────────────────────────────────────────────────────
 
@@ -381,29 +382,26 @@ interface TrialPromptCardProps {
 }
 
 function TrialPromptCard({ isDark, onStartTrial }: TrialPromptCardProps) {
-  const { t } = useTranslation();
   const cardBg = isDark ? Colors.surfaceDark : Colors.surface;
-  const cardBorder = isDark ? Colors.borderDark : Colors.border;
   const textPrimary = isDark ? Colors.textPrimaryDark : Colors.textPrimary;
   const textSecondary = isDark ? Colors.textSecondaryDark : Colors.textSecondary;
 
   return (
-    <View style={[styles.card, { backgroundColor: cardBg, borderColor: Colors.primary }]}>
+    <TouchableOpacity
+      onPress={onStartTrial}
+      activeOpacity={0.85}
+      style={[styles.card, { backgroundColor: cardBg, borderColor: Colors.primary + '50', borderWidth: 1.5 }]}
+    >
       <View style={styles.aiTitleRow}>
         <Text style={[styles.cardTitle, { color: textPrimary }]}>
-          {t('insights.trial_prompt_title')}
+          You've been tracking for 2 weeks 🎉
         </Text>
-        <View style={styles.premiumBadge}>
-          <Text style={styles.premiumBadgeText}>Premium</Text>
-        </View>
       </View>
       <Text style={[styles.teaserText, { color: textSecondary }]}>
-        {t('insights.trial_prompt_body')}
+        Your data is ready for its first AI analysis. See what patterns are driving your symptoms.
       </Text>
-      <TouchableOpacity onPress={onStartTrial} activeOpacity={0.8} style={styles.ctaBtn}>
-        <Text style={styles.ctaBtnText}>{t('insights.trial_prompt_cta')}</Text>
-      </TouchableOpacity>
-    </View>
+      <Text style={[styles.teaserLink, { color: Colors.primary }]}>See what's included →</Text>
+    </TouchableOpacity>
   );
 }
 
@@ -696,7 +694,10 @@ export default function InsightsScreen() {
   const router = useRouter();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
-  const { isSubscribed, isLoading: subLoading, purchase } = useSubscription();
+  const { isSubscribed, isLoading: subLoading, monthlyPrice, purchase, restore } = useSubscription();
+  const [showPremiumModal, setShowPremiumModal] = useState(false);
+  const [isPurchasing, setIsPurchasing] = useState(false);
+  const [isRestoring, setIsRestoring] = useState(false);
   const { history: healthHistory } = useHealthHistory(28);
 
   const { latestScore: latestBasdaiScore, daysSinceLastScore: daysSinceLastBasdai, saveScore: saveBasdaiScore } = useBasdai();
@@ -761,16 +762,31 @@ export default function InsightsScreen() {
   const hasEnoughDataForTrialPrompt = allLogs.length >= 14;
 
   const handlePurchase = useCallback(async () => {
+    setIsPurchasing(true);
     try {
       const success = await purchase();
-      if (!success) {
-        Alert.alert('', t('profile.purchase_unavailable'));
-      }
+      if (success) setShowPremiumModal(false);
+      else Alert.alert('', t('profile.purchase_unavailable'));
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       Alert.alert('Purchase error', msg);
+    } finally {
+      setIsPurchasing(false);
     }
   }, [purchase, t]);
+
+  const handleRestore = useCallback(async () => {
+    setIsRestoring(true);
+    try {
+      const success = await restore();
+      if (success) setShowPremiumModal(false);
+      else Alert.alert('', 'No previous purchases found.');
+    } catch (err) {
+      console.error('Restore error:', err);
+    } finally {
+      setIsRestoring(false);
+    }
+  }, [restore]);
 
   const painData = logs.map((l) => l.pain_score);
   const fatigueData = logs.map((l) => l.fatigue_score);
@@ -843,7 +859,7 @@ export default function InsightsScreen() {
           ) : hasEnoughDataForTrialPrompt ? (
             <TrialPromptCard
               isDark={isDark}
-              onStartTrial={handlePurchase}
+              onStartTrial={() => setShowPremiumModal(true)}
             />
           ) : null
         )}
@@ -1010,28 +1026,24 @@ export default function InsightsScreen() {
 
         {/* Chat CTA for non-subscribers — shown below when not subscribed */}
         {!subLoading && !isSubscribed && (
-          <View style={[styles.card, { backgroundColor: cardBg, borderColor: cardBorder }]}>
-            <View style={styles.aiCardHeader}>
-              <View style={styles.aiTitleRow}>
-                <Text style={[styles.cardTitle, { color: textPrimary }]}>
-                  {t('insights.ai_insight_title')}
-                </Text>
-                <View style={styles.premiumBadge}>
-                  <Text style={styles.premiumBadgeText}>Premium</Text>
-                </View>
+          <TouchableOpacity
+            onPress={() => setShowPremiumModal(true)}
+            activeOpacity={0.85}
+            style={[styles.card, { backgroundColor: cardBg, borderColor: Colors.primary + '50', borderWidth: 1.5 }]}
+          >
+            <View style={styles.aiTitleRow}>
+              <Text style={[styles.cardTitle, { color: textPrimary }]}>
+                {t('insights.ai_insight_title')}
+              </Text>
+              <View style={styles.premiumBadge}>
+                <Text style={styles.premiumBadgeText}>Premium</Text>
               </View>
             </View>
             <Text style={[styles.teaserText, { color: textSecondary }]}>
-              {t('insights.ai_insight_teaser')}
+              Weekly AI analysis of your symptoms, flare prediction, and a chat with your own data.
             </Text>
-            <TouchableOpacity
-              style={styles.ctaBtn}
-              activeOpacity={0.8}
-              onPress={handlePurchase}
-            >
-              <Text style={styles.ctaBtnText}>{t('insights.unlock_ai_cta')}</Text>
-            </TouchableOpacity>
-          </View>
+            <Text style={[styles.teaserLink, { color: Colors.primary }]}>See what's included →</Text>
+          </TouchableOpacity>
         )}
 
         <Text style={[styles.disclaimer, { color: isDark ? Colors.textSecondaryDark : Colors.textSecondary }]}>
@@ -1044,6 +1056,17 @@ export default function InsightsScreen() {
         visible={showBasdai}
         onClose={() => setShowBasdai(false)}
         onSave={saveBasdaiScore}
+        isDark={isDark}
+      />
+
+      <PremiumModal
+        visible={showPremiumModal}
+        onClose={() => setShowPremiumModal(false)}
+        onPurchase={handlePurchase}
+        onRestore={handleRestore}
+        monthlyPrice={monthlyPrice}
+        isPurchasing={isPurchasing}
+        isRestoring={isRestoring}
         isDark={isDark}
       />
     </SafeAreaView>
@@ -1371,7 +1394,11 @@ const styles = StyleSheet.create({
   teaserText: {
     fontSize: FontSize.sm,
     lineHeight: 20,
-    marginBottom: Spacing.md,
+    marginBottom: Spacing.sm,
+  },
+  teaserLink: {
+    fontSize: FontSize.sm,
+    fontWeight: '600',
   },
   ctaBtn: {
     backgroundColor: Colors.primary,

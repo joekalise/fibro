@@ -37,6 +37,7 @@ import { useHealthData } from '@/hooks/useHealthData';
 import { useMedicationTracking } from '@/hooks/useMedicationTracking';
 import { useBiologicInjections, BIOLOGIC_INTERVALS } from '@/hooks/useBiologicInjections';
 import { scheduleDailyCheckIn, cancelNotification } from '@/services/notifications';
+import { PremiumModal } from '@/components/common/PremiumModal';
 import { generateAndShareReport } from '@/services/pdfExport';
 import { getDailyLogs, getUveitisEpisodes, getBasdaiScores, deleteAllUserData } from '@/services/database';
 import {
@@ -850,6 +851,7 @@ export default function ProfileScreen() {
   const [showLogInjection, setShowLogInjection] = useState(false);
   const [injectionDefaultMed, setInjectionDefaultMed] = useState('');
   const [reminderEnabled, setReminderEnabled] = useState(true);
+  const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [pendingTime, setPendingTime] = useState<Date | null>(null);
 
@@ -1344,61 +1346,27 @@ export default function ProfileScreen() {
               </TouchableOpacity>
             </View>
           ) : (
-            <View style={[styles.card, { backgroundColor: cardBg, borderColor: cardBorder }]}>
-              <View style={styles.subHeader}>
-                <Text style={[styles.cardTitle, { color: textPrimary }]}>
-                  {t('profile.subscription_card_title')}
-                </Text>
-                <View style={styles.premiumBadge}>
-                  <Text style={styles.premiumBadgeText}>Premium</Text>
+            <TouchableOpacity
+              onPress={() => setShowPremiumModal(true)}
+              activeOpacity={0.85}
+              style={[styles.card, styles.premiumTeaser, { backgroundColor: cardBg, borderColor: Colors.primary + '50' }]}
+            >
+              <View style={styles.premiumTeaserRow}>
+                <View style={styles.premiumTeaserLeft}>
+                  <View style={styles.premiumBadge}>
+                    <Text style={styles.premiumBadgeText}>Premium</Text>
+                  </View>
+                  <Text style={[styles.premiumTeaserTitle, { color: textPrimary }]}>
+                    AI-powered insights
+                  </Text>
+                  <Text style={[styles.premiumTeaserBody, { color: textSecondary }]}>
+                    Weekly reports, flare prediction, and a chat with your own data.
+                    {monthlyPrice ? ` ${monthlyPrice}/month after a 14-day free trial.` : ' 14-day free trial.'}
+                  </Text>
                 </View>
+                <Text style={[styles.premiumTeaserArrow, { color: Colors.primary }]}>→</Text>
               </View>
-              {monthlyPrice && (
-                <Text style={[styles.subPrice, { color: textSecondary }]}>
-                  {monthlyPrice} / month after free trial
-                </Text>
-              )}
-
-              {/* Feature list */}
-              {[1, 2, 3, 4].map((n) => (
-                <View key={n} style={styles.featureRow}>
-                  <Text style={{ color: Colors.primary, fontSize: FontSize.md }}>✓</Text>
-                  <Text style={[styles.featureText, { color: textPrimary }]}>
-                    {t(`profile.subscription_feature_${n}` as Parameters<typeof t>[0])}
-                  </Text>
-                </View>
-              ))}
-
-              <TouchableOpacity
-                onPress={handlePurchase}
-                disabled={isPurchasing}
-                activeOpacity={0.8}
-                style={[styles.purchaseBtn, { opacity: isPurchasing ? 0.6 : 1 }]}
-              >
-                {isPurchasing ? (
-                  <ActivityIndicator color="#FFFFFF" size="small" />
-                ) : (
-                  <Text style={styles.purchaseBtnText}>
-                    {t('subscription.trial_cta')}
-                  </Text>
-                )}
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                onPress={handleRestore}
-                disabled={isRestoring}
-                activeOpacity={0.8}
-                style={styles.restoreBtn}
-              >
-                {isRestoring ? (
-                  <ActivityIndicator color={Colors.primary} size="small" />
-                ) : (
-                  <Text style={[styles.restoreBtnText, { color: Colors.primary }]}>
-                    {t('profile.subscription_restore')}
-                  </Text>
-                )}
-              </TouchableOpacity>
-            </View>
+            </TouchableOpacity>
           )
         )}
 
@@ -1773,6 +1741,17 @@ export default function ProfileScreen() {
         onClose={() => setShowLogInjection(false)}
         onSave={logInjection}
         defaultMedicationName={injectionDefaultMed}
+        isDark={isDark}
+      />
+
+      <PremiumModal
+        visible={showPremiumModal}
+        onClose={() => setShowPremiumModal(false)}
+        onPurchase={handlePurchase}
+        onRestore={handleRestore}
+        monthlyPrice={monthlyPrice}
+        isPurchasing={isPurchasing}
+        isRestoring={isRestoring}
         isDark={isDark}
       />
 
@@ -2257,6 +2236,30 @@ const styles = StyleSheet.create({
     minWidth: 110,
   },
   // Subscription card
+  premiumTeaser: {
+    borderWidth: 1.5,
+  },
+  premiumTeaserRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.md,
+  },
+  premiumTeaserLeft: {
+    flex: 1,
+    gap: Spacing.xs,
+  },
+  premiumTeaserTitle: {
+    fontSize: FontSize.md,
+    fontWeight: '700',
+  },
+  premiumTeaserBody: {
+    fontSize: FontSize.sm,
+    lineHeight: 20,
+  },
+  premiumTeaserArrow: {
+    fontSize: 20,
+    fontWeight: '600',
+  },
   subHeader: {
     flexDirection: 'row',
     alignItems: 'center',
