@@ -1048,9 +1048,9 @@ export default function InsightsScreen() {
               </View>
             </View>
             <Text style={[styles.teaserText, { color: textSecondary }]}>
-              Weekly AI analysis of your symptoms, flare prediction, and a chat with your own data.
+              {t('premium_teaser.insights_body')}
             </Text>
-            <Text style={[styles.teaserLink, { color: Colors.primary }]}>See what's included →</Text>
+            <Text style={[styles.teaserLink, { color: Colors.primary }]}>{t('premium_teaser.see_whats_included')}</Text>
           </TouchableOpacity>
         )}
 

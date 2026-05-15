@@ -420,6 +420,13 @@ export default {
     manage: 'Manage subscription',
     restore: 'Restore purchases',
   },
+  premium_teaser: {
+    ai_title: 'AI-powered insights',
+    profile_body: 'Weekly reports, flare prediction, and a chat with your own data.',
+    profile_body_with_price: 'Weekly reports, flare prediction, and a chat with your own data. {{price}}/month after a 14-day free trial.',
+    insights_body: 'Weekly AI analysis of your symptoms, flare prediction, and a chat with your own data.',
+    see_whats_included: "See what's included →",
+  },
   profile_privacy: {
     ai_title: 'Data & AI Privacy',
     ai_body_1: 'When you use AI Chat or weekly insights, your symptom logs, health data summaries, and profile information are sent to Anthropic (Claude API) to generate responses. Your raw Apple Health data is never sent — only aggregated summaries. Conversation history is stored locally on your device only.',

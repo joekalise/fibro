@@ -1365,11 +1365,12 @@ export default function ProfileScreen() {
                     <Text style={styles.premiumBadgeText}>Premium</Text>
                   </View>
                   <Text style={[styles.premiumTeaserTitle, { color: textPrimary }]}>
-                    AI-powered insights
+                    {t('premium_teaser.ai_title')}
                   </Text>
                   <Text style={[styles.premiumTeaserBody, { color: textSecondary }]}>
-                    Weekly reports, flare prediction, and a chat with your own data.
-                    {monthlyPrice ? ` ${monthlyPrice}/month after a 14-day free trial.` : ' 14-day free trial.'}
+                    {monthlyPrice
+                      ? t('premium_teaser.profile_body_with_price', { price: monthlyPrice })
+                      : t('premium_teaser.profile_body')}
                   </Text>
                 </View>
                 <Text style={[styles.premiumTeaserArrow, { color: Colors.primary }]}>→</Text>
