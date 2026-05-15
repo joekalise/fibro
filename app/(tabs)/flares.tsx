@@ -247,9 +247,9 @@ function EditFlareModal({ visible, flare, onClose, onSave, onDelete, isDark, loc
             textAlignVertical="top"
           />
 
-          <Button label="Save changes" onPress={handleSave} isLoading={isSaving} style={styles.modalConfirmButton} />
+          <Button label={t('common.save_changes')} onPress={handleSave} isLoading={isSaving} style={styles.modalConfirmButton} />
           <Button
-            label="Delete this entry"
+            label={t('common.delete_entry')}
             onPress={handleDelete}
             variant="ghost"
             textStyle={{ color: Colors.error }}
@@ -400,7 +400,7 @@ function StartFlareModal({ visible, onClose, onConfirm, isDark, title, locationO
             textAlignVertical="top"
           />
 
-          <Button label="Log flare" onPress={handleConfirm} isLoading={isSaving} style={styles.modalConfirmButton} />
+          <Button label={t('flares.log_flare_button')} onPress={handleConfirm} isLoading={isSaving} style={styles.modalConfirmButton} />
           <Button label={t('common.cancel')} onPress={onClose} variant="ghost" />
         </View>
       </View>
@@ -544,7 +544,7 @@ function EditUveitisModal({ visible, episode, onClose, onSave, onDelete, isDark 
 
           <Text style={[styles.modalSectionLabel, isDark && styles.textPrimaryDark]}>{t('flares.notes')}</Text>
           <TextInput style={[styles.notesInput, isDark && styles.notesInputDark]}
-            placeholder="Optional notes..." placeholderTextColor={isDark ? Colors.textSecondaryDark : Colors.textSecondary}
+            placeholder={t('common.optional_notes')} placeholderTextColor={isDark ? Colors.textSecondaryDark : Colors.textSecondary}
             value={notes} onChangeText={setNotes} multiline numberOfLines={2} textAlignVertical="top" />
 
           <Button label="Save changes" onPress={handleSave} isLoading={isSaving} style={styles.modalConfirmButton} />
@@ -731,7 +731,7 @@ function StartUveitisModal({ visible, onClose, onConfirm, isDark }: StartUveitis
           <Text style={[styles.modalSectionLabel, isDark && styles.textPrimaryDark]}>{t('flares.notes')}</Text>
           <TextInput
             style={[styles.notesInput, isDark && styles.notesInputDark]}
-            placeholder="Optional notes..."
+            placeholder={t('common.optional_notes')}
             placeholderTextColor={isDark ? Colors.textSecondaryDark : Colors.textSecondary}
             value={notes}
             onChangeText={setNotes}
@@ -740,7 +740,7 @@ function StartUveitisModal({ visible, onClose, onConfirm, isDark }: StartUveitis
             textAlignVertical="top"
           />
 
-          <Button label="Log episode" onPress={handleConfirm} isLoading={isSaving} style={styles.modalConfirmButton} />
+          <Button label={t('flares.log_episode')} onPress={handleConfirm} isLoading={isSaving} style={styles.modalConfirmButton} />
           <Button label={t('common.cancel')} onPress={onClose} variant="ghost" />
         </View>
       </View>
@@ -861,10 +861,10 @@ export default function FlaresScreen() {
             <>
               <View style={styles.statusRow}>
                 <View style={styles.statusDot} />
-                <Text style={[styles.statusText, isDark && styles.textPrimaryDark]}>No current flare</Text>
+                <Text style={[styles.statusText, isDark && styles.textPrimaryDark]}>{t('flares.no_current_flare')}</Text>
               </View>
               <Button
-                label="Log a flare"
+                label={t('flares.log_a_flare')}
                 onPress={() => setModalVisible(true)}
                 variant="outline"
                 style={styles.logFlareBtn}
@@ -873,10 +873,10 @@ export default function FlaresScreen() {
           )}
 
           <View style={[styles.innerDivider, isDark && styles.innerDividerDark]} />
-          <Text style={[styles.historySubLabel, isDark && styles.textSecDark]}>History</Text>
+          <Text style={[styles.historySubLabel, isDark && styles.textSecDark]}>{t('common.history')}</Text>
 
           {endedFlares.length === 0 ? (
-            <Text style={[styles.emptyStateText, isDark && styles.textSecDark]}>No past flares recorded.</Text>
+            <Text style={[styles.emptyStateText, isDark && styles.textSecDark]}>{t('flares.no_past_flares')}</Text>
           ) : (
             endedFlares.map((flare) => (
               <FlareHistoryItem key={flare.id ?? flare.start_date} flare={flare} isDark={isDark} onEdit={() => setEditingFlare(flare)} />
@@ -887,13 +887,13 @@ export default function FlaresScreen() {
         {/* ── Enthesitis Flare card ─── */}
         {showEnthesitisSection && (
           <View style={[styles.groupCard, isDark && styles.groupCardDark]}>
-            <Text style={[styles.groupCardTitle, isDark && styles.textPrimaryDark]}>Enthesitis Flare</Text>
+            <Text style={[styles.groupCardTitle, isDark && styles.textPrimaryDark]}>{t('flares.section_enthesitis')}</Text>
 
             {activeEnthesitis ? (
               <View style={[styles.activeFlareInner, isDark && styles.activeFlareInnerDark]}>
                 <View style={styles.activeFlareTitleRow}>
                   <View style={styles.activeFlareIndicator} />
-                  <Text style={[styles.activeFlareTitle, { flex: 1 }]}>Active enthesitis flare</Text>
+                  <Text style={[styles.activeFlareTitle, { flex: 1 }]}>{t('flares.active_enthesitis')}</Text>
                   <SeverityBadge severity={activeEnthesitis.severity} isDark={isDark} />
                 </View>
                 <Text style={[styles.activeFlareDate, isDark && styles.textSecDark]}>
@@ -905,10 +905,10 @@ export default function FlaresScreen() {
                   </Text>
                 )}
                 <Button
-                  label="Mark as resolved"
-                  onPress={() => Alert.alert('Resolve flare', 'Mark this enthesitis flare as resolved?', [
-                    { text: 'Cancel', style: 'cancel' },
-                    { text: 'Resolve', style: 'destructive', onPress: () => endEnthesitis() },
+                  label={t('common.mark_resolved')}
+                  onPress={() => Alert.alert(t('flares.resolve_flare_title'), t('flares.resolve_enthesitis'), [
+                    { text: t('common.cancel'), style: 'cancel' },
+                    { text: t('common.resolve'), style: 'destructive', onPress: () => endEnthesitis() },
                   ])}
                   variant="outline"
                   textStyle={{ color: Colors.error }}
@@ -921,12 +921,12 @@ export default function FlaresScreen() {
                   <View style={styles.statusDot} />
                   <Text style={[styles.statusText, isDark && styles.textPrimaryDark]}>No current enthesitis flare</Text>
                 </View>
-                <Button label="Log a flare" onPress={() => setShowEnthesitisModal(true)} variant="outline" style={styles.logFlareBtn} />
+                <Button label={t('flares.log_a_flare')} onPress={() => setShowEnthesitisModal(true)} variant="outline" style={styles.logFlareBtn} />
               </>
             )}
 
             <View style={[styles.innerDivider, isDark && styles.innerDividerDark]} />
-            <Text style={[styles.historySubLabel, isDark && styles.textSecDark]}>History</Text>
+            <Text style={[styles.historySubLabel, isDark && styles.textSecDark]}>{t('common.history')}</Text>
 
             {enthesitisFlares.filter(f => f.end_date !== null).length === 0 ? (
               <Text style={[styles.emptyStateText, isDark && styles.textSecDark]}>No past enthesitis flares recorded.</Text>
@@ -945,7 +945,7 @@ export default function FlaresScreen() {
               <View style={[styles.activeFlareInner, isDark && styles.activeFlareInnerDark]}>
                 <View style={styles.activeFlareTitleRow}>
                   <View style={styles.activeFlareIndicator} />
-                  <Text style={[styles.activeFlareTitle, { flex: 1 }]}>Active peripheral flare</Text>
+                  <Text style={[styles.activeFlareTitle, { flex: 1 }]}>{t('flares.active_peripheral')}</Text>
                   <SeverityBadge severity={activePeripheral.severity} isDark={isDark} />
                 </View>
                 <Text style={[styles.activeFlareDate, isDark && styles.textSecDark]}>
@@ -957,10 +957,10 @@ export default function FlaresScreen() {
                   </Text>
                 )}
                 <Button
-                  label="Mark as resolved"
-                  onPress={() => Alert.alert('Resolve flare', 'Mark this peripheral joint flare as resolved?', [
-                    { text: 'Cancel', style: 'cancel' },
-                    { text: 'Resolve', style: 'destructive', onPress: () => endPeripheral() },
+                  label={t('common.mark_resolved')}
+                  onPress={() => Alert.alert(t('flares.resolve_flare_title'), t('flares.resolve_peripheral'), [
+                    { text: t('common.cancel'), style: 'cancel' },
+                    { text: t('common.resolve'), style: 'destructive', onPress: () => endPeripheral() },
                   ])}
                   variant="outline"
                   textStyle={{ color: Colors.error }}
@@ -973,15 +973,15 @@ export default function FlaresScreen() {
                   <View style={styles.statusDot} />
                   <Text style={[styles.statusText, isDark && styles.textPrimaryDark]}>No current peripheral joint flare</Text>
                 </View>
-                <Button label="Log a flare" onPress={() => setShowPeripheralModal(true)} variant="outline" style={styles.logFlareBtn} />
+                <Button label={t('flares.log_a_flare')} onPress={() => setShowPeripheralModal(true)} variant="outline" style={styles.logFlareBtn} />
               </>
             )}
 
             <View style={[styles.innerDivider, isDark && styles.innerDividerDark]} />
-            <Text style={[styles.historySubLabel, isDark && styles.textSecDark]}>History</Text>
+            <Text style={[styles.historySubLabel, isDark && styles.textSecDark]}>{t('common.history')}</Text>
 
             {peripheralFlares.filter(f => f.end_date !== null).length === 0 ? (
-              <Text style={[styles.emptyStateText, isDark && styles.textSecDark]}>No past peripheral joint flares recorded.</Text>
+              <Text style={[styles.emptyStateText, isDark && styles.textSecDark]}>{t('flares.no_past_peripheral')}</Text>
             ) : peripheralFlares.filter(f => f.end_date !== null).map(f => (
               <FlareHistoryItem key={f.id ?? f.start_date} flare={f} isDark={isDark} onEdit={() => setEditingFlare(f)} />
             ))}
@@ -991,13 +991,13 @@ export default function FlaresScreen() {
         {/* ── Uveitis Flare card — status + history grouped ─── */}
         {showUveitisSection && (
           <View style={[styles.groupCard, isDark && styles.groupCardDark]}>
-            <Text style={[styles.groupCardTitle, isDark && styles.textPrimaryDark]}>Uveitis Flare</Text>
+            <Text style={[styles.groupCardTitle, isDark && styles.textPrimaryDark]}>{t('flares.section_uveitis')}</Text>
 
             {activeUveitis ? (
               <View style={[styles.activeFlareInner, isDark && styles.activeFlareInnerDark]}>
                 <View style={styles.activeFlareTitleRow}>
                   <View style={styles.activeFlareIndicator} />
-                  <Text style={[styles.activeFlareTitle, { flex: 1 }]}>Active uveitis episode</Text>
+                  <Text style={[styles.activeFlareTitle, { flex: 1 }]}>{t('flares.active_uveitis')}</Text>
                   <SeverityBadge severity={activeUveitis.severity} isDark={isDark} />
                 </View>
                 <Text style={[styles.activeFlareDate, isDark && styles.textSecDark]}>
@@ -1009,11 +1009,11 @@ export default function FlaresScreen() {
                   </Text>
                 )}
                 <Button
-                  label="Mark as resolved"
+                  label={t('common.mark_resolved')}
                   onPress={() => {
-                    Alert.alert('Resolve episode', 'Mark this uveitis episode as resolved?', [
-                      { text: 'Cancel', style: 'cancel' },
-                      { text: 'Resolve', onPress: () => endEpisode(activeUveitis.id!) },
+                    Alert.alert(t('flares.resolve_episode_title'), t('flares.resolve_uveitis'), [
+                      { text: t('common.cancel'), style: 'cancel' },
+                      { text: t('common.resolve'), onPress: () => endEpisode(activeUveitis.id!) },
                     ]);
                   }}
                   variant="outline"
@@ -1037,7 +1037,7 @@ export default function FlaresScreen() {
             )}
 
             <View style={[styles.innerDivider, isDark && styles.innerDividerDark]} />
-            <Text style={[styles.historySubLabel, isDark && styles.textSecDark]}>History</Text>
+            <Text style={[styles.historySubLabel, isDark && styles.textSecDark]}>{t('common.history')}</Text>
 
             {uveitisEpisodes.filter(e => e.end_date !== null).length === 0 ? (
               <Text style={[styles.emptyStateText, isDark && styles.textSecDark]}>No past episodes recorded.</Text>
@@ -1055,7 +1055,7 @@ export default function FlaresScreen() {
         onClose={() => setModalVisible(false)}
         onConfirm={async (sev, areas, notes) => { await startFlare(sev, areas, notes); logEvent(Events.FLARE_LOGGED, { type: 'as' }).catch(() => {}); }}
         isDark={isDark}
-        title="Log AS flare"
+        title={t('flares.log_as_title')}
         locationOptions={AS_LOCATIONS}
       />
       <StartFlareModal
@@ -1063,7 +1063,7 @@ export default function FlaresScreen() {
         onClose={() => setShowEnthesitisModal(false)}
         onConfirm={async (sev, areas, notes) => { await startEnthesitis(sev, areas, notes); logEvent(Events.FLARE_LOGGED, { type: 'enthesitis' }).catch(() => {}); }}
         isDark={isDark}
-        title="Log enthesitis flare"
+        title={t('flares.log_enthesitis_title')}
         locationOptions={ENTHESITIS_LOCATIONS}
       />
       <StartFlareModal
@@ -1071,7 +1071,7 @@ export default function FlaresScreen() {
         onClose={() => setShowPeripheralModal(false)}
         onConfirm={async (sev, areas, notes) => { await startPeripheral(sev, areas, notes); logEvent(Events.FLARE_LOGGED, { type: 'peripheral' }).catch(() => {}); }}
         isDark={isDark}
-        title="Log peripheral joint flare"
+        title={t('flares.log_peripheral_title')}
         locationOptions={PERIPHERAL_LOCATIONS}
       />
       <StartUveitisModal

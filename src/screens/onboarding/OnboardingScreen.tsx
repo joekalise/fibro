@@ -742,12 +742,12 @@ export function OnboardingScreen() {
             </View>
 
             <Text style={[styles.welcomeCreator, isDark && styles.timeLabelDark]}>
-              Built by someone with AS, for people with AS.
+              {t('common.built_by')}
             </Text>
           </View>
 
           <Button
-            label="Get started"
+            label={t('common.get_started')}
             onPress={() => { logEvent(Events.ONBOARDING_STARTED).catch(() => {}); setShowWelcome(false); }}
             style={styles.welcomeButton}
           />

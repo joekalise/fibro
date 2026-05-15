@@ -216,14 +216,14 @@ function SpondyScoreCard({
 
           {showBreakdown && breakdown && (
             <View style={[styles.breakdownBox, isDark && styles.breakdownBoxDark]}>
-              <Text style={[styles.breakdownTitle, { color: textSec }]}>Score breakdown</Text>
-              <FactorRow label="Base" value={75} positive={true} />
-              {breakdown.painPenalty > 0 && <FactorRow label="Pain" value={breakdown.painPenalty} positive={false} />}
-              {breakdown.fatiguePenalty > 0 && <FactorRow label="Fatigue" value={breakdown.fatiguePenalty} positive={false} />}
-              {breakdown.activeFlarePenalty > 0 && <FactorRow label="Active flare" value={breakdown.activeFlarePenalty} positive={false} />}
-              {breakdown.consistencyBonus > 0 && <FactorRow label="Logging streak" value={breakdown.consistencyBonus} positive={true} />}
-              {breakdown.moodPoints !== 0 && <FactorRow label="Mood" value={Math.abs(breakdown.moodPoints)} positive={breakdown.moodPoints >= 0} />}
-              {breakdown.medPoints > 0 && <FactorRow label="Medication adherence" value={breakdown.medPoints} positive={true} />}
+              <Text style={[styles.breakdownTitle, { color: textSec }]}>{t('score.breakdown')}</Text>
+              <FactorRow label={t('score.factor_base')} value={75} positive={true} />
+              {breakdown.painPenalty > 0 && <FactorRow label={t('score.factor_pain')} value={breakdown.painPenalty} positive={false} />}
+              {breakdown.fatiguePenalty > 0 && <FactorRow label={t('score.factor_fatigue')} value={breakdown.fatiguePenalty} positive={false} />}
+              {breakdown.activeFlarePenalty > 0 && <FactorRow label={t('score.factor_active_flare')} value={breakdown.activeFlarePenalty} positive={false} />}
+              {breakdown.consistencyBonus > 0 && <FactorRow label={t('score.factor_streak')} value={breakdown.consistencyBonus} positive={true} />}
+              {breakdown.moodPoints !== 0 && <FactorRow label={t('score.factor_mood')} value={Math.abs(breakdown.moodPoints)} positive={breakdown.moodPoints >= 0} />}
+              {breakdown.medPoints > 0 && <FactorRow label={t('score.factor_medication')} value={breakdown.medPoints} positive={true} />}
             </View>
           )}
         </>

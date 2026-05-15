@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/common/Button';
 import { DragSlider } from '@/components/common/DragSlider';
@@ -56,6 +57,7 @@ function localDateString(): string {
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export function ProfileReadyScreen() {
+  const { t } = useTranslation();
   const router = useRouter();
   const { saveProfile, profile } = useProfile();
   const { user } = useAuth();
@@ -207,7 +209,7 @@ export function ProfileReadyScreen() {
         )}
 
         <Button
-          label="Let's go"
+          label={t('common.lets_go')}
           onPress={handleEnterApp}
           isLoading={isSaving}
           style={styles.cta}

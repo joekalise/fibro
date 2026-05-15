@@ -264,7 +264,7 @@ export default function AIChatScreen() {
   // Clear chat handler
   const handleClearChat = useCallback(() => {
     Alert.alert(
-      'Clear conversation history?',
+      t('common.clear_history'),
       undefined,
       [
         { text: 'Cancel', style: 'cancel' },

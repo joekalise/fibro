@@ -460,8 +460,8 @@ function ChatDataCard({ isDark, onPress }: { isDark: boolean; onPress: () => voi
         </View>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
           <InfoButton
-            title="How it works"
-            message="A summary of your data is sent to the AI to generate responses. Your data is never used to train AI models."
+            title={t('insights_info.how_it_works_title')}
+            message={t('insights_info.how_it_works_message')}
             color={textSecondary}
           />
           <Text style={[styles.chatRowArrow, { color: Colors.primary }]}>→</Text>
@@ -788,7 +788,7 @@ export default function InsightsScreen() {
     try {
       const success = await restore();
       if (success) setShowPremiumModal(false);
-      else Alert.alert('', 'No previous purchases found.');
+      else Alert.alert('', t('common.no_purchases'));
     } catch (err) {
       console.error('Restore error:', err);
     } finally {

@@ -335,7 +335,7 @@ function ProfileEditModal({ visible, onClose, profile, onSave, isDark }: Profile
       onClose();
     } catch (err) {
       console.error('ProfileEditModal save error:', err);
-      Alert.alert('Error', 'Failed to save profile. Please try again.');
+      Alert.alert(t('common.error'), t('profile_alerts.error_save_profile'));
     } finally {
       setIsSaving(false);
     }
@@ -482,7 +482,7 @@ function AddMedicationModal({
 
   async function handleSave() {
     if (!name.trim()) {
-      Alert.alert('', 'Please enter a medication name.');
+      Alert.alert('', t('profile_alerts.error_med_name'));
       return;
     }
     setIsSaving(true);
@@ -733,7 +733,7 @@ function LogInjectionModal({ visible, onClose, onSave, defaultMedicationName, is
       });
       onClose();
     } catch (err) {
-      Alert.alert('Error', 'Failed to save injection.');
+      Alert.alert(t('common.error'), t('profile_alerts.error_save_injection'));
     } finally {
       setIsSaving(false);
     }
@@ -942,7 +942,7 @@ export default function ProfileScreen() {
                       await signOut();
                     } catch (err) {
                       console.error('Delete account error:', err);
-                      Alert.alert('', 'Failed to delete data. Please try again.');
+                      Alert.alert('', t('profile_alerts.error_delete_data'));
                     } finally {
                       setIsDeletingAccount(false);
                     }
@@ -1101,7 +1101,7 @@ export default function ProfileScreen() {
     try {
       const success = await restore();
       if (!success) {
-        Alert.alert('', 'No previous purchases found.');
+        Alert.alert('', t('common.no_purchases'));
       }
     } catch (err) {
       console.error('Restore error:', err);
@@ -1124,8 +1124,8 @@ export default function ProfileScreen() {
       async (newEmail) => {
         if (!newEmail?.trim()) return;
         const { error } = await supabase.auth.updateUser({ email: newEmail.trim() });
-        if (error) Alert.alert('Error', 'Failed to update email.');
-        else Alert.alert('', 'Check your new inbox to confirm the change.');
+        if (error) Alert.alert(t('common.error'), t('profile_alerts.error_update_email'));
+        else Alert.alert('', t('profile_alerts.confirm_email_change'));
       },
       'plain-text',
       user?.email ?? ''
@@ -1138,12 +1138,12 @@ export default function ProfileScreen() {
       'At least 8 characters.',
       async (newPassword) => {
         if (!newPassword || newPassword.length < 8) {
-          Alert.alert('', 'Password must be at least 8 characters.');
+          Alert.alert('', t('profile_alerts.error_password_short'));
           return;
         }
         const { error } = await supabase.auth.updateUser({ password: newPassword });
-        if (error) Alert.alert('Error', 'Failed to update password.');
-        else Alert.alert('', 'Password updated.');
+        if (error) Alert.alert(t('common.error'), t('profile_alerts.error_update_password'));
+        else Alert.alert('', t('profile_alerts.password_updated'));
       },
       'secure-text'
     );
@@ -1187,12 +1187,12 @@ export default function ProfileScreen() {
               onSubmitEditing={async () => {
                 setEditingName(false);
                 try { await saveProfile({ preferred_name: nameValue.trim() || null }); }
-                catch { Alert.alert('Error', 'Could not save name. Please try again.'); }
+                catch { Alert.alert(t('common.error'), t('profile_alerts.error_save_name')); }
               }}
               onBlur={async () => {
                 setEditingName(false);
                 try { await saveProfile({ preferred_name: nameValue.trim() || null }); }
-                catch { Alert.alert('Error', 'Could not save name. Please try again.'); }
+                catch { Alert.alert(t('common.error'), t('profile_alerts.error_save_name')); }
               }}
             />
           ) : (
@@ -1609,8 +1609,8 @@ export default function ProfileScreen() {
               {t('profile.share_report_title')}
             </Text>
             <InfoButton
-              title="What's in the report"
-              message="A PDF covering all your daily logs, flares, stiffness trends, medication adherence, and BASDAI scores. Set a date range to cover just since your last appointment, then share it with your rheumatologist."
+              title={t('profile_alerts.report_info_title')}
+              message={t('profile_alerts.report_info_message')}
               color={textSecondary}
             />
           </View>
@@ -1711,7 +1711,7 @@ export default function ProfileScreen() {
           />
           <View style={[styles.innerDivider, { backgroundColor: isDark ? Colors.borderDark : Colors.border }]} />
           <Button
-            label={isDeletingAccount ? 'Deleting…' : 'Delete all my data'}
+            label={isDeletingAccount ? t('common.deleting') : t('profile_alerts.delete_data_button')}
             onPress={handleDeleteAccount}
             variant="outline"
             isLoading={isDeletingAccount}
