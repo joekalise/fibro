@@ -15,7 +15,7 @@ import {
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Svg, { Polyline, Line, Text as SvgText, Circle } from 'react-native-svg';
 import { useTranslation } from 'react-i18next';
-import { useRouter } from 'expo-router';
+import { useRouter, useFocusEffect } from 'expo-router';
 
 import { Colors } from '@/constants/colors';
 import { FontSize, Spacing, BorderRadius } from '@/constants/theme';
@@ -23,6 +23,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/contexts/ProfileContext';
 import { getDailyLogs, getFlares, getStreak } from '@/services/database';
 import { generateWeeklyInsight, WeeklyInsight } from '@/services/aiInsights';
+import { getAiConsent } from '@/services/aiConsent';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useHealthHistory } from '@/hooks/useHealthHistory';
 import { useBasdai } from '@/hooks/useBasdai';
@@ -371,6 +372,9 @@ function AIInsightCard({ logs, flares, profile, healthHistory, isDark }: AIInsig
         </Text>
       )}
 
+      <Text style={[styles.aiDisclaimer, { color: textSecondary }]}>
+        {t('ai_chat.disclaimer')}
+      </Text>
     </View>
   );
 }
@@ -435,6 +439,27 @@ function flareDays(flare: Flare): number {
   const end = flare.end_date ? new Date(flare.end_date) : new Date();
   const diff = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
   return Math.max(1, diff);
+}
+
+// ─── AiOffCard ────────────────────────────────────────────────────────────────
+
+function AiOffCard({ isDark, onPress }: { isDark: boolean; onPress: () => void }) {
+  const cardBg = isDark ? Colors.surfaceDark : Colors.surface;
+  const cardBorder = isDark ? Colors.borderDark : Colors.border;
+  const textPrimary = isDark ? Colors.textPrimaryDark : Colors.textPrimary;
+  const textSecondary = isDark ? Colors.textSecondaryDark : Colors.textSecondary;
+
+  return (
+    <View style={[styles.aiCard, { backgroundColor: cardBg, borderColor: cardBorder }]}>
+      <Text style={[styles.cardTitle, { color: textPrimary, marginBottom: 6 }]}>AI insights are off</Text>
+      <Text style={[styles.insightSummary, { color: textSecondary }]}>
+        To use AI-powered insights and chat, enable AI personalisation in your Profile settings.
+      </Text>
+      <TouchableOpacity onPress={onPress} activeOpacity={0.8} style={[styles.refreshBtn, { borderColor: Colors.primary, marginTop: 12 }]}>
+        <Text style={styles.refreshBtnText}>Go to Profile</Text>
+      </TouchableOpacity>
+    </View>
+  );
 }
 
 // ─── ChatDataCard — compact list-item style ───────────────────────────────────
@@ -705,6 +730,11 @@ export default function InsightsScreen() {
   const { latestScore: latestBasdaiScore, daysSinceLastScore: daysSinceLastBasdai, saveScore: saveBasdaiScore } = useBasdai();
   const [showBasdai, setShowBasdai] = useState(false);
 
+  const [aiConsented, setAiConsented] = useState<boolean | null>(null);
+  useFocusEffect(useCallback(() => {
+    getAiConsent().then(setAiConsented);
+  }, []));
+
   const [period, setPeriod] = useState<Period>(30);
   const [logs, setLogs] = useState<DailyLog[]>([]);
   const [allLogs, setAllLogs] = useState<DailyLog[]>([]); // 28-day for AI
@@ -864,18 +894,20 @@ export default function InsightsScreen() {
         {/* ── AI Insight section — above period selector ── */}
         {!subLoading && (
           isSubscribed ? (
-            <AIInsightCard logs={allLogs} flares={flares} profile={profile} healthHistory={healthHistory} isDark={isDark} />
+            aiConsented === true ? (
+              <>
+                <AIInsightCard logs={allLogs} flares={flares} profile={profile} healthHistory={healthHistory} isDark={isDark} />
+                <ChatDataCard isDark={isDark} onPress={() => router.push('/ai-chat')} />
+              </>
+            ) : aiConsented !== null ? (
+              <AiOffCard isDark={isDark} onPress={() => router.push('/(tabs)/profile')} />
+            ) : null
           ) : hasEnoughDataForTrialPrompt ? (
             <TrialPromptCard
               isDark={isDark}
               onStartTrial={() => setShowPremiumModal(true)}
             />
           ) : null
-        )}
-
-        {/* Chat with your data — compact row directly under weekly insight */}
-        {!subLoading && isSubscribed && (
-          <ChatDataCard isDark={isDark} onPress={() => router.push('/ai-chat')} />
         )}
 
         {/* Section divider before period selector */}
@@ -1358,6 +1390,12 @@ const styles = StyleSheet.create({
   insightTimestamp: {
     fontSize: FontSize.xs,
     marginBottom: Spacing.xs,
+  },
+  aiDisclaimer: {
+    fontSize: FontSize.xs,
+    lineHeight: 16,
+    marginTop: Spacing.sm,
+    opacity: 0.65,
   },
   insightSummary: {
     fontSize: FontSize.sm,

@@ -210,14 +210,14 @@ export function PremiumModal({
           </View>
 
           {/* Pricing */}
-          {monthlyPrice && (
+          {monthlyPrice && !trialDays && (
             <Text style={[styles.priceAmount, { color: textPrimary }]}>
               {monthlyPrice} / month
             </Text>
           )}
           {trialDays && (
             <Text style={[styles.trialLabel, { color: textSecondary }]}>
-              {t('subscription.trial_sublabel_days', { days: trialDays })}
+              {t('subscription.trial_sublabel_days', { days: trialDays, price: monthlyPrice })}
             </Text>
           )}
           <Text style={[styles.pricingNote, { color: textSecondary }]}>

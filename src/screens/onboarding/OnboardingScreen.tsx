@@ -10,7 +10,9 @@ import {
   KeyboardAvoidingView,
   Platform,
   TouchableOpacity,
+  Linking,
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useTranslation } from 'react-i18next';
 import { useRouter } from 'expo-router';
@@ -85,6 +87,8 @@ export function OnboardingScreen() {
   const [data, setData] = useState<OnboardingData>(defaultOnboardingData);
   const [isCompleting, setIsCompleting] = useState(false);
   const [completingMessage, setCompletingMessage] = useState('');
+  const [showConsent, setShowConsent] = useState(false);
+  const [aiConsented, setAiConsented] = useState<boolean | null>(null);
   const [showPreview, setShowPreview] = useState(false);
   const [previewStep, setPreviewStep] = useState(0);
   const PREVIEW_TOTAL = 3;
@@ -141,9 +145,17 @@ export function OnboardingScreen() {
     };
 
     try {
-      welcomeContent = await generateWelcomeContent(data);
-    } catch (err) {
-      console.warn('Claude API failed, using fallback content:', err);
+      await AsyncStorage.setItem('@spondy_ai_consent', aiConsented ? 'true' : 'false');
+    } catch {
+      // non-fatal
+    }
+
+    if (aiConsented) {
+      try {
+        welcomeContent = await generateWelcomeContent(data);
+      } catch (err) {
+        console.warn('Claude API failed, using fallback content:', err);
+      }
     }
 
     try {
@@ -187,14 +199,29 @@ export function OnboardingScreen() {
     if (currentStep < TOTAL_STEPS) {
       setCurrentStep(s => s + 1);
     } else {
-      // Show feature previews before completing
       setShowPreview(true);
       setPreviewStep(0);
     }
   };
 
+  const handleConsentAgree = () => {
+    setAiConsented(true);
+    setShowConsent(false);
+    handleComplete();
+  };
+
+  const handleConsentDecline = () => {
+    setAiConsented(false);
+    setShowConsent(false);
+    handleComplete();
+  };
+
   const handleBack = () => {
-    if (showPreview) {
+    if (showConsent) {
+      setShowConsent(false);
+      setShowPreview(true);
+      setPreviewStep(PREVIEW_TOTAL - 1);
+    } else if (showPreview) {
       if (previewStep > 0) {
         setPreviewStep(s => s - 1);
       } else {
@@ -209,7 +236,8 @@ export function OnboardingScreen() {
     if (previewStep < PREVIEW_TOTAL - 1) {
       setPreviewStep(s => s + 1);
     } else {
-      handleComplete();
+      setShowConsent(true);
+      setShowPreview(false);
     }
   };
 
@@ -667,6 +695,71 @@ export function OnboardingScreen() {
     },
   ];
 
+  if (showConsent) {
+    const bg = isDark ? Colors.backgroundDark : Colors.background;
+    const textPrimary = isDark ? Colors.textPrimaryDark : Colors.textPrimary;
+    const textSecondary = isDark ? Colors.textSecondaryDark : Colors.textSecondary;
+    const cardBg = isDark ? Colors.surfaceDark : Colors.surface;
+    const cardBorder = isDark ? Colors.borderDark : Colors.border;
+
+    return (
+      <SafeAreaView style={[styles.screen, { backgroundColor: bg }]}>
+        <ScrollView contentContainerStyle={[styles.scrollContent, { flexGrow: 1 }]} showsVerticalScrollIndicator={false}>
+          <View style={styles.consentHeader}>
+            <Text style={styles.consentEmoji}>🤖</Text>
+            <Text style={[styles.consentTitle, { color: textPrimary }]}>
+              {t('onboarding.ai_consent.title')}
+            </Text>
+            <Text style={[styles.consentSubtitle, { color: textSecondary }]}>
+              {t('onboarding.ai_consent.subtitle')}
+            </Text>
+          </View>
+
+          <View style={[styles.consentCard, { backgroundColor: cardBg, borderColor: cardBorder }]}>
+            <Text style={[styles.consentSectionTitle, { color: textPrimary }]}>
+              {t('onboarding.ai_consent.what_shared_title')}
+            </Text>
+            {(['what_shared_1', 'what_shared_2', 'what_shared_3'] as const).map(key => (
+              <View key={key} style={styles.consentBulletRow}>
+                <Text style={[styles.consentBullet, { color: Colors.primary }]}>•</Text>
+                <Text style={[styles.consentBulletText, { color: textSecondary }]}>
+                  {t(`onboarding.ai_consent.${key}`)}
+                </Text>
+              </View>
+            ))}
+
+            <View style={[styles.consentDivider, { backgroundColor: cardBorder }]} />
+
+            <Text style={[styles.consentSectionTitle, { color: textPrimary }]}>
+              {t('onboarding.ai_consent.how_used_title')}
+            </Text>
+            <Text style={[styles.consentBodyText, { color: textSecondary }]}>
+              {t('onboarding.ai_consent.how_used_body')}
+            </Text>
+
+            <TouchableOpacity onPress={() => Linking.openURL('https://gist.github.com/joekalise/fb689414dba7ade9f6d7383ccad9cf1f').catch(() => {})}>
+              <Text style={[styles.consentPrivacyLink, { color: Colors.primary }]}>
+                View Privacy Policy
+              </Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.consentActions}>
+            <Button
+              label={t('onboarding.ai_consent.agree_cta')}
+              onPress={handleConsentAgree}
+            />
+            <TouchableOpacity onPress={handleConsentDecline} style={styles.consentDeclineBtn} activeOpacity={0.7}>
+              <Text style={[styles.consentDeclineText, { color: textSecondary }]}>
+                {t('onboarding.ai_consent.decline_cta')}
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </ScrollView>
+      </SafeAreaView>
+    );
+  }
+
   if (showPreview) {
     const slide = PREVIEW_SLIDES[previewStep];
     return (
@@ -857,6 +950,78 @@ const styles = StyleSheet.create({
   },
   timeLabelDark: {
     color: Colors.textSecondaryDark,
+  },
+
+  // AI consent screen
+  consentHeader: {
+    alignItems: 'center',
+    paddingVertical: Spacing.xl,
+  },
+  consentEmoji: {
+    fontSize: 48,
+    marginBottom: Spacing.md,
+  },
+  consentTitle: {
+    fontSize: FontSize.xxl,
+    fontWeight: '800',
+    textAlign: 'center',
+    marginBottom: Spacing.sm,
+  },
+  consentSubtitle: {
+    fontSize: FontSize.sm,
+    textAlign: 'center',
+    lineHeight: 22,
+    paddingHorizontal: Spacing.md,
+  },
+  consentCard: {
+    borderWidth: 1,
+    borderRadius: BorderRadius.lg,
+    padding: Spacing.lg,
+    marginBottom: Spacing.xl,
+    gap: Spacing.sm,
+  },
+  consentSectionTitle: {
+    fontSize: FontSize.sm,
+    fontWeight: '700',
+    marginBottom: 2,
+  },
+  consentBulletRow: {
+    flexDirection: 'row',
+    gap: Spacing.sm,
+    alignItems: 'flex-start',
+  },
+  consentBullet: {
+    fontSize: FontSize.sm,
+    lineHeight: 20,
+  },
+  consentBulletText: {
+    fontSize: FontSize.sm,
+    lineHeight: 20,
+    flex: 1,
+  },
+  consentDivider: {
+    height: StyleSheet.hairlineWidth,
+    marginVertical: Spacing.sm,
+  },
+  consentBodyText: {
+    fontSize: FontSize.sm,
+    lineHeight: 20,
+  },
+  consentPrivacyLink: {
+    fontSize: FontSize.sm,
+    textDecorationLine: 'underline',
+    marginTop: Spacing.xs,
+  },
+  consentActions: {
+    gap: Spacing.md,
+  },
+  consentDeclineBtn: {
+    alignItems: 'center',
+    paddingVertical: Spacing.sm,
+  },
+  consentDeclineText: {
+    fontSize: FontSize.sm,
+    fontWeight: '600',
   },
   timePickerContainer: {
     alignItems: 'center',

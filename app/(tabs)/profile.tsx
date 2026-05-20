@@ -39,6 +39,7 @@ import { useBiologicInjections, BIOLOGIC_INTERVALS } from '@/hooks/useBiologicIn
 import { scheduleDailyCheckIn, cancelNotification } from '@/services/notifications';
 import { PremiumModal } from '@/components/common/PremiumModal';
 import { logEvent, Events } from '@/services/analytics';
+import { getAiConsent, setAiConsent } from '@/services/aiConsent';
 import { generateAndShareReport } from '@/services/pdfExport';
 import { getDailyLogs, getUveitisEpisodes, getBasdaiScores, deleteAllUserData } from '@/services/database';
 import {
@@ -873,6 +874,33 @@ export default function ProfileScreen() {
   const [aiContext, setAiContext] = useState(profile?.ai_context ?? '');
   const [isSavingAiContext, setIsSavingAiContext] = useState(false);
   const [editingAiContext, setEditingAiContext] = useState(false);
+
+  const [aiConsented, setAiConsentedState] = useState<boolean>(false);
+  useEffect(() => {
+    getAiConsent().then((val) => setAiConsentedState(val === true));
+  }, []);
+
+  const handleToggleAiConsent = useCallback((value: boolean) => {
+    if (value) {
+      Alert.alert(
+        'Enable AI personalisation',
+        'This allows Spondy to share your health data (symptom logs, profile, Apple Health metrics) with Claude AI (Anthropic, Inc.) to generate insights. Anthropic does not use your data to train AI models.',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'I agree',
+            onPress: () => {
+              setAiConsent(true);
+              setAiConsentedState(true);
+            },
+          },
+        ]
+      );
+    } else {
+      setAiConsent(false);
+      setAiConsentedState(false);
+    }
+  }, []);
   const [showAddMed, setShowAddMed] = useState(false);
   const [isGeneratingReport, setIsGeneratingReport] = useState(false);
   const [reportFromDate, setReportFromDate] = useState<string>('');
@@ -1725,13 +1753,60 @@ export default function ProfileScreen() {
 
         {/* Data & AI Privacy */}
         <View style={[styles.aiPrivacyBox, { backgroundColor: cardBg, borderColor: cardBorder }]}>
-          <Text style={[styles.aiPrivacyTitle, { color: textPrimary }]}>{t('profile_privacy.ai_title')}</Text>
-          <Text style={[styles.aiPrivacyBody, { color: textSecondary }]}>
+          <View style={styles.notifRow}>
+            <View style={styles.notifInfo}>
+              <Text style={[styles.aiPrivacyTitle, { color: textPrimary, marginBottom: 2 }]}>
+                AI personalisation
+              </Text>
+              <Text style={[styles.notifTime, { color: textSecondary }]}>
+                Share health data with Claude AI (Anthropic)
+              </Text>
+            </View>
+            <Switch
+              value={aiConsented}
+              onValueChange={handleToggleAiConsent}
+              trackColor={{ true: Colors.primary, false: isDark ? Colors.borderDark : Colors.border }}
+              thumbColor="#FFFFFF"
+            />
+          </View>
+          <Text style={[styles.aiPrivacyBody, { color: textSecondary, marginTop: Spacing.sm }]}>
             {t('profile_privacy.ai_body_1')}
           </Text>
           <Text style={[styles.aiPrivacyBody, { color: textSecondary, marginTop: Spacing.xs }]}>
             {t('profile_privacy.ai_body_2')}
           </Text>
+        </View>
+
+        {/* Medical Sources & Disclaimer */}
+        <View style={[styles.aiPrivacyBox, { backgroundColor: cardBg, borderColor: cardBorder }]}>
+          <Text style={[styles.aiPrivacyTitle, { color: textPrimary }]}>{t('profile_privacy.sources_title')}</Text>
+          <Text style={[styles.aiPrivacyBody, { color: textSecondary }]}>
+            {t('profile_privacy.sources_disclaimer')}
+          </Text>
+          <Text style={[styles.aiPrivacyBody, { color: textSecondary, marginTop: Spacing.sm, fontWeight: '600' }]}>
+            Further reading:
+          </Text>
+          <TouchableOpacity
+            onPress={() => Linking.openURL('https://nass.co.uk')}
+            activeOpacity={0.7}
+            style={styles.sourceLink}
+          >
+            <Text style={[styles.sourceLinkText, { color: Colors.primary }]}>{t('profile_privacy.sources_nass')}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => Linking.openURL('https://spondylitis.org')}
+            activeOpacity={0.7}
+            style={styles.sourceLink}
+          >
+            <Text style={[styles.sourceLinkText, { color: Colors.primary }]}>{t('profile_privacy.sources_saa')}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => Linking.openURL('https://www.basdai.com')}
+            activeOpacity={0.7}
+            style={styles.sourceLink}
+          >
+            <Text style={[styles.sourceLinkText, { color: Colors.primary }]}>{t('profile_privacy.sources_basdai')}</Text>
+          </TouchableOpacity>
         </View>
 
         {/* Privacy policy + version */}
@@ -2199,6 +2274,14 @@ const styles = StyleSheet.create({
   aiPrivacyBody: {
     fontSize: FontSize.xs,
     lineHeight: 18,
+  },
+  sourceLink: {
+    marginTop: Spacing.xs,
+  },
+  sourceLinkText: {
+    fontSize: FontSize.xs,
+    lineHeight: 18,
+    textDecorationLine: 'underline',
   },
   version: {
     fontSize: FontSize.xs,

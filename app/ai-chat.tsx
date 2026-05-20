@@ -26,6 +26,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/contexts/ProfileContext';
 import { useHealthHistory } from '@/hooks/useHealthHistory';
 import { sendChatMessage } from '@/services/aiInsights';
+import { getAiConsent } from '@/services/aiConsent';
 import { getDailyLogs } from '@/services/database';
 import { logEvent, Events } from '@/services/analytics';
 
@@ -234,6 +235,11 @@ export default function AIChatScreen() {
     content: t('ai_chat.greeting'),
   };
 
+  const [aiConsented, setAiConsented] = useState<boolean | null>(null);
+  useEffect(() => {
+    getAiConsent().then(setAiConsented);
+  }, [user]);
+
   const [messages, setMessages] = useState<Message[]>([initialGreeting]);
   const [inputText, setInputText] = useState('');
   const [isSending, setIsSending] = useState(false);
@@ -410,6 +416,20 @@ export default function AIChatScreen() {
 
       {!isSubscribed ? (
         <LockedState isDark={isDark} onUpgrade={purchase} />
+      ) : aiConsented !== true ? (
+        <View style={[styles.lockedContainer, { backgroundColor: bg }]}>
+          <Text style={[styles.lockedTitle, { color: textPrimary }]}>AI chat is off</Text>
+          <Text style={[styles.lockedBody, { color: textSecondary }]}>
+            Enable AI personalisation in Profile to use this feature. Your data stays yours — we just need your permission first.
+          </Text>
+          <TouchableOpacity
+            onPress={() => { router.back(); router.push('/(tabs)/profile'); }}
+            activeOpacity={0.8}
+            style={styles.upgradeBtn}
+          >
+            <Text style={styles.upgradeBtnText}>Go to Profile</Text>
+          </TouchableOpacity>
+        </View>
       ) : (
         <KeyboardAvoidingView
           style={styles.flex}
