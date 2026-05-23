@@ -62,6 +62,7 @@ module.exports = {
         },
       ],
       '@react-native-community/datetimepicker',
+      '@react-native-firebase/app',
       'expo-updates',
     ],
     updates: {
