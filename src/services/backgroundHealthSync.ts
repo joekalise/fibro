@@ -1,3 +1,4 @@
+import { Platform } from 'react-native';
 import * as BackgroundFetch from 'expo-background-fetch';
 import * as TaskManager from 'expo-task-manager';
 import { supabase } from './supabase';
@@ -39,6 +40,7 @@ TaskManager.defineTask(TASK_NAME, async () => {
 });
 
 export async function registerBackgroundHealthSync(): Promise<void> {
+  if (Platform.OS !== 'ios') return;
   try {
     const status = await BackgroundFetch.getStatusAsync();
     if (
@@ -62,6 +64,7 @@ export async function registerBackgroundHealthSync(): Promise<void> {
 }
 
 export async function triggerHealthSyncNow(userId: string): Promise<void> {
+  if (Platform.OS !== 'ios') return;
   const connected = await isHealthConnected();
   if (!connected) return;
 

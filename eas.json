@@ -29,6 +29,19 @@
         "EXPO_PUBLIC_REVENUECAT_IOS_KEY": "appl_FDnYALlJtpZOVLglvgPEmWBxlHx",
         "EXPO_PUBLIC_REVENUECAT_ANDROID_KEY": "test_cmkTTrSkBGUWhtFodQGnqIwKCMo"
       }
+    },
+    "production-android": {
+      "autoIncrement": true,
+      "android": {
+        "image": "latest",
+        "buildType": "aab"
+      },
+      "channel": "production",
+      "env": {
+        "EAS_BUILD_PLATFORM": "android",
+        "EXPO_PUBLIC_REVENUECAT_IOS_KEY": "appl_FDnYALlJtpZOVLglvgPEmWBxlHx",
+        "EXPO_PUBLIC_REVENUECAT_ANDROID_KEY": "test_cmkTTrSkBGUWhtFodQGnqIwKCMo"
+      }
     }
   },
   "submit": {
