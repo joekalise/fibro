@@ -11,7 +11,7 @@ export function configureRevenueCat(): void {
   const apiKey = Platform.OS === 'ios' ? IOS_KEY : ANDROID_KEY;
   if (!apiKey) return;
   try {
-    if (__DEV__) Purchases.setLogLevel(LOG_LEVEL.DEBUG);
+    Purchases.setLogLevel(LOG_LEVEL.DEBUG);
     Purchases.configure({ apiKey });
     _configureError = null;
   } catch (e) {
@@ -57,14 +57,14 @@ export async function getSubscriptionStatus(): Promise<{
 }
 
 export async function purchasePremium(): Promise<boolean> {
-  if (_configureError) throw new Error(`RevenueCat setup error: ${_configureError}`);
+  if (_configureError) throw new Error(`RC configure error: ${_configureError}`);
   try {
     const offerings = await Purchases.getOfferings();
     const currentOffering = offerings.current;
-    if (!currentOffering) throw new Error('RC: no current offering');
+    if (!currentOffering) throw new Error(`RC: no current offering (all: ${JSON.stringify(Object.keys(offerings.all))})`);
 
     const monthlyPackage = currentOffering.monthly;
-    if (!monthlyPackage) throw new Error('RC: no monthly package');
+    if (!monthlyPackage) throw new Error(`RC: no monthly package (packages: ${JSON.stringify(currentOffering.availablePackages.map(p => p.identifier))})`);
 
     await Purchases.purchasePackage(monthlyPackage);
     return true;
