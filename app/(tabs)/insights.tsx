@@ -3,7 +3,6 @@ import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   ScrollView,
   TouchableOpacity,
   useColorScheme,
@@ -12,6 +11,7 @@ import {
   Modal,
   Alert,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Svg, { Polyline, Line, Text as SvgText, Circle } from 'react-native-svg';
 import { useTranslation } from 'react-i18next';
@@ -740,6 +740,7 @@ export default function InsightsScreen() {
   const [logs, setLogs] = useState<DailyLog[]>([]);
   const [allLogs, setAllLogs] = useState<DailyLog[]>([]); // 28-day for AI
   const [flares, setFlares] = useState<Flare[]>([]);
+  const [allFlares, setAllFlares] = useState<Flare[]>([]); // unfiltered — for AI context
   const [streak, setStreak] = useState(0);
   const [totalLogCount, setTotalLogCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
@@ -751,7 +752,7 @@ export default function InsightsScreen() {
     }
     setIsLoading(true);
     try {
-      const [periodLogs, logs30, allLogs180, allFlares, currentStreak] = await Promise.all([
+      const [periodLogs, logs30, allLogs180, flaresResult, currentStreak] = await Promise.all([
         getDailyLogs(user.id, period),
         getDailyLogs(user.id, 30),
         getDailyLogs(user.id, 180),
@@ -761,11 +762,12 @@ export default function InsightsScreen() {
       setLogs(periodLogs);
       setAllLogs(logs30);
       setTotalLogCount(allLogs180.length);
+      setAllFlares(flaresResult);
 
       const since = new Date();
       since.setDate(since.getDate() - period);
       const sinceStr = since.toISOString().split('T')[0];
-      setFlares(allFlares.filter((f) => f.start_date >= sinceStr));
+      setFlares(flaresResult.filter((f) => f.start_date >= sinceStr));
       setStreak(currentStreak);
     } catch (err) {
       console.error('InsightsScreen load error:', err);
@@ -897,7 +899,7 @@ export default function InsightsScreen() {
           isSubscribed ? (
             aiConsented === true ? (
               <>
-                <AIInsightCard logs={allLogs} flares={flares} profile={profile} healthHistory={healthHistory} isDark={isDark} />
+                <AIInsightCard logs={allLogs} flares={allFlares} profile={profile} healthHistory={healthHistory} isDark={isDark} />
                 <ChatDataCard isDark={isDark} onPress={() => router.push('/ai-chat')} />
               </>
             ) : aiConsented !== null ? (

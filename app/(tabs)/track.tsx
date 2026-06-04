@@ -4,7 +4,6 @@ import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   ScrollView,
   TextInput,
   TouchableOpacity,
@@ -13,6 +12,7 @@ import {
   Modal,
   Switch,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { DragSlider } from '@/components/common/DragSlider';
 import { useTranslation } from 'react-i18next';
 import { Colors } from '@/constants/colors';

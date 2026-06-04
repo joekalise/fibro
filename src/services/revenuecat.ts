@@ -1,15 +1,15 @@
 import Purchases, { LOG_LEVEL } from 'react-native-purchases';
 import { Platform } from 'react-native';
 
-const IOS_KEY = 'appl_FDnYALlJtpZOVLglvgPEmWBxlHx';
-const ANDROID_KEY = 'test_cmkTTrSkBGUWhtFodQGnqIwKCMo';
+const IOS_KEY = process.env.EXPO_PUBLIC_REVENUECAT_IOS_KEY ?? 'appl_FDnYALlJtpZOVLglvgPEmWBxlHx';
+const ANDROID_KEY = process.env.EXPO_PUBLIC_REVENUECAT_ANDROID_KEY ?? '';
 
 let _configureError: string | null = null;
 
 export function configureRevenueCat(): void {
   if (__DEV__) return; // dev builds mock subscription
   const apiKey = Platform.OS === 'ios' ? IOS_KEY : ANDROID_KEY;
-  if (apiKey.startsWith('test_')) return;
+  if (!apiKey) return;
   try {
     if (__DEV__) Purchases.setLogLevel(LOG_LEVEL.DEBUG);
     Purchases.configure({ apiKey });

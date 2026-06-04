@@ -33,36 +33,41 @@ export function useHealthData(): UseHealthDataResult {
     let cancelled = false;
 
     async function init() {
-      const available = await isHealthKitAvailable();
-      if (cancelled) return;
-      setIsAvailable(available);
-
-      const connected = await isHealthConnected();
-      if (cancelled) return;
-      setIsConnected(connected);
-
-      if (!available || !connected || !user) return;
-
-      const today = new Date().toISOString().split('T')[0];
-
-      // Fast path: load from Supabase first
+      setIsLoading(true);
       try {
-        const cached = await getTodayHealthData(user.id, today);
-        if (cached && !cancelled) setTodayData(cached);
-      } catch {}
-
-      // Fresh path: pull from HealthKit then persist
-      try {
-        const fresh = await fetchTodayHealthData(user.id, today);
+        const available = await isHealthKitAvailable();
         if (cancelled) return;
-        const hasData = Object.entries(fresh).some(
-          ([k, v]) => k !== 'user_id' && k !== 'date' && v !== null
-        );
-        if (hasData) {
-          setTodayData(fresh);
-          await saveHealthData(fresh as Omit<HealthData, 'id'>);
-        }
-      } catch {}
+        setIsAvailable(available);
+
+        const connected = await isHealthConnected();
+        if (cancelled) return;
+        setIsConnected(connected);
+
+        if (!available || !connected || !user) return;
+
+        const today = new Date().toISOString().split('T')[0];
+
+        // Fast path: load from Supabase first
+        try {
+          const cached = await getTodayHealthData(user.id, today);
+          if (cached && !cancelled) setTodayData(cached);
+        } catch {}
+
+        // Fresh path: pull from HealthKit then persist
+        try {
+          const fresh = await fetchTodayHealthData(user.id, today);
+          if (cancelled) return;
+          const hasData = Object.entries(fresh).some(
+            ([k, v]) => k !== 'user_id' && k !== 'date' && v !== null
+          );
+          if (hasData) {
+            setTodayData(fresh);
+            await saveHealthData(fresh as Omit<HealthData, 'id'>);
+          }
+        } catch {}
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
     }
 
     init();

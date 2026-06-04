@@ -30,7 +30,7 @@ import { useProfile } from '@/contexts/ProfileContext';
 import { useAuth } from '@/contexts/AuthContext';
 
 import { InfoButton } from '@/components/common/InfoButton';
-import { requestNotificationPermissions } from '@/services/notifications';
+import { requestNotificationPermissions, scheduleDailyCheckIn } from '@/services/notifications';
 import {
   OnboardingData,
   AgeRange,
@@ -194,7 +194,9 @@ export function OnboardingScreen() {
 
   const handleNext = () => {
     if (currentStep === 11) {
-      requestNotificationPermissions().catch(() => {});
+      requestNotificationPermissions().then((granted) => {
+        if (granted) scheduleDailyCheckIn(data.notification_time).catch(() => {});
+      }).catch(() => {});
     }
     if (currentStep < TOTAL_STEPS) {
       setCurrentStep(s => s + 1);
