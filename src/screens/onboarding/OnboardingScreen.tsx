@@ -4,7 +4,6 @@ import {
   View,
   ScrollView,
   StyleSheet,
-  SafeAreaView,
   Text,
   useColorScheme,
   KeyboardAvoidingView,
@@ -12,6 +11,7 @@ import {
   TouchableOpacity,
   Linking,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { useTranslation } from 'react-i18next';

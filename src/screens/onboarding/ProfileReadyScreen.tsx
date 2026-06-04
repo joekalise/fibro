@@ -4,10 +4,11 @@ import {
   Text,
   ScrollView,
   StyleSheet,
-  SafeAreaView,
+  Alert,
   TouchableOpacity,
   useColorScheme,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
@@ -124,7 +125,9 @@ export function ProfileReadyScreen() {
       await Promise.all(tasks);
       logEvent(Events.ONBOARDING_COMPLETE).catch(() => {});
     } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
       console.error('ProfileReadyScreen save error:', err);
+      Alert.alert('Save error (debug)', msg);
     } finally {
       setIsSaving(false);
     }
