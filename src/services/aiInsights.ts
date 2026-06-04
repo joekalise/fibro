@@ -6,9 +6,22 @@ export interface WeeklyInsight {
   points: Array<{ title: string; detail: string }>;
 }
 
+const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL!;
+const SUPABASE_ANON_KEY = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY!;
+
 async function callClaude(body: object): Promise<string> {
-  const { data, error } = await supabase.functions.invoke('claude-proxy', { body });
-  if (error) throw new Error(`Claude proxy error: ${error.message}`);
+  const { data: { session } } = await supabase.auth.getSession();
+  const response = await fetch(`${SUPABASE_URL}/functions/v1/claude-proxy`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${session?.access_token ?? SUPABASE_ANON_KEY}`,
+      'apikey': SUPABASE_ANON_KEY,
+    },
+    body: JSON.stringify(body),
+  });
+  if (!response.ok) throw new Error(`Claude proxy error: ${response.status}`);
+  const data = await response.json();
   if (!data?.text) throw new Error('No text in Claude proxy response');
   return data.text;
 }
