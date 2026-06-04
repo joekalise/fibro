@@ -127,7 +127,10 @@ export function OnboardingScreen() {
   }
 
   const handleComplete = async () => {
-    if (!user) return;
+    if (!user) {
+      Alert.alert('Debug', 'user is null — session lost before handleComplete');
+      return;
+    }
 
     setIsCompleting(true);
     setCompletingMessage(t('onboarding.completing.subtitle'));

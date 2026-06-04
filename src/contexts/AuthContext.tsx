@@ -5,7 +5,7 @@ import React, {
   useState,
   useCallback,
 } from 'react';
-import { Platform } from 'react-native';
+import { Platform, Linking } from 'react-native';
 import { Session, User } from '@supabase/supabase-js';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import * as AuthSession from 'expo-auth-session';
@@ -61,6 +61,40 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => {
       listener.subscription.unsubscribe();
     };
+  }, []);
+
+  // Handle email verification deep links (spondy://?code=... or spondy://#access_token=...)
+  useEffect(() => {
+    const handleUrl = async (url: string) => {
+      if (!url || !url.startsWith('spondy://')) return;
+
+      // PKCE flow: code in query params
+      const queryString = url.split('?')[1]?.split('#')[0] ?? '';
+      const params = new URLSearchParams(queryString);
+      const code = params.get('code');
+      if (code) {
+        const { error } = await supabase.auth.exchangeCodeForSession(code);
+        if (error) console.error('exchangeCodeForSession error:', error);
+        return;
+      }
+
+      // Implicit flow: tokens in URL fragment
+      const fragment = url.split('#')[1] ?? '';
+      const fragmentParams = new URLSearchParams(fragment);
+      const accessToken = fragmentParams.get('access_token');
+      const refreshToken = fragmentParams.get('refresh_token');
+      if (accessToken && refreshToken) {
+        const { error } = await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken });
+        if (error) console.error('setSession error:', error);
+      }
+    };
+
+    // Cold start: app opened directly from the verification link
+    Linking.getInitialURL().then((url) => { if (url) handleUrl(url); });
+
+    // Warm start: app already running when link is tapped
+    const sub = Linking.addEventListener('url', ({ url }) => handleUrl(url));
+    return () => sub.remove();
   }, []);
 
   const signInWithEmail = useCallback(
