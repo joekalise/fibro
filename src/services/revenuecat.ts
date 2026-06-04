@@ -11,8 +11,8 @@ export function configureRevenueCat(): void {
   const apiKey = Platform.OS === 'ios' ? IOS_KEY : ANDROID_KEY;
   if (!apiKey) return;
   try {
-    Purchases.setLogLevel(LOG_LEVEL.DEBUG);
     Purchases.configure({ apiKey });
+    if (__DEV__) Purchases.setLogLevel(LOG_LEVEL.DEBUG);
     _configureError = null;
   } catch (e) {
     _configureError = e instanceof Error ? e.message : String(e);
