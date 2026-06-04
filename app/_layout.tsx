@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { View, useColorScheme } from 'react-native';
@@ -45,11 +45,17 @@ function RootNavigator() {
   const colorScheme = useColorScheme();
 
   const isLoading = authLoading || profileLoading;
+  const [authReady, setAuthReady] = useState(false);
 
   const inAuthGroup = segments[0] === '(auth)';
   const inOnboardingGroup = segments[0] === '(onboarding)';
   const inTabsGroup = segments[0] === '(tabs)';
   const inModalRoute = segments[0] === 'ai-chat';
+
+  // Mark ready once auth has resolved — not affected by segment changes during navigation
+  useEffect(() => {
+    if (!isLoading) setAuthReady(true);
+  }, [isLoading]);
 
   // Register background health sync once on mount
   useEffect(() => {
@@ -88,13 +94,7 @@ function RootNavigator() {
     }
   }, [session, isOnboardingComplete, isLoading, segments, router]);
 
-  const needsRedirect = !isLoading && (
-    (!session && !inAuthGroup) ||
-    (session && !isOnboardingComplete && !inOnboardingGroup) ||
-    (session && isOnboardingComplete && !inTabsGroup && !inModalRoute)
-  );
-
-  if (isLoading || needsRedirect) {
+  if (isLoading || !authReady) {
     return <LoadingSpinner fullScreen />;
   }
 
