@@ -1118,11 +1118,7 @@ export default function ProfileScreen() {
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       logEvent(Events.PURCHASE_ERROR, { message: msg }).catch(() => {});
-      if (Platform.OS === 'android') {
-        Alert.alert('Not available yet', 'Android subscriptions are coming soon. Please use the iOS app for now.');
-      } else {
-        Alert.alert('Purchase error', msg);
-      }
+      Alert.alert('Purchase error', msg);
     } finally {
       setIsPurchasing(false);
     }
