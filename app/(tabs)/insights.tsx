@@ -10,6 +10,7 @@ import {
   ActivityIndicator,
   Modal,
   Alert,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -811,7 +812,11 @@ export default function InsightsScreen() {
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       logEvent(Events.PURCHASE_ERROR, { message: msg }).catch(() => {});
-      Alert.alert('Purchase error', msg);
+      if (Platform.OS === 'android') {
+        Alert.alert('Not available yet', 'Android subscriptions are coming soon. Please use the iOS app for now.');
+      } else {
+        Alert.alert('Purchase error', msg);
+      }
     } finally {
       setIsPurchasing(false);
     }
