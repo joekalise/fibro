@@ -1,14 +1,14 @@
-# Privacy Policy — Spondy
+# Privacy Policy — Fibro
 
-**Last updated: 11 May 2026**
+**Last updated: 9 July 2026**
 
-Spondy is a personal health companion for people living with Ankylosing Spondylitis (AS). This policy explains what data we collect, why we collect it, how it is stored, and your rights over it.
+Fibro is a personal health companion for people living with fibromyalgia. This policy explains what data we collect, why we collect it, how it is stored, and your rights over it.
 
 ---
 
 ## 1. Who we are
 
-Spondy is operated by Joseph Brockbank ("we", "us"). If you have any questions about this policy, contact us at joseph.brockbank@gmail.com.
+Fibro is operated by Joseph Brockbank ("we", "us"). If you have any questions about this policy, contact us at joseph.brockbank@gmail.com.
 
 ---
 
@@ -24,7 +24,7 @@ We collect this when you sign up with email/password, Apple Sign In, or Google S
 You provide this voluntarily during onboarding and can update it at any time:
 - Age range, years since diagnosis, current disease activity (severity)
 - Current medications, pain locations, pain types
-- Associated conditions (e.g. uveitis, psoriasis, IBD)
+- Associated conditions (e.g. sleep disorder, IBS, restless legs, anxiety/depression)
 - Morning stiffness duration, lifestyle challenges
 - Biological sex (optional — used to show relevant tracking options such as menstrual cycle logging)
 
@@ -32,7 +32,7 @@ This data is used solely to personalise your experience and generate relevant AI
 
 ### 2c. Daily tracking data
 Logged by you each day:
-- Pain score (0–10), fatigue score (0–10)
+- Pain score (0–10), fatigue score (0–10), brain fog score (0–10)
 - Morning stiffness, mood, free-text notes
 - Medication adherence
 - Diet quality and dietary triggers
@@ -40,18 +40,12 @@ Logged by you each day:
 - Period / menstrual cycle activity (for users who opt in — female users only)
 
 ### 2d. Flare logs
-Start date, end date, severity, areas affected, and notes for any AS flares you record.
+Start date, end date, severity, areas affected, triggers, and notes for any fibromyalgia flares you record.
 
-### 2e. BASDAI scores
-Responses to the six BASDAI questionnaire items and the calculated score.
+### 2e. Biologic injection logs
+Medication name, injection date, interval, lot number (optional), response rating (optional). Only relevant if you are on injectable treatments.
 
-### 2f. Biologic injection logs
-Medication name, injection date, interval, lot number (optional), response rating (optional).
-
-### 2g. Uveitis episode logs
-Start/end dates, affected eye, severity, symptoms, treatment received.
-
-### 2h. Apple Health data (optional)
+### 2f. Apple Health data (optional)
 If you connect Apple Health, we read — and only read — the following:
 - Step count
 - Sleep duration and sleep stages (Core, Deep, REM)
@@ -62,9 +56,9 @@ If you connect Apple Health, we read — and only read — the following:
 
 We **never write anything to Apple Health**. We do not access any other health categories (e.g. weight, blood glucose, reproductive health) even if they exist in your Health app.
 
-Health data is read on your device and stored in our secure database linked to your account. It is used solely to surface patterns relevant to your AS symptoms.
+Health data is read on your device and stored in our secure database linked to your account. It is used solely to surface patterns relevant to your fibromyalgia symptoms.
 
-### 2i. Notification preferences
+### 2g. Notification preferences
 The time you set for your daily log reminder. No notification content is stored on our servers.
 
 ---
@@ -87,7 +81,7 @@ We use your data for the following purposes only:
 
 ## 4. AI processing
 
-Spondy uses Claude, an AI model made by Anthropic, to generate personalised insights, a welcome message during onboarding, and responses in the AI chat.
+Fibro uses Claude, an AI model made by Anthropic, to generate personalised insights, a welcome message during onboarding, and responses in the AI chat.
 
 When you trigger an AI feature, relevant portions of your health profile and recent tracking data are sent to Anthropic's API via our secure server-side proxy. This data is used only to generate your response and is not used to train Anthropic's models (we use the API under Anthropic's standard terms, which prohibit training on customer data).
 
@@ -138,7 +132,7 @@ To exercise any of these rights, contact us at joseph.brockbank@gmail.com. We wi
 
 ## 9. Children
 
-Spondy is not directed at children under 13 and we do not knowingly collect data from children under 13. If you believe a child under 13 has provided us with personal data, please contact us and we will delete it.
+Fibro is not directed at children under 13 and we do not knowingly collect data from children under 13. If you believe a child under 13 has provided us with personal data, please contact us and we will delete it.
 
 ---
 
@@ -150,5 +144,5 @@ We may update this policy as the app evolves. If we make material changes, we wi
 
 ## 11. Contact
 
-Joseph Brockbank  
+Joseph Brockbank
 joseph.brockbank@gmail.com
