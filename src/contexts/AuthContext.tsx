@@ -63,10 +63,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   }, []);
 
-  // Handle email verification deep links (spondy://?code=... or spondy://#access_token=...)
+  // Handle email verification deep links (fibro://?code=... or fibro://#access_token=...)
   useEffect(() => {
     const handleUrl = async (url: string) => {
-      if (!url || !url.startsWith('spondy://')) return;
+      if (!url || !url.startsWith('fibro://')) return;
 
       // PKCE flow: code in query params
       const queryString = url.split('?')[1]?.split('#')[0] ?? '';
@@ -110,7 +110,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signUpWithEmail = useCallback(
     async (email: string, password: string) => {
-      const redirectUrl = AuthSession.makeRedirectUri({ scheme: 'spondy' });
+      const redirectUrl = AuthSession.makeRedirectUri({ scheme: 'fibro' });
       const { error } = await supabase.auth.signUp({
         email,
         password,
@@ -150,7 +150,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signInWithGoogle = useCallback(async () => {
-    const redirectUrl = AuthSession.makeRedirectUri({ scheme: 'spondy' });
+    const redirectUrl = AuthSession.makeRedirectUri({ scheme: 'fibro' });
 
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
@@ -198,7 +198,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const resetPassword = useCallback(async (email: string) => {
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: 'spondy://reset-password',
+      redirectTo: 'fibro://reset-password',
     });
     if (error) throw error;
   }, []);

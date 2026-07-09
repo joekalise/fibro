@@ -15,13 +15,12 @@ import { useTranslation } from 'react-i18next';
 import { Colors } from '@/constants/colors';
 import { FontSize, Spacing, BorderRadius } from '@/constants/theme';
 import { useFlares } from '@/hooks/useFlares';
-import { useUveitisEpisodes } from '@/hooks/useUveitisEpisodes';
 import { useProfile } from '@/contexts/ProfileContext';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { ErrorMessage } from '@/components/common/ErrorMessage';
 import { Button } from '@/components/common/Button';
 import { ProfileButton } from '@/components/common/ProfileButton';
-import { FlareSeverity, Flare, FlareType, UveitisEpisode, UveitisEye, UveitisSymptom } from '@/types';
+import { FlareSeverity, Flare } from '@/types';
 import { logEvent, Events } from '@/services/analytics';
 
 // ─── Severity badge ──────────────────────────────────────────────────────────
@@ -62,36 +61,17 @@ function daysBetween(start: string, end: string | null): number {
 
 // ─── Pain location labels ────────────────────────────────────────────────────
 
-const AS_LOCATIONS: { value: string; label: string }[] = [
-  { value: 'lower_back', label: 'Lower back / SI' },
+const FIBRO_LOCATIONS: { value: string; label: string }[] = [
+  { value: 'widespread', label: 'Widespread' },
+  { value: 'neck_shoulders', label: 'Neck / shoulders' },
   { value: 'upper_back', label: 'Upper back' },
+  { value: 'lower_back', label: 'Lower back' },
   { value: 'hips', label: 'Hips' },
-  { value: 'neck', label: 'Neck' },
-  { value: 'chest', label: 'Chest / ribs' },
-  { value: 'shoulders', label: 'Shoulders' },
-  { value: 'knees', label: 'Knees' },
+  { value: 'arms', label: 'Arms' },
+  { value: 'legs', label: 'Legs' },
+  { value: 'hands_feet', label: 'Hands / feet' },
+  { value: 'chest', label: 'Chest' },
   { value: 'jaw', label: 'Jaw (TMJ)' },
-];
-
-const ENTHESITIS_LOCATIONS: { value: string; label: string }[] = [
-  { value: 'heel_achilles', label: 'Heel / Achilles' },
-  { value: 'plantar_fascia', label: 'Plantar fascia' },
-  { value: 'chest_sternum', label: 'Chest / sternum' },
-  { value: 'ribs', label: 'Ribs' },
-  { value: 'elbow', label: 'Elbow' },
-  { value: 'si_joint', label: 'SI joint' },
-  { value: 'knee_tendon', label: 'Knee tendon' },
-  { value: 'other', label: 'Other' },
-];
-
-const PERIPHERAL_LOCATIONS: { value: string; label: string }[] = [
-  { value: 'knee', label: 'Knee' },
-  { value: 'hip', label: 'Hip' },
-  { value: 'shoulder', label: 'Shoulder' },
-  { value: 'ankle', label: 'Ankle' },
-  { value: 'wrist', label: 'Wrist' },
-  { value: 'elbow', label: 'Elbow' },
-  { value: 'fingers_toes', label: 'Fingers / toes' },
   { value: 'other', label: 'Other' },
 ];
 
@@ -408,346 +388,6 @@ function StartFlareModal({ visible, onClose, onConfirm, isDark, title, locationO
   );
 }
 
-// ─── Edit Uveitis Modal ───────────────────────────────────────────────────────
-
-interface EditUveitisModalProps {
-  visible: boolean;
-  episode: UveitisEpisode | null;
-  onClose: () => void;
-  onSave: (id: string, updates: Partial<UveitisEpisode>) => Promise<void>;
-  onDelete: (id: string) => Promise<void>;
-  isDark: boolean;
-}
-
-function EditUveitisModal({ visible, episode, onClose, onSave, onDelete, isDark }: EditUveitisModalProps) {
-  const { t } = useTranslation();
-  const [severity, setSeverity] = useState<FlareSeverity>('moderate');
-  const [affectedEye, setAffectedEye] = useState<UveitisEye>('left');
-  const [symptoms, setSymptoms] = useState<UveitisSymptom[]>([]);
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
-  const [notes, setNotes] = useState('');
-  const [isSaving, setIsSaving] = useState(false);
-
-  useEffect(() => {
-    if (episode) {
-      setSeverity(episode.severity);
-      setAffectedEye(episode.affected_eye);
-      setSymptoms(episode.symptoms);
-      setStartDate(episode.start_date);
-      setEndDate(episode.end_date ?? '');
-      setNotes(episode.notes ?? '');
-    }
-  }, [episode]);
-
-  const toggleSymptom = (s: UveitisSymptom) =>
-    setSymptoms(prev => prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s]);
-
-  const handleSave = async () => {
-    if (!episode?.id) return;
-    setIsSaving(true);
-    try {
-      await onSave(episode.id, { severity, affected_eye: affectedEye, symptoms, start_date: startDate, end_date: endDate || null, notes });
-      onClose();
-    } catch { Alert.alert(t('errors.save_failed')); }
-    finally { setIsSaving(false); }
-  };
-
-  const handleDelete = () => {
-    if (!episode?.id) return;
-    Alert.alert('Delete episode', 'This will permanently remove this episode.', [
-      { text: 'Cancel', style: 'cancel' },
-      { text: 'Delete', style: 'destructive', onPress: async () => {
-        try { await onDelete(episode.id!); onClose(); }
-        catch { Alert.alert(t('errors.save_failed')); }
-      }},
-    ]);
-  };
-
-  const SEVERITIES: FlareSeverity[] = ['mild', 'moderate', 'severe'];
-  const EYES: { value: UveitisEye; label: string }[] = [
-    { value: 'left', label: 'Left' }, { value: 'right', label: 'Right' }, { value: 'both', label: 'Both' },
-  ];
-  const SYMPTOMS_LIST: { value: UveitisSymptom; label: string }[] = [
-    { value: 'red_eye', label: 'Red eye' }, { value: 'photophobia', label: 'Light sensitivity' },
-    { value: 'blurred_vision', label: 'Blurred vision' }, { value: 'eye_pain', label: 'Eye pain' },
-    { value: 'floaters', label: 'Floaters' },
-  ];
-
-  return (
-    <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
-      <View style={styles.modalOverlay}>
-        <View style={[styles.modalSheet, isDark && styles.modalSheetDark]}>
-          <View style={styles.modalHandle} />
-          <Text style={[styles.modalTitle, isDark && styles.textPrimaryDark]}>Edit uveitis episode</Text>
-
-          <Text style={[styles.modalSectionLabel, isDark && styles.textPrimaryDark]}>Severity</Text>
-          <View style={styles.chipRow}>
-            {SEVERITIES.map(sev => {
-              const selected = severity === sev;
-              const color = SEVERITY_COLOR[sev];
-              return (
-                <TouchableOpacity key={sev} onPress={() => setSeverity(sev)}
-                  style={[styles.chip, isDark && styles.chipDark, selected && { backgroundColor: color + '22', borderColor: color }]}
-                  activeOpacity={0.7}>
-                  <Text style={[styles.chipText, isDark && styles.textSecDark, selected && { color, fontWeight: '700' }]}>
-                    {t(`flares.severity_${sev}`)}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-
-          <Text style={[styles.modalSectionLabel, isDark && styles.textPrimaryDark]}>Affected eye</Text>
-          <View style={styles.chipRow}>
-            {EYES.map(eye => (
-              <TouchableOpacity key={eye.value} onPress={() => setAffectedEye(eye.value)}
-                style={[styles.chip, isDark && styles.chipDark, affectedEye === eye.value && styles.chipSelected]}
-                activeOpacity={0.7}>
-                <Text style={[styles.chipText, isDark && styles.textSecDark, affectedEye === eye.value && styles.chipTextSelected]}>
-                  {eye.label}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-
-          <Text style={[styles.modalSectionLabel, isDark && styles.textPrimaryDark]}>Symptoms</Text>
-          <View style={styles.chipRow}>
-            {SYMPTOMS_LIST.map(sym => (
-              <TouchableOpacity key={sym.value} onPress={() => toggleSymptom(sym.value)}
-                style={[styles.chip, isDark && styles.chipDark, symptoms.includes(sym.value) && styles.chipSelected]}
-                activeOpacity={0.7}>
-                <Text style={[styles.chipText, isDark && styles.textSecDark, symptoms.includes(sym.value) && styles.chipTextSelected]}>
-                  {sym.label}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-
-          <Text style={[styles.modalSectionLabel, isDark && styles.textPrimaryDark]}>Dates</Text>
-          <View style={styles.dateRow}>
-            <View style={{ flex: 1 }}>
-              <Text style={[styles.dateInputLabel, isDark && styles.textSecDark]}>Start</Text>
-              <TextInput style={[styles.dateInput, isDark && styles.notesInputDark]}
-                value={startDate} onChangeText={setStartDate} placeholder="YYYY-MM-DD"
-                placeholderTextColor={isDark ? Colors.textSecondaryDark : Colors.textSecondary}
-                keyboardType="numbers-and-punctuation" />
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={[styles.dateInputLabel, isDark && styles.textSecDark]}>End</Text>
-              <TextInput style={[styles.dateInput, isDark && styles.notesInputDark]}
-                value={endDate} onChangeText={setEndDate} placeholder="YYYY-MM-DD"
-                placeholderTextColor={isDark ? Colors.textSecondaryDark : Colors.textSecondary}
-                keyboardType="numbers-and-punctuation" />
-            </View>
-          </View>
-
-          <Text style={[styles.modalSectionLabel, isDark && styles.textPrimaryDark]}>{t('flares.notes')}</Text>
-          <TextInput style={[styles.notesInput, isDark && styles.notesInputDark]}
-            placeholder={t('common.optional_notes')} placeholderTextColor={isDark ? Colors.textSecondaryDark : Colors.textSecondary}
-            value={notes} onChangeText={setNotes} multiline numberOfLines={2} textAlignVertical="top" />
-
-          <Button label="Save changes" onPress={handleSave} isLoading={isSaving} style={styles.modalConfirmButton} />
-          <Button label="Delete this entry" onPress={handleDelete} variant="ghost" textStyle={{ color: Colors.error }} />
-          <Button label={t('common.cancel')} onPress={onClose} variant="ghost" />
-        </View>
-      </View>
-    </Modal>
-  );
-}
-
-// ─── Uveitis history item ────────────────────────────────────────────────────
-
-function UveitisHistoryItem({ episode, onEnd, onEdit, isDark }: { episode: UveitisEpisode; onEnd: () => void; onEdit: () => void; isDark: boolean }) {
-  const severityColor = SEVERITY_COLOR[episode.severity];
-  return (
-    <View style={[styles.historyItem, isDark && styles.historyItemDark, { borderLeftColor: severityColor }]}>
-      <View style={styles.historyItemHeader}>
-        <Text style={[styles.historyDateRange, isDark && styles.textPrimaryDark]}>
-          {formatDate(episode.start_date)}
-          {episode.end_date ? ` – ${formatDate(episode.end_date)}` : ''}
-        </Text>
-        <View style={styles.historyItemActions}>
-          <SeverityBadge severity={episode.severity} isDark={isDark} />
-          <TouchableOpacity onPress={onEdit} activeOpacity={0.7} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-            <Text style={[styles.historyEditLink, { color: Colors.primary }]}>Edit</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-      <Text style={[styles.historyDuration, isDark && styles.textPrimaryDark]}>
-        {episode.affected_eye.charAt(0).toUpperCase() + episode.affected_eye.slice(1)} eye
-        {episode.end_date ? ` · ${daysBetween(episode.start_date, episode.end_date)} days` : ' · Ongoing'}
-      </Text>
-      {episode.symptoms.length > 0 && (
-        <Text style={[styles.historyAreas, isDark && styles.textSecDark]}>
-          {episode.symptoms.map(s => s.replace(/_/g, ' ')).join(', ')}
-        </Text>
-      )}
-    </View>
-  );
-}
-
-// ─── Start Uveitis Modal ──────────────────────────────────────────────────────
-
-interface StartUveitisModalProps {
-  visible: boolean;
-  onClose: () => void;
-  onConfirm: (ep: Omit<UveitisEpisode, 'id' | 'user_id' | 'end_date'>) => Promise<void>;
-  isDark: boolean;
-}
-
-function StartUveitisModal({ visible, onClose, onConfirm, isDark }: StartUveitisModalProps) {
-  const { t } = useTranslation();
-  const [severity, setSeverity] = useState<FlareSeverity>('moderate');
-  const [affectedEye, setAffectedEye] = useState<UveitisEye>('left');
-  const [symptoms, setSymptoms] = useState<UveitisSymptom[]>([]);
-  const [treatmentReceived, setTreatmentReceived] = useState(false);
-  const [notes, setNotes] = useState('');
-  const [isSaving, setIsSaving] = useState(false);
-
-  const SYMPTOMS: { value: UveitisSymptom; label: string }[] = [
-    { value: 'red_eye', label: 'Red eye' },
-    { value: 'photophobia', label: 'Light sensitivity' },
-    { value: 'blurred_vision', label: 'Blurred vision' },
-    { value: 'eye_pain', label: 'Eye pain' },
-    { value: 'floaters', label: 'Floaters' },
-  ];
-
-  const EYES: { value: UveitisEye; label: string }[] = [
-    { value: 'left', label: 'Left eye' },
-    { value: 'right', label: 'Right eye' },
-    { value: 'both', label: 'Both eyes' },
-  ];
-
-  const toggleSymptom = (s: UveitisSymptom) => {
-    setSymptoms(prev => prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s]);
-  };
-
-  const handleConfirm = async () => {
-    setIsSaving(true);
-    try {
-      await onConfirm({
-        start_date: new Date().toISOString().split('T')[0],
-        severity,
-        affected_eye: affectedEye,
-        symptoms,
-        treatment_received: treatmentReceived,
-        notes,
-      });
-      setSeverity('moderate');
-      setAffectedEye('left');
-      setSymptoms([]);
-      setTreatmentReceived(false);
-      setNotes('');
-      onClose();
-    } catch {
-      Alert.alert(t('errors.save_failed'));
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  const SEVERITIES: FlareSeverity[] = ['mild', 'moderate', 'severe'];
-
-  return (
-    <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
-      <View style={styles.modalOverlay}>
-        <View style={[styles.modalSheet, isDark && styles.modalSheetDark]}>
-          <View style={styles.modalHandle} />
-
-          {/* Warning banner */}
-          <View style={[styles.uveitisWarningBanner]}>
-            <Text style={styles.uveitisWarningText}>
-              Seek urgent eye care. Uveitis can cause permanent vision loss if untreated. Contact your ophthalmologist or go to A&E today.
-            </Text>
-          </View>
-
-          <Text style={[styles.modalTitle, isDark && styles.textPrimaryDark]}>
-            Log uveitis episode
-          </Text>
-
-          {/* Severity */}
-          <Text style={[styles.modalSectionLabel, isDark && styles.textPrimaryDark]}>Severity</Text>
-          <View style={styles.chipRow}>
-            {SEVERITIES.map((sev) => {
-              const selected = severity === sev;
-              const color = SEVERITY_COLOR[sev];
-              return (
-                <TouchableOpacity
-                  key={sev}
-                  onPress={() => setSeverity(sev)}
-                  style={[styles.chip, isDark && styles.chipDark, selected && { backgroundColor: color + '22', borderColor: color }]}
-                  activeOpacity={0.7}
-                >
-                  <Text style={[styles.chipText, isDark && styles.textSecDark, selected && { color, fontWeight: '700' }]}>
-                    {t(`flares.severity_${sev}`)}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-
-          {/* Affected eye */}
-          <Text style={[styles.modalSectionLabel, isDark && styles.textPrimaryDark]}>Affected eye</Text>
-          <View style={styles.chipRow}>
-            {EYES.map((eye) => {
-              const selected = affectedEye === eye.value;
-              return (
-                <TouchableOpacity
-                  key={eye.value}
-                  onPress={() => setAffectedEye(eye.value)}
-                  style={[styles.chip, isDark && styles.chipDark, selected && styles.chipSelected]}
-                  activeOpacity={0.7}
-                >
-                  <Text style={[styles.chipText, isDark && styles.textSecDark, selected && styles.chipTextSelected]}>
-                    {eye.label}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-
-          {/* Symptoms */}
-          <Text style={[styles.modalSectionLabel, isDark && styles.textPrimaryDark]}>Symptoms</Text>
-          <View style={styles.chipRow}>
-            {SYMPTOMS.map((sym) => {
-              const selected = symptoms.includes(sym.value);
-              return (
-                <TouchableOpacity
-                  key={sym.value}
-                  onPress={() => toggleSymptom(sym.value)}
-                  style={[styles.chip, isDark && styles.chipDark, selected && styles.chipSelected]}
-                  activeOpacity={0.7}
-                >
-                  <Text style={[styles.chipText, isDark && styles.textSecDark, selected && styles.chipTextSelected]}>
-                    {sym.label}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-
-          {/* Notes */}
-          <Text style={[styles.modalSectionLabel, isDark && styles.textPrimaryDark]}>{t('flares.notes')}</Text>
-          <TextInput
-            style={[styles.notesInput, isDark && styles.notesInputDark]}
-            placeholder={t('common.optional_notes')}
-            placeholderTextColor={isDark ? Colors.textSecondaryDark : Colors.textSecondary}
-            value={notes}
-            onChangeText={setNotes}
-            multiline
-            numberOfLines={2}
-            textAlignVertical="top"
-          />
-
-          <Button label={t('flares.log_episode')} onPress={handleConfirm} isLoading={isSaving} style={styles.modalConfirmButton} />
-          <Button label={t('common.cancel')} onPress={onClose} variant="ghost" />
-        </View>
-      </View>
-    </Modal>
-  );
-}
-
 // ─── Main screen ─────────────────────────────────────────────────────────────
 
 export default function FlaresScreen() {
@@ -755,29 +395,12 @@ export default function FlaresScreen() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
 
-  const { flares: asFlares, activeFlare, isLoading, error, startFlare, endCurrentFlare, updateFlare: updateAsFlare, deleteFlare: deleteAsFlare, refresh } = useFlares('as');
-  const { flares: enthesitisFlares, activeFlare: activeEnthesitis, startFlare: startEnthesitis, endCurrentFlare: endEnthesitis, updateFlare: updateEnthesitisFlare, deleteFlare: deleteEnthesitisFlare } = useFlares('enthesitis');
-  const { flares: peripheralFlares, activeFlare: activePeripheral, startFlare: startPeripheral, endCurrentFlare: endPeripheral, updateFlare: updatePeripheralFlare, deleteFlare: deletePeripheralFlare } = useFlares('peripheral');
-  const { episodes: uveitisEpisodes, activeEpisode: activeUveitis, startEpisode, endEpisode, deleteEpisode: deleteUveitis, updateEpisode: updateUveitis } = useUveitisEpisodes();
+  const { flares, activeFlare, isLoading, error, startFlare, endCurrentFlare, updateFlare, deleteFlare, refresh } = useFlares('widespread');
   const { profile } = useProfile();
   const [modalVisible, setModalVisible] = useState(false);
-  const [showUveitisModal, setShowUveitisModal] = useState(false);
-  const [showEnthesitisModal, setShowEnthesitisModal] = useState(false);
-  const [showPeripheralModal, setShowPeripheralModal] = useState(false);
   const [editingFlare, setEditingFlare] = useState<Flare | null>(null);
-  const [editingUveitis, setEditingUveitis] = useState<UveitisEpisode | null>(null);
 
-  const editFlareLocations = editingFlare?.flare_type === 'enthesitis'
-    ? ENTHESITIS_LOCATIONS
-    : editingFlare?.flare_type === 'peripheral'
-      ? PERIPHERAL_LOCATIONS
-      : AS_LOCATIONS;
-
-  const showUveitisSection = profile?.conditions?.includes('uveitis') ?? false;
-  const showEnthesitisSection = profile?.conditions?.includes('enthesitis') ?? false;
-  const showPeripheralSection = profile?.conditions?.includes('peripheral_joint') ?? false;
-
-  const endedFlares = asFlares.filter((f) => f.end_date !== null);
+  const endedFlares = flares.filter((f) => f.end_date !== null);
 
   const handleEndFlare = () => {
     Alert.alert(
@@ -827,9 +450,9 @@ export default function FlaresScreen() {
           <ErrorMessage message={error} onRetry={refresh} retryLabel={t('common.retry')} />
         )}
 
-        {/* ── AS Flare card — status + history grouped ─── */}
+        {/* ── Fibromyalgia Flare card — status + history grouped ─── */}
         <View style={[styles.groupCard, isDark && styles.groupCardDark]}>
-          <Text style={[styles.groupCardTitle, isDark && styles.textPrimaryDark]}>AS Flare</Text>
+          <Text style={[styles.groupCardTitle, isDark && styles.textPrimaryDark]}>Fibromyalgia Flare</Text>
 
           {activeFlare ? (
             <View style={[styles.activeFlareInner, isDark && styles.activeFlareInnerDark]}>
@@ -884,230 +507,25 @@ export default function FlaresScreen() {
           )}
         </View>
 
-        {/* ── Enthesitis Flare card ─── */}
-        {showEnthesitisSection && (
-          <View style={[styles.groupCard, isDark && styles.groupCardDark]}>
-            <Text style={[styles.groupCardTitle, isDark && styles.textPrimaryDark]}>{t('flares.section_enthesitis')}</Text>
-
-            {activeEnthesitis ? (
-              <View style={[styles.activeFlareInner, isDark && styles.activeFlareInnerDark]}>
-                <View style={styles.activeFlareTitleRow}>
-                  <View style={styles.activeFlareIndicator} />
-                  <Text style={[styles.activeFlareTitle, { flex: 1 }]}>{t('flares.active_enthesitis')}</Text>
-                  <SeverityBadge severity={activeEnthesitis.severity} isDark={isDark} />
-                </View>
-                <Text style={[styles.activeFlareDate, isDark && styles.textSecDark]}>
-                  Started: {formatDate(activeEnthesitis.start_date)}
-                </Text>
-                {activeEnthesitis.areas_affected.length > 0 && (
-                  <Text style={[styles.activeFlareAreas, isDark && styles.textSecDark]}>
-                    {activeEnthesitis.areas_affected.map(a => a.replace(/_/g, ' ')).join(', ')}
-                  </Text>
-                )}
-                <Button
-                  label={t('common.mark_resolved')}
-                  onPress={() => Alert.alert(t('flares.resolve_flare_title'), t('flares.resolve_enthesitis'), [
-                    { text: t('common.cancel'), style: 'cancel' },
-                    { text: t('common.resolve'), style: 'destructive', onPress: () => endEnthesitis() },
-                  ])}
-                  variant="outline"
-                  textStyle={{ color: Colors.error }}
-                  style={{ ...styles.endFlareButton, borderColor: Colors.error }}
-                />
-              </View>
-            ) : (
-              <>
-                <View style={styles.statusRow}>
-                  <View style={styles.statusDot} />
-                  <Text style={[styles.statusText, isDark && styles.textPrimaryDark]}>No current enthesitis flare</Text>
-                </View>
-                <Button label={t('flares.log_a_flare')} onPress={() => setShowEnthesitisModal(true)} variant="outline" style={styles.logFlareBtn} />
-              </>
-            )}
-
-            <View style={[styles.innerDivider, isDark && styles.innerDividerDark]} />
-            <Text style={[styles.historySubLabel, isDark && styles.textSecDark]}>{t('common.history')}</Text>
-
-            {enthesitisFlares.filter(f => f.end_date !== null).length === 0 ? (
-              <Text style={[styles.emptyStateText, isDark && styles.textSecDark]}>No past enthesitis flares recorded.</Text>
-            ) : enthesitisFlares.filter(f => f.end_date !== null).map(f => (
-              <FlareHistoryItem key={f.id ?? f.start_date} flare={f} isDark={isDark} onEdit={() => setEditingFlare(f)} />
-            ))}
-          </View>
-        )}
-
-        {/* ── Peripheral Joint Flare card ─── */}
-        {showPeripheralSection && (
-          <View style={[styles.groupCard, isDark && styles.groupCardDark]}>
-            <Text style={[styles.groupCardTitle, isDark && styles.textPrimaryDark]}>Peripheral Joint Flare</Text>
-
-            {activePeripheral ? (
-              <View style={[styles.activeFlareInner, isDark && styles.activeFlareInnerDark]}>
-                <View style={styles.activeFlareTitleRow}>
-                  <View style={styles.activeFlareIndicator} />
-                  <Text style={[styles.activeFlareTitle, { flex: 1 }]}>{t('flares.active_peripheral')}</Text>
-                  <SeverityBadge severity={activePeripheral.severity} isDark={isDark} />
-                </View>
-                <Text style={[styles.activeFlareDate, isDark && styles.textSecDark]}>
-                  Started: {formatDate(activePeripheral.start_date)}
-                </Text>
-                {activePeripheral.areas_affected.length > 0 && (
-                  <Text style={[styles.activeFlareAreas, isDark && styles.textSecDark]}>
-                    {activePeripheral.areas_affected.map(a => a.replace(/_/g, ' ')).join(', ')}
-                  </Text>
-                )}
-                <Button
-                  label={t('common.mark_resolved')}
-                  onPress={() => Alert.alert(t('flares.resolve_flare_title'), t('flares.resolve_peripheral'), [
-                    { text: t('common.cancel'), style: 'cancel' },
-                    { text: t('common.resolve'), style: 'destructive', onPress: () => endPeripheral() },
-                  ])}
-                  variant="outline"
-                  textStyle={{ color: Colors.error }}
-                  style={{ ...styles.endFlareButton, borderColor: Colors.error }}
-                />
-              </View>
-            ) : (
-              <>
-                <View style={styles.statusRow}>
-                  <View style={styles.statusDot} />
-                  <Text style={[styles.statusText, isDark && styles.textPrimaryDark]}>No current peripheral joint flare</Text>
-                </View>
-                <Button label={t('flares.log_a_flare')} onPress={() => setShowPeripheralModal(true)} variant="outline" style={styles.logFlareBtn} />
-              </>
-            )}
-
-            <View style={[styles.innerDivider, isDark && styles.innerDividerDark]} />
-            <Text style={[styles.historySubLabel, isDark && styles.textSecDark]}>{t('common.history')}</Text>
-
-            {peripheralFlares.filter(f => f.end_date !== null).length === 0 ? (
-              <Text style={[styles.emptyStateText, isDark && styles.textSecDark]}>{t('flares.no_past_peripheral')}</Text>
-            ) : peripheralFlares.filter(f => f.end_date !== null).map(f => (
-              <FlareHistoryItem key={f.id ?? f.start_date} flare={f} isDark={isDark} onEdit={() => setEditingFlare(f)} />
-            ))}
-          </View>
-        )}
-
-        {/* ── Uveitis Flare card — status + history grouped ─── */}
-        {showUveitisSection && (
-          <View style={[styles.groupCard, isDark && styles.groupCardDark]}>
-            <Text style={[styles.groupCardTitle, isDark && styles.textPrimaryDark]}>{t('flares.section_uveitis')}</Text>
-
-            {activeUveitis ? (
-              <View style={[styles.activeFlareInner, isDark && styles.activeFlareInnerDark]}>
-                <View style={styles.activeFlareTitleRow}>
-                  <View style={styles.activeFlareIndicator} />
-                  <Text style={[styles.activeFlareTitle, { flex: 1 }]}>{t('flares.active_uveitis')}</Text>
-                  <SeverityBadge severity={activeUveitis.severity} isDark={isDark} />
-                </View>
-                <Text style={[styles.activeFlareDate, isDark && styles.textSecDark]}>
-                  Started: {formatDate(activeUveitis.start_date)} · {activeUveitis.affected_eye} eye
-                </Text>
-                {activeUveitis.symptoms.length > 0 && (
-                  <Text style={[styles.activeFlareAreas, isDark && styles.textSecDark]}>
-                    {activeUveitis.symptoms.map(s => s.replace(/_/g, ' ')).join(', ')}
-                  </Text>
-                )}
-                <Button
-                  label={t('common.mark_resolved')}
-                  onPress={() => {
-                    Alert.alert(t('flares.resolve_episode_title'), t('flares.resolve_uveitis'), [
-                      { text: t('common.cancel'), style: 'cancel' },
-                      { text: t('common.resolve'), onPress: () => endEpisode(activeUveitis.id!) },
-                    ]);
-                  }}
-                  variant="outline"
-                  textStyle={{ color: Colors.error }}
-                  style={{ ...styles.endFlareButton, borderColor: Colors.error }}
-                />
-              </View>
-            ) : (
-              <>
-                <View style={styles.statusRow}>
-                  <View style={styles.statusDot} />
-                  <Text style={[styles.statusText, isDark && styles.textPrimaryDark]}>No current episode</Text>
-                </View>
-                <Button
-                  label="Log an episode"
-                  onPress={() => setShowUveitisModal(true)}
-                  variant="outline"
-                  style={styles.logFlareBtn}
-                />
-              </>
-            )}
-
-            <View style={[styles.innerDivider, isDark && styles.innerDividerDark]} />
-            <Text style={[styles.historySubLabel, isDark && styles.textSecDark]}>{t('common.history')}</Text>
-
-            {uveitisEpisodes.filter(e => e.end_date !== null).length === 0 ? (
-              <Text style={[styles.emptyStateText, isDark && styles.textSecDark]}>No past episodes recorded.</Text>
-            ) : uveitisEpisodes.filter(e => e.end_date !== null).map((ep) => (
-              <UveitisHistoryItem key={ep.id ?? ep.start_date} episode={ep} onEnd={() => endEpisode(ep.id!)} onEdit={() => setEditingUveitis(ep)} isDark={isDark} />
-            ))}
-          </View>
-        )}
-
         <View style={styles.bottomPad} />
       </ScrollView>
 
       <StartFlareModal
         visible={modalVisible}
         onClose={() => setModalVisible(false)}
-        onConfirm={async (sev, areas, notes) => { await startFlare(sev, areas, notes); logEvent(Events.FLARE_LOGGED, { type: 'as' }).catch(() => {}); }}
+        onConfirm={async (sev, areas, notes) => { await startFlare(sev, areas, notes); logEvent(Events.FLARE_LOGGED, { type: 'fibro' }).catch(() => {}); }}
         isDark={isDark}
         title={t('flares.log_as_title')}
-        locationOptions={AS_LOCATIONS}
-      />
-      <StartFlareModal
-        visible={showEnthesitisModal}
-        onClose={() => setShowEnthesitisModal(false)}
-        onConfirm={async (sev, areas, notes) => { await startEnthesitis(sev, areas, notes); logEvent(Events.FLARE_LOGGED, { type: 'enthesitis' }).catch(() => {}); }}
-        isDark={isDark}
-        title={t('flares.log_enthesitis_title')}
-        locationOptions={ENTHESITIS_LOCATIONS}
-      />
-      <StartFlareModal
-        visible={showPeripheralModal}
-        onClose={() => setShowPeripheralModal(false)}
-        onConfirm={async (sev, areas, notes) => { await startPeripheral(sev, areas, notes); logEvent(Events.FLARE_LOGGED, { type: 'peripheral' }).catch(() => {}); }}
-        isDark={isDark}
-        title={t('flares.log_peripheral_title')}
-        locationOptions={PERIPHERAL_LOCATIONS}
-      />
-      <StartUveitisModal
-        visible={showUveitisModal}
-        onClose={() => setShowUveitisModal(false)}
-        onConfirm={async (ep) => { await startEpisode(ep); logEvent(Events.FLARE_LOGGED, { type: 'uveitis' }).catch(() => {}); }}
-        isDark={isDark}
-      />
-      <EditUveitisModal
-        visible={editingUveitis !== null}
-        episode={editingUveitis}
-        onClose={() => setEditingUveitis(null)}
-        onSave={async (id, updates) => { await updateUveitis(id, updates); setEditingUveitis(null); }}
-        onDelete={async (id) => { await deleteUveitis(id); setEditingUveitis(null); }}
-        isDark={isDark}
+        locationOptions={FIBRO_LOCATIONS}
       />
       <EditFlareModal
         visible={editingFlare !== null}
         flare={editingFlare}
         onClose={() => setEditingFlare(null)}
-        onSave={async (id, updates) => {
-          const type = editingFlare?.flare_type ?? 'as';
-          if (type === 'enthesitis') await updateEnthesitisFlare(id, updates);
-          else if (type === 'peripheral') await updatePeripheralFlare(id, updates);
-          else await updateAsFlare(id, updates);
-          setEditingFlare(null);
-        }}
-        onDelete={async (id) => {
-          const type = editingFlare?.flare_type ?? 'as';
-          if (type === 'enthesitis') await deleteEnthesitisFlare(id);
-          else if (type === 'peripheral') await deletePeripheralFlare(id);
-          else await deleteAsFlare(id);
-          setEditingFlare(null);
-        }}
+        onSave={async (id, updates) => { await updateFlare(id, updates); setEditingFlare(null); }}
+        onDelete={async (id) => { await deleteFlare(id); setEditingFlare(null); }}
         isDark={isDark}
-        locationOptions={editFlareLocations}
+        locationOptions={FIBRO_LOCATIONS}
       />
     </SafeAreaView>
   );

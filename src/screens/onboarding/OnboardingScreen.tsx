@@ -137,18 +137,18 @@ export function OnboardingScreen() {
 
     let welcomeContent: WelcomeContent = {
       welcome_message:
-        "Welcome to Spondy. We're glad you're here. This app will help you track and understand your AS journey.",
+        "Welcome to Fibro. We're glad you're here. This app will help you track and understand your fibromyalgia journey.",
       insights: [
-        'Consistent daily tracking is one of the most powerful tools for understanding your AS patterns.',
-        'Many people with AS find that sleep quality is closely linked to next-day symptom levels.',
-        'Small amounts of regular gentle movement can help reduce morning stiffness over time.',
+        'Consistent daily tracking is one of the most powerful tools for understanding your fibromyalgia patterns.',
+        'Many people with fibromyalgia find that sleep quality is closely linked to next-day pain and brain fog levels.',
+        'Pacing your activity — not too much, not too little — is one of the most effective tools for managing fibromyalgia.',
       ],
       watch_summary:
-        "Spondy will monitor your daily symptom patterns, sleep, and activity levels to help you spot trends before they become flares.",
+        "Fibro will monitor your daily symptom patterns, sleep, and activity levels to help you spot trends before they become flares.",
     };
 
     try {
-      await AsyncStorage.setItem('@spondy_ai_consent', aiConsented ? 'true' : 'false');
+      await AsyncStorage.setItem('@fibro_ai_consent', aiConsented ? 'true' : 'false');
     } catch {
       // non-fatal
     }
@@ -183,8 +183,9 @@ export function OnboardingScreen() {
       console.error('Failed to save profile during onboarding:', err);
     }
 
-    setIsCompleting(false);
-
+    // Keep isCompleting = true — the loading screen stays while OnboardingScreen
+    // remains mounted behind profile-ready. This prevents the step-11 DateTimePicker
+    // from rendering on Android and opening a system dialog over the next screen.
     router.push({
       pathname: '/(onboarding)/profile-ready',
       params: {
@@ -344,7 +345,7 @@ export function OnboardingScreen() {
       case 3:
         return (
           <>
-            {(['under_1', '1_3', '3_5', '5_10', '10_plus'] as DiagnosisYears[]).map(v => (
+            {(['not_diagnosed', 'under_1', '1_3', '3_5', '5_10', '10_plus'] as DiagnosisYears[]).map(v => (
               <OptionCard
                 key={v}
                 label={t(`onboarding.diagnosis_years.${v}`)}
@@ -376,10 +377,11 @@ export function OnboardingScreen() {
           <>
             {(
               [
-                'adalimumab',
-                'secukinumab',
-                'ixekizumab',
-                'ustekinumab',
+                'duloxetine',
+                'pregabalin',
+                'milnacipran',
+                'amitriptyline',
+                'low_dose_naltrexone',
                 'nsaids_only',
                 'no_medication',
                 'other',
@@ -414,7 +416,8 @@ export function OnboardingScreen() {
                 'neck',
                 'chest',
                 'jaw',
-                'heels',
+                'hands_feet',
+                'widespread',
                 'other',
               ] as PainLocation[]
             ).map(v => (
@@ -438,7 +441,7 @@ export function OnboardingScreen() {
         return (
           <>
             {(
-              ['stiffness', 'sharp_pain', 'burning', 'aching', 'fatigue'] as PainType[]
+              ['stiffness', 'sharp_pain', 'burning', 'aching', 'tingling', 'hypersensitivity', 'fatigue'] as PainType[]
             ).map(v => (
               <MultiSelectCard
                 key={v}
@@ -471,14 +474,14 @@ export function OnboardingScreen() {
             </View>
             {(
               [
-                'uveitis',
-                'psoriasis',
-                'ibd',
-                'enthesitis',
-                'peripheral_joint',
-                'fatigue',
-                'brain_fog',
+                'sleep_disorder',
+                'ibs',
+                'restless_legs',
+                'headaches',
+                'tmj',
                 'anxiety_depression',
+                'brain_fog',
+                'fatigue',
               ] as AssociatedCondition[]
             ).map(v => (
               <MultiSelectCard
@@ -542,7 +545,53 @@ export function OnboardingScreen() {
         );
 
       // Step 11: Notification time
-      case 11:
+      case 11: {
+        if (Platform.OS === 'android') {
+          // DateTimePicker always opens a system dialog on Android — use inline +/- controls instead
+          const [hStr, mStr] = data.notification_time.split(':');
+          const hVal = parseInt(hStr, 10);
+          const mVal = parseInt(mStr, 10);
+          const adjustTime = (hDelta: number, mDelta: number) => {
+            const newH = ((hVal + hDelta) + 24) % 24;
+            const newM = ((mVal + mDelta) + 60) % 60;
+            setData(d => ({ ...d, notification_time: `${String(newH).padStart(2, '0')}:${String(newM).padStart(2, '0')}` }));
+          };
+          const textCol = isDark ? Colors.textPrimaryDark : Colors.textPrimary;
+          const mutedCol = isDark ? Colors.textSecondaryDark : Colors.textSecondary;
+          const btnBg = isDark ? Colors.surfaceDark : Colors.surface;
+          const btnBorder = isDark ? Colors.borderDark : Colors.border;
+          return (
+            <View style={styles.timePickerContainer}>
+              <View style={styles.androidTimeRow}>
+                {/* Hours column */}
+                <View style={styles.androidTimeCol}>
+                  <TouchableOpacity style={[styles.androidTimeBtn, { backgroundColor: btnBg, borderColor: btnBorder }]} onPress={() => adjustTime(1, 0)} activeOpacity={0.7}>
+                    <Text style={[styles.androidTimeArrow, { color: Colors.primary }]}>▲</Text>
+                  </TouchableOpacity>
+                  <Text style={[styles.androidTimeValue, { color: textCol }]}>{String(hVal).padStart(2, '0')}</Text>
+                  <TouchableOpacity style={[styles.androidTimeBtn, { backgroundColor: btnBg, borderColor: btnBorder }]} onPress={() => adjustTime(-1, 0)} activeOpacity={0.7}>
+                    <Text style={[styles.androidTimeArrow, { color: Colors.primary }]}>▼</Text>
+                  </TouchableOpacity>
+                  <Text style={[styles.androidTimeUnit, { color: mutedCol }]}>hour</Text>
+                </View>
+
+                <Text style={[styles.androidTimeColon, { color: textCol }]}>:</Text>
+
+                {/* Minutes column */}
+                <View style={styles.androidTimeCol}>
+                  <TouchableOpacity style={[styles.androidTimeBtn, { backgroundColor: btnBg, borderColor: btnBorder }]} onPress={() => adjustTime(0, 5)} activeOpacity={0.7}>
+                    <Text style={[styles.androidTimeArrow, { color: Colors.primary }]}>▲</Text>
+                  </TouchableOpacity>
+                  <Text style={[styles.androidTimeValue, { color: textCol }]}>{String(mVal).padStart(2, '0')}</Text>
+                  <TouchableOpacity style={[styles.androidTimeBtn, { backgroundColor: btnBg, borderColor: btnBorder }]} onPress={() => adjustTime(0, -5)} activeOpacity={0.7}>
+                    <Text style={[styles.androidTimeArrow, { color: Colors.primary }]}>▼</Text>
+                  </TouchableOpacity>
+                  <Text style={[styles.androidTimeUnit, { color: mutedCol }]}>min</Text>
+                </View>
+              </View>
+            </View>
+          );
+        }
         return (
           <View style={styles.timePickerContainer}>
             <DateTimePicker
@@ -559,6 +608,7 @@ export function OnboardingScreen() {
             />
           </View>
         );
+      }
 
       default:
         return null;
@@ -577,7 +627,7 @@ export function OnboardingScreen() {
           {/* Score row */}
           <View style={styles.mockScoreRow}>
             <View>
-              <Text style={[styles.mockCardTitle, isDark && styles.mockCardTitleDark]}>Spondy Score</Text>
+              <Text style={[styles.mockCardTitle, isDark && styles.mockCardTitleDark]}>Fibro Score</Text>
               <Text style={[styles.mockScoreHint, isDark && styles.mockTextSec]}>This week · 6 days logged</Text>
             </View>
             <View style={[styles.mockScoreCircle, { borderColor: Colors.success }]}>
@@ -657,7 +707,7 @@ export function OnboardingScreen() {
               <Text style={[styles.mockFactor, isDark && styles.mockTextSec]}>Creator's note</Text>
             </View>
             <Text style={[styles.mockInsightSummary, isDark && styles.mockTextSec]}>
-              These signals predicted a uveitis flare 3 days before it struck. Spondy watches for exactly this.
+              These signals predicted a flare 3 days before it struck. Fibro watches for exactly this.
             </Text>
           </View>
         </View>
@@ -818,19 +868,19 @@ export function OnboardingScreen() {
           showsVerticalScrollIndicator={false}
         >
           <View style={styles.welcomeContent}>
-            <Text style={styles.welcomeEmoji}>🦴</Text>
+            <Text style={styles.welcomeEmoji}>💜</Text>
             <Text style={[styles.welcomeTitle, isDark && styles.textDark]}>
-              Life with AS,{'\n'}finally understood
+              Life with fibromyalgia,{'\n'}finally understood
             </Text>
             <Text style={[styles.welcomeSubtitle, isDark && styles.timeLabelDark]}>
-              Spondy learns your patterns so you can stay ahead of flares and make the most of your good days.
+              Fibro learns your patterns so you can stay ahead of flares and make the most of your good days.
             </Text>
 
             <View style={styles.welcomeFeatures}>
               {[
-                { icon: '📊', text: 'Track pain, fatigue, sleep, and medication in under 60 seconds' },
+                { icon: '📊', text: 'Track pain, fatigue, brain fog, and sleep in under 60 seconds' },
                 { icon: '🔮', text: 'Spot early warning signs before a flare strikes' },
-                { icon: '🩺', text: 'Share clear reports with your rheumatologist' },
+                { icon: '🩺', text: 'Share clear reports with your doctor' },
               ].map(({ icon, text }) => (
                 <View key={text} style={[styles.welcomeFeatureRow, isDark && styles.welcomeFeatureRowDark]}>
                   <Text style={styles.welcomeFeatureIcon}>{icon}</Text>
@@ -1035,6 +1085,43 @@ const styles = StyleSheet.create({
   timePicker: {
     width: '100%',
     height: 180,
+  },
+  androidTimeRow: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    gap: Spacing.xl,
+    marginVertical: Spacing.md,
+  },
+  androidTimeCol: {
+    alignItems: 'center',
+    gap: Spacing.sm,
+  },
+  androidTimeBtn: {
+    borderWidth: 1,
+    borderRadius: BorderRadius.md,
+    paddingHorizontal: Spacing.lg,
+    paddingVertical: Spacing.sm,
+  },
+  androidTimeArrow: {
+    fontSize: FontSize.lg,
+    fontWeight: '700',
+  },
+  androidTimeValue: {
+    fontSize: 52,
+    fontWeight: '700',
+    textAlign: 'center',
+    minWidth: 80,
+  },
+  androidTimeUnit: {
+    fontSize: FontSize.sm,
+    textAlign: 'center',
+  },
+  androidTimeColon: {
+    fontSize: 52,
+    fontWeight: '700',
+    alignSelf: 'center',
+    paddingBottom: 28,
   },
 
   // Preview slides

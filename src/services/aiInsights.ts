@@ -1,5 +1,5 @@
 import { supabase } from '@/services/supabase';
-import { BasdaiScore, DailyLog, Flare, HealthData, UserProfile } from '@/types';
+import { DailyLog, Flare, HealthData, UserProfile } from '@/types';
 
 export interface WeeklyInsight {
   summary: string;
@@ -40,10 +40,10 @@ function buildHealthSummary(healthHistory: HealthData[]): string {
   const withSteps = healthHistory.filter((d) => d.steps !== null);
 
   if (withHRV.length === 0 && withSleep.length === 0 && withHR.length === 0) {
-    return 'No Apple Health data available.';
+    return 'No health data available.';
   }
 
-  const lines: string[] = [`APPLE HEALTH DATA (last ${healthHistory.length} days with data):`];
+  const lines: string[] = [`HEALTH DATA (last ${healthHistory.length} days with data):`];
 
   if (withHRV.length > 0) {
     const avgHRV = (withHRV.reduce((s, d) => s + d.hrv!, 0) / withHRV.length).toFixed(1);
@@ -54,7 +54,7 @@ function buildHealthSummary(healthHistory: HealthData[]): string {
       const rHRV = recent.reduce((s, d) => s + d.hrv!, 0) / recent.length;
       const eHRV = earlier.reduce((s, d) => s + d.hrv!, 0) / earlier.length;
       const pct = ((eHRV - rHRV) / eHRV) * 100;
-      if (pct >= 10) trend = ` (↓ ${pct.toFixed(0)}% vs earlier — possible inflammation signal)`;
+      if (pct >= 10) trend = ` (↓ ${pct.toFixed(0)}% vs earlier — possible nervous system stress signal)`;
       else if (pct <= -10) trend = ` (↑ recovering)`;
     }
     lines.push(`- Average HRV: ${avgHRV}ms${trend}`);
@@ -93,7 +93,7 @@ function buildHealthSummary(healthHistory: HealthData[]): string {
   return lines.join('\n');
 }
 
-function buildDataSummary(logs: DailyLog[], flares: Flare[], healthHistory?: HealthData[], basdaiScores?: BasdaiScore[]): string {
+function buildDataSummary(logs: DailyLog[], flares: Flare[], healthHistory?: HealthData[]): string {
   if (logs.length === 0) {
     return 'No tracking data available for this period.';
   }
@@ -101,11 +101,14 @@ function buildDataSummary(logs: DailyLog[], flares: Flare[], healthHistory?: Hea
   const avgPain = (logs.reduce((s, l) => s + l.pain_score, 0) / logs.length).toFixed(1);
   const avgFatigue = (logs.reduce((s, l) => s + l.fatigue_score, 0) / logs.length).toFixed(1);
 
+  const brainFogLogs = logs.filter(l => l.brain_fog_score !== null && l.brain_fog_score !== undefined);
+  const brainFogLine = brainFogLogs.length > 0
+    ? `\n- Average brain fog score: ${(brainFogLogs.reduce((s, l) => s + (l.brain_fog_score ?? 0), 0) / brainFogLogs.length).toFixed(1)}/10`
+    : '';
+
   const moodCounts: Record<string, number> = {};
   for (const log of logs) {
-    if (log.mood) {
-      moodCounts[log.mood] = (moodCounts[log.mood] ?? 0) + 1;
-    }
+    if (log.mood) moodCounts[log.mood] = (moodCounts[log.mood] ?? 0) + 1;
   }
   const moodSummary = Object.entries(moodCounts)
     .map(([mood, count]) => `${mood}: ${count} days`)
@@ -126,21 +129,21 @@ function buildDataSummary(logs: DailyLog[], flares: Flare[], healthHistory?: Hea
       : flares
           .map(
             (f) =>
-              `  - ${formatDate(f.start_date)} to ${f.end_date ? formatDate(f.end_date) : 'ongoing'} (${f.severity}, areas: ${f.areas_affected.join(', ')})`
+              `  - ${formatDate(f.start_date)} to ${f.end_date ? formatDate(f.end_date) : 'ongoing'} (${f.severity}${f.triggers?.length ? `, triggers: ${f.triggers.join(', ')}` : ''}, areas: ${f.areas_affected.join(', ')})`
           )
           .join('\n');
 
-  // Simple sleep/pain correlation detection
+  // Morning stiffness/pain correlation
   let correlationNote = '';
   if (logs.length >= 5) {
-    const poorSleepDays = logs.filter(
+    const highStiffnessDays = logs.filter(
       (l) => l.stiffness_duration === 'over_2_hours' || l.stiffness_duration === '1_2_hours'
     );
-    if (poorSleepDays.length > 0) {
-      const avgPainOnPoorSleepDays = (
-        poorSleepDays.reduce((s, l) => s + l.pain_score, 0) / poorSleepDays.length
+    if (highStiffnessDays.length > 0) {
+      const avgPainOnHighStiffDays = (
+        highStiffnessDays.reduce((s, l) => s + l.pain_score, 0) / highStiffnessDays.length
       ).toFixed(1);
-      correlationNote = `\nOn days with long morning stiffness (${poorSleepDays.length} days), average pain was ${avgPainOnPoorSleepDays}/10 vs overall average of ${avgPain}/10.`;
+      correlationNote = `\nOn days with significant morning pain/stiffness (${highStiffnessDays.length} days), average pain was ${avgPainOnHighStiffDays}/10 vs overall average of ${avgPain}/10.`;
     }
   }
 
@@ -169,20 +172,19 @@ function buildDataSummary(logs: DailyLog[], flares: Flare[], healthHistory?: Hea
       .map(([t, n]) => `${TRIGGER_LABELS[t] ?? t} (${n}d)`)
       .join(', ');
 
-    // Pain on poor/mixed vs clean days
     const inflammatoryDays = dietLogs.filter((l) => l.diet_quality === 'poor' || l.diet_quality === 'mixed');
     const cleanDays = dietLogs.filter((l) => l.diet_quality === 'clean' || l.diet_quality === 'mostly_clean');
     let dietCorrelation = '';
     if (inflammatoryDays.length >= 2 && cleanDays.length >= 2) {
       const avgPainInflam = (inflammatoryDays.reduce((s, l) => s + l.pain_score, 0) / inflammatoryDays.length).toFixed(1);
       const avgPainClean = (cleanDays.reduce((s, l) => s + l.pain_score, 0) / cleanDays.length).toFixed(1);
-      dietCorrelation = `\n- Avg pain on inflammatory diet days: ${avgPainInflam}/10 vs clean days: ${avgPainClean}/10`;
+      dietCorrelation = `\n- Avg pain on poor diet days: ${avgPainInflam}/10 vs clean days: ${avgPainClean}/10`;
     }
 
     dietSection = `\n\nDIET (${dietLogs.length} days logged):
 - Quality: clean ${qCounts.clean}d, mostly clean ${qCounts.mostly_clean}d, mixed ${qCounts.mixed}d, poor ${qCounts.poor}d
 ${topTriggers ? `- Most frequent triggers: ${topTriggers}` : '- No specific triggers logged'}${dietCorrelation}
-- Note: For AS, high starch/wheat, alcohol, processed food and sugar are known inflammation drivers.`;
+- Note: Some research suggests certain dietary triggers may worsen fibromyalgia symptoms in susceptible individuals.`;
   }
 
   // Exercise section
@@ -190,10 +192,10 @@ ${topTriggers ? `- Most frequent triggers: ${topTriggers}` : '- No specific trig
   const exerciseDays = logs.filter(l => (l as any).exercise_done);
   if (exerciseDays.length > 0) {
     const pct = Math.round((exerciseDays.length / logs.length) * 100);
-    exerciseSection = `\n\nEXERCISE: Logged exercise on ${exerciseDays.length} of ${logs.length} days (${pct}%).`;
+    exerciseSection = `\n\nEXERCISE: Logged exercise on ${exerciseDays.length} of ${logs.length} days (${pct}%). Note: graded exercise is one of the most evidence-based fibromyalgia management strategies.`;
   }
 
-  // Period section (only present when user tracks period data)
+  // Period section
   let periodSection = '';
   const periodLogs = logs.filter(l => l.period_active === true);
   if (periodLogs.length > 0) {
@@ -208,23 +210,10 @@ ${topTriggers ? `- Most frequent triggers: ${topTriggers}` : '- No specific trig
     periodSection = `\n\nMENSTRUAL CYCLE DATA: Period active on ${periodLogs.length} logged days.${correlationLine}`;
   }
 
-  // BASDAI section
-  let basdaiSection = '';
-  if (basdaiScores && basdaiScores.length > 0) {
-    const latest = basdaiScores[0];
-    const interp = latest.score < 2 ? 'low activity' : latest.score < 4 ? 'moderate' : latest.score < 6 ? 'high (at biologic threshold)' : 'very high';
-    basdaiSection = `\n\nBASDI SCORE (most recent, ${latest.date}): ${latest.score}/10 — ${interp}`;
-    if (basdaiScores.length >= 2) {
-      const prev = basdaiScores[1];
-      const diff = latest.score - prev.score;
-      basdaiSection += `. Previous score was ${prev.score} (${diff > 0 ? `↑ +${diff.toFixed(1)}` : diff < 0 ? `↓ ${diff.toFixed(1)}` : 'unchanged'}).`;
-    }
-  }
-
   return `
 TRACKING DATA SUMMARY (last 28 days, ${logs.length} days logged):
 - Average pain score: ${avgPain}/10
-- Average fatigue score: ${avgFatigue}/10
+- Average fatigue score: ${avgFatigue}/10${brainFogLine}
 - Mood breakdown: ${moodSummary || 'not recorded'}
 - Medication adherence: ${medicationAdherence} days fully taken, ${medicationPartial} partial, ${medicationMissed} missed${correlationNote}
 
@@ -232,7 +221,7 @@ FLARES:
 ${flareSummary}
 
 USER NOTES (free text from check-ins):
-${notes || '  None'}${dietSection}${healthSection}${exerciseSection}${periodSection}${basdaiSection}
+${notes || '  None'}${dietSection}${healthSection}${exerciseSection}${periodSection}
 `.trim();
 }
 
@@ -243,13 +232,13 @@ function buildProfileSummary(profile: UserProfile): string {
   return `
 USER PROFILE:
 ${sexLine}- Age range: ${profile.age_range ?? 'not specified'}
-- Years diagnosed: ${profile.diagnosis_years ?? 'not specified'}
-- Disease activity: ${profile.severity ?? 'not specified'}
+- Time since fibromyalgia diagnosis: ${profile.diagnosis_years ?? 'not specified'}
+- Current disease activity: ${profile.severity ?? 'not specified'}
 - Medications: ${profile.medications.join(', ') || 'none'}
 - Pain locations: ${profile.pain_locations.join(', ') || 'none specified'}
 - Pain types: ${profile.pain_types.join(', ') || 'none specified'}
-- Associated conditions: ${profile.conditions.join(', ') || 'none'}
-- Morning stiffness: ${profile.morning_stiffness ?? 'not specified'}
+- Related conditions: ${profile.conditions.join(', ') || 'none'}
+- Morning pain/stiffness: ${profile.morning_stiffness ?? 'not specified'}
 - Main challenges: ${profile.challenges.join(', ') || 'none specified'}
 ${profile.ai_context ? `- Additional context from user: ${profile.ai_context}` : ''}
 `.trim();
@@ -262,12 +251,11 @@ export async function generateWeeklyInsight(params: {
   flares: Flare[];
   profile: UserProfile;
   healthHistory?: HealthData[];
-  basdaiScores?: BasdaiScore[];
   aiContext?: string;
 }): Promise<WeeklyInsight> {
-  const { logs, flares, profile, healthHistory, basdaiScores, aiContext } = params;
+  const { logs, flares, profile, healthHistory, aiContext } = params;
 
-  const systemPrompt = `You are Spondy, a warm and knowledgeable health companion for someone living with Ankylosing Spondylitis.
+  const systemPrompt = `You are Fibro, a warm and knowledgeable health companion for someone living with fibromyalgia.
 Analyse the user's data and respond with a JSON object in exactly this structure:
 {
   "summary": "2-3 warm sentences giving an overall picture of the week — the main theme or standout pattern.",
@@ -284,13 +272,14 @@ Rules:
 - Use language like "your data suggests", "it might be worth", "consider"
 - Be specific to their actual data — mention real numbers or patterns you see
 - Be warm and encouraging, like a knowledgeable friend
+- Pay attention to sleep quality, brain fog, pacing, and stress as key fibromyalgia factors
 - The JSON must be valid and parseable — no markdown, no text outside the JSON`;
 
   const userMessage = `Here is my health data:
 
 ${buildProfileSummary(profile)}
 
-${buildDataSummary(logs, flares, healthHistory, basdaiScores)}
+${buildDataSummary(logs, flares, healthHistory)}
 ${aiContext ? `\nAdditional context: ${aiContext}` : ''}`;
 
   try {
@@ -319,26 +308,26 @@ export async function sendChatMessage(params: {
   flares: Flare[];
   profile: UserProfile;
   healthHistory?: HealthData[];
-  basdaiScores?: BasdaiScore[];
   aiContext?: string;
 }): Promise<string> {
-  const { messages, logs, flares, profile, healthHistory, basdaiScores, aiContext } = params;
+  const { messages, logs, flares, profile, healthHistory, aiContext } = params;
 
-  const systemPrompt = `You are Spondy AI, a warm and knowledgeable health companion for someone living with Ankylosing Spondylitis (AS).
-You have access to the user's tracking data and can help them understand their patterns, potential triggers, and AS management.
+  const systemPrompt = `You are Fibro AI, a warm and knowledgeable health companion for someone living with fibromyalgia.
+You have access to the user's tracking data and can help them understand their patterns, potential triggers, and fibromyalgia management.
 
 Here is the user's profile and recent data:
 
 ${buildProfileSummary(profile)}
 
-${buildDataSummary(logs, flares, healthHistory, basdaiScores)}
+${buildDataSummary(logs, flares, healthHistory)}
 ${aiContext ? `\nAdditional context from user: ${aiContext}` : ''}
 
 Guidelines for your responses:
-- Be conversational, warm, and encouraging — like a knowledgeable friend who also has AS
+- Be conversational, warm, and encouraging — like a knowledgeable friend who understands fibromyalgia
 - Never say "you are at risk", make diagnoses, or give medical advice
 - Use language like "your data suggests", "it might be worth exploring", "consider"
 - Be specific to their actual data when relevant
+- Key fibromyalgia factors to watch for: sleep quality, pacing/overactivity, stress, brain fog, weather changes
 - Keep responses concise (2-4 sentences usually) unless they ask for detail
 - If asked about something outside your knowledge, say so honestly`;
 
@@ -351,8 +340,6 @@ Guidelines for your responses:
     });
   } catch (err) {
     console.error('sendChatMessage error:', err);
-    throw new Error(
-      'AI chat is temporarily unavailable. Please try again in a moment.'
-    );
+    throw new Error('AI chat is temporarily unavailable. Please try again in a moment.');
   }
 }

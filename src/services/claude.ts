@@ -25,33 +25,38 @@ async function callClaude(body: object): Promise<string> {
 
 function buildOnboardingPrompt(data: OnboardingData): string {
   const medicationLabels: Record<string, string> = {
-    adalimumab: 'Adalimumab (Humira)',
-    secukinumab: 'Secukinumab (Cosentyx)',
-    ixekizumab: 'Ixekizumab (Taltz)',
-    ustekinumab: 'Ustekinumab (Stelara)',
+    duloxetine: 'Duloxetine (Cymbalta)',
+    pregabalin: 'Pregabalin (Lyrica)',
+    milnacipran: 'Milnacipran (Savella)',
+    amitriptyline: 'Amitriptyline (low dose)',
+    low_dose_naltrexone: 'Low Dose Naltrexone (LDN)',
     nsaids_only: 'NSAIDs only',
     no_medication: 'no medication',
     other: 'other treatment',
   };
 
   const locationLabels: Record<string, string> = {
-    lower_back: 'lower back/sacroiliac',
+    lower_back: 'lower back',
     upper_back: 'upper back',
     hips: 'hips',
     knees: 'knees',
     shoulders: 'shoulders',
-    neck: 'neck/cervical spine',
-    chest: 'chest/ribs',
+    neck: 'neck',
+    chest: 'chest',
     jaw: 'jaw (TMJ)',
+    hands_feet: 'hands and feet',
+    widespread: 'widespread/all-over pain',
   };
 
   const conditionLabels: Record<string, string> = {
-    uveitis: 'uveitis',
-    psoriasis: 'psoriasis',
-    ibd: 'inflammatory bowel disease',
-    fatigue: 'significant fatigue',
-    brain_fog: 'brain fog',
+    sleep_disorder: 'sleep disorder',
+    ibs: 'irritable bowel syndrome (IBS)',
+    restless_legs: 'restless leg syndrome',
+    headaches: 'chronic headaches/migraines',
+    tmj: 'TMJ dysfunction',
     anxiety_depression: 'anxiety/depression',
+    brain_fog: 'brain fog/cognitive issues',
+    fatigue: 'significant fatigue',
   };
 
   const ageLabels: Record<string, string> = {
@@ -63,6 +68,7 @@ function buildOnboardingPrompt(data: OnboardingData): string {
   };
 
   const diagnosisLabels: Record<string, string> = {
+    not_diagnosed: 'not yet diagnosed (suspected fibromyalgia)',
     under_1: 'less than 1 year',
     '1_3': '1–3 years',
     '3_5': '3–5 years',
@@ -78,39 +84,39 @@ function buildOnboardingPrompt(data: OnboardingData): string {
   };
 
   const sexLine = data.biological_sex && data.biological_sex !== 'prefer_not_to_say'
-    ? `- Biological sex: ${data.biological_sex}${data.biological_sex === 'female' ? ' (note: AS often presents with more peripheral joint involvement in women; hormonal fluctuations may affect symptom severity)' : ''}\n`
+    ? `- Biological sex: ${data.biological_sex}${data.biological_sex === 'female' ? ' (note: fibromyalgia is more prevalent in females; hormonal fluctuations may significantly affect symptom severity and flare patterns)' : ''}\n`
     : '';
 
-  return `You are a warm, knowledgeable companion for someone living with Ankylosing Spondylitis (AS).
+  return `You are a warm, knowledgeable companion for someone living with fibromyalgia.
 
 Here is their profile:
 ${sexLine}- Age range: ${ageLabels[data.age_range ?? ''] ?? 'unknown'}
-- Years since AS diagnosis: ${diagnosisLabels[data.diagnosis_years ?? ''] ?? 'unknown'}
+- Years since fibromyalgia diagnosis: ${diagnosisLabels[data.diagnosis_years ?? ''] ?? 'unknown'}
 - Current disease activity: ${data.severity ?? 'unknown'}
 - Current treatment: ${data.medications.map(m => medicationLabels[m] ?? m).join(', ') || 'none specified'}
 - Pain locations: ${data.pain_locations.map(l => locationLabels[l] ?? l).join(', ') || 'none specified'}
 - Pain types: ${data.pain_types.join(', ') || 'none specified'}
 - Associated conditions: ${data.conditions.map(c => conditionLabels[c] ?? c).join(', ') || 'none'}
-- Morning stiffness duration: ${stiffnessLabels[data.morning_stiffness ?? ''] ?? 'unknown'}
+- Morning stiffness/pain duration: ${stiffnessLabels[data.morning_stiffness ?? ''] ?? 'unknown'}
 - Biggest lifestyle challenges: ${data.challenges.join(', ') || 'none specified'}
 
 Please respond with a JSON object with exactly this structure:
 {
-  "welcome_message": "A warm, personal 2-3 sentence welcome that acknowledges what they're going through specifically. Make them feel understood. Use 'you' and 'your'. Never use clinical language or anything alarming. Tone: like a knowledgeable friend who also has AS.",
+  "welcome_message": "A warm, personal 2-3 sentence welcome that acknowledges what they're going through specifically. Make them feel understood. Use 'you' and 'your'. Never use clinical language or anything alarming. Tone: like a knowledgeable friend who also has fibromyalgia.",
   "insights": [
     "First condition-specific insight relevant to their profile — something genuinely useful they might not know. 1-2 sentences.",
     "Second insight — different aspect of their profile. 1-2 sentences.",
     "Third insight — practical, actionable, warm. 1-2 sentences."
   ],
-  "watch_summary": "1-2 sentences describing what Spondy will specifically monitor for this person based on their profile. Be specific to their conditions and challenges."
+  "watch_summary": "1-2 sentences describing what Fibro will specifically monitor for this person based on their profile. Be specific to their conditions and challenges — e.g. sleep quality, brain fog patterns, pacing, flare triggers."
 }
 
 Rules:
 - Never say "you are at risk", "you will flare", or anything that sounds like a diagnosis
 - Always use language like "your data suggests", "might be worth", "consider"
 - Be warm, not clinical
-- Be specific to their actual profile — don't give generic AS advice
-- If they have uveitis, mention it specifically
+- Be specific to their actual profile — don't give generic fibromyalgia advice
+- Key fibromyalgia factors: sleep quality, pacing/activity balance, stress, brain fog, weather sensitivity
 - The JSON must be valid and parseable`;
 }
 

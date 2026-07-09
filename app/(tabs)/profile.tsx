@@ -41,7 +41,7 @@ import { PremiumModal } from '@/components/common/PremiumModal';
 import { logEvent, Events } from '@/services/analytics';
 import { getAiConsent, setAiConsent } from '@/services/aiConsent';
 import { generateAndShareReport } from '@/services/pdfExport';
-import { getDailyLogs, getUveitisEpisodes, getBasdaiScores, deleteAllUserData } from '@/services/database';
+import { getDailyLogs, deleteAllUserData } from '@/services/database';
 import {
   MedicationReminder,
   BiologicInjection,
@@ -87,10 +87,11 @@ function capitalize(s: string): string {
 }
 
 const MEDICATION_LABELS: Record<string, string> = {
-  adalimumab: 'Adalimumab (Humira)',
-  secukinumab: 'Secukinumab (Cosentyx)',
-  ixekizumab: 'Ixekizumab (Taltz)',
-  ustekinumab: 'Ustekinumab (Stelara)',
+  duloxetine: 'Duloxetine (Cymbalta)',
+  pregabalin: 'Pregabalin (Lyrica)',
+  milnacipran: 'Milnacipran (Savella)',
+  amitriptyline: 'Amitriptyline (low dose)',
+  low_dose_naltrexone: 'Low Dose Naltrexone (LDN)',
   nsaids_only: 'NSAIDs only',
   no_medication: 'No medication',
   other: 'Other treatment',
@@ -138,8 +139,9 @@ const PAIN_LOCATION_LABELS: Record<string, string> = {
   shoulders: 'Shoulders',
   neck: 'Neck',
   chest: 'Chest',
-  jaw: 'Jaw',
-  heels: 'Heels',
+  jaw: 'Jaw (TMJ)',
+  hands_feet: 'Hands & feet',
+  widespread: 'Widespread',
   other: 'Other',
 };
 
@@ -148,18 +150,20 @@ const PAIN_TYPE_LABELS: Record<string, string> = {
   sharp_pain: 'Sharp pain',
   burning: 'Burning',
   aching: 'Deep aching',
-  fatigue: 'AS fatigue',
+  tingling: 'Tingling / numbness',
+  hypersensitivity: 'Hypersensitivity',
+  fatigue: 'Fatigue',
 };
 
 const CONDITION_LABELS: Record<string, string> = {
-  uveitis: 'Uveitis',
-  psoriasis: 'Psoriasis',
-  ibd: 'IBD',
-  enthesitis: 'Enthesitis',
-  peripheral_joint: 'Peripheral joints',
-  fatigue: 'Significant fatigue',
-  brain_fog: 'Brain fog',
+  sleep_disorder: 'Sleep disorder',
+  ibs: 'Irritable bowel syndrome',
+  restless_legs: 'Restless leg syndrome',
+  headaches: 'Chronic headaches',
+  tmj: 'TMJ dysfunction',
   anxiety_depression: 'Anxiety / depression',
+  brain_fog: 'Brain fog',
+  fatigue: 'Significant fatigue',
 };
 
 const MORNING_STIFFNESS_LABELS: Record<string, string> = {
@@ -371,7 +375,7 @@ function ProfileEditModal({ visible, onClose, profile, onSave, isDark }: Profile
             <OptionCard key={v} style={compactCard} label={AGE_RANGE_LABELS[v]} isSelected={ageRange === v} onPress={() => setAgeRange(v)} />
           ))}
 
-          <Text style={[styles.editFieldLabel, { color: textSecondary }]}>Years with AS</Text>
+          <Text style={[styles.editFieldLabel, { color: textSecondary }]}>Years with fibromyalgia</Text>
           {(['under_1', '1_3', '3_5', '5_10', '10_plus'] as DiagnosisYears[]).map(v => (
             <OptionCard key={v} style={compactCard} label={DIAGNOSIS_YEARS_LABELS[v]} isSelected={diagnosisYears === v} onPress={() => setDiagnosisYears(v)} />
           ))}
@@ -389,19 +393,19 @@ function ProfileEditModal({ visible, onClose, profile, onSave, isDark }: Profile
           <EditSectionHeader label="Symptoms" color={textSecondary} />
 
           <Text style={[styles.editFieldLabel, { color: textSecondary }]}>Pain locations</Text>
-          {(['lower_back', 'upper_back', 'hips', 'knees', 'shoulders', 'neck', 'chest', 'jaw', 'heels', 'other'] as PainLocation[]).map(v => (
+          {(['lower_back', 'upper_back', 'hips', 'knees', 'shoulders', 'neck', 'chest', 'jaw', 'hands_feet', 'widespread', 'other'] as PainLocation[]).map(v => (
             <MultiSelectCard key={v} style={compactCard} label={PAIN_LOCATION_LABELS[v]} isSelected={painLocations.includes(v)} onPress={() => setPainLocations(arr => toggle(arr, v))} />
           ))}
 
           <Text style={[styles.editFieldLabel, { color: textSecondary }]}>Types of pain</Text>
-          {(['stiffness', 'sharp_pain', 'burning', 'aching', 'fatigue'] as PainType[]).map(v => (
+          {(['stiffness', 'sharp_pain', 'burning', 'aching', 'tingling', 'hypersensitivity', 'fatigue'] as PainType[]).map(v => (
             <MultiSelectCard key={v} style={compactCard} label={PAIN_TYPE_LABELS[v]} isSelected={painTypes.includes(v)} onPress={() => setPainTypes(arr => toggle(arr, v))} />
           ))}
 
           <EditSectionHeader label="Conditions" color={textSecondary} />
 
           <Text style={[styles.editFieldLabel, { color: textSecondary }]}>Associated conditions</Text>
-          {(['uveitis', 'psoriasis', 'ibd', 'enthesitis', 'peripheral_joint', 'fatigue', 'brain_fog', 'anxiety_depression'] as AssociatedCondition[]).map(v => (
+          {(['sleep_disorder', 'ibs', 'restless_legs', 'headaches', 'tmj', 'anxiety_depression', 'brain_fog', 'fatigue'] as AssociatedCondition[]).map(v => (
             <MultiSelectCard key={v} style={compactCard} label={CONDITION_LABELS[v]} isSelected={conditions.includes(v)} onPress={() => setConditions(arr => toggle(arr, v))} />
           ))}
 
@@ -415,7 +419,7 @@ function ProfileEditModal({ visible, onClose, profile, onSave, isDark }: Profile
           <EditSectionHeader label="Treatment" color={textSecondary} />
 
           <Text style={[styles.editFieldLabel, { color: textSecondary }]}>Current treatment</Text>
-          {(['adalimumab', 'secukinumab', 'ixekizumab', 'ustekinumab', 'nsaids_only', 'no_medication', 'other'] as Medication[]).map(v => (
+          {(['duloxetine', 'pregabalin', 'milnacipran', 'amitriptyline', 'low_dose_naltrexone', 'nsaids_only', 'no_medication', 'other'] as Medication[]).map(v => (
             <MultiSelectCard key={v} style={compactCard} label={MEDICATION_LABELS[v]} isSelected={medications.includes(v)} onPress={() => setMedications(arr => toggle(arr, v))} />
           ))}
 
@@ -858,19 +862,16 @@ export default function ProfileScreen() {
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [pendingTime, setPendingTime] = useState<Date | null>(null);
 
-  // Restore persisted reminder toggle and re-schedule notification on mount
+  // Restore persisted reminder toggle on mount — scheduling is owned by _layout.tsx
   useEffect(() => {
     if (!user) return;
-    AsyncStorage.getItem(`@spondy_reminder_enabled_${user.id}`)
+    AsyncStorage.getItem(`@fibro_reminder_enabled_${user.id}`)
       .then((val) => {
         const enabled = val === null ? true : val === 'true';
         setReminderEnabled(enabled);
-        if (enabled && profile?.notification_time) {
-          scheduleDailyCheckIn(profile.notification_time).catch(() => {});
-        }
       })
       .catch(() => {});
-  }, [user, profile?.notification_time]);
+  }, [user]);
   const [aiContext, setAiContext] = useState(profile?.ai_context ?? '');
   const [isSavingAiContext, setIsSavingAiContext] = useState(false);
   const [editingAiContext, setEditingAiContext] = useState(false);
@@ -925,7 +926,7 @@ export default function ProfileScreen() {
   const inputBg = isDark ? Colors.backgroundDark : Colors.background;
 
   const handleSignOut = useCallback(() => {
-    Alert.alert(t('auth.sign_out'), 'Sign out of Spondy?', [
+    Alert.alert(t('auth.sign_out'), 'Sign out of Fibro?', [
       { text: t('common.cancel'), style: 'cancel' },
       {
         text: t('auth.sign_out'),
@@ -988,7 +989,7 @@ export default function ProfileScreen() {
     async (value: boolean) => {
       setReminderEnabled(value);
       if (user) {
-        await AsyncStorage.setItem(`@spondy_reminder_enabled_${user.id}`, String(value));
+        await AsyncStorage.setItem(`@fibro_reminder_enabled_${user.id}`, String(value));
       }
       if (value && profile?.notification_time) {
         try {
@@ -1080,19 +1081,13 @@ export default function ProfileScreen() {
       const daysBack = reportFromDate
         ? Math.ceil((Date.now() - new Date(reportFromDate + 'T00:00:00').getTime()) / 86400000) + 1
         : 365;
-      const [logs, uveitisEpisodes, basdaiScores] = await Promise.all([
-        getDailyLogs(user.id, daysBack),
-        getUveitisEpisodes(user.id),
-        getBasdaiScores(user.id, 50),
-      ]);
+      const logs = await getDailyLogs(user.id, daysBack);
       await generateAndShareReport({
         logs,
         flares,
-        uveitisEpisodes,
         medications,
         biologicInjections,
         profile,
-        basdaiScores,
         fromDate: reportFromDate || undefined,
       });
       logEvent(Events.REPORT_GENERATED).catch(() => {});
@@ -1179,7 +1174,7 @@ export default function ProfileScreen() {
 
   const handleSendFeedback = useCallback(() => {
     if (!feedbackText.trim()) return;
-    const subject = encodeURIComponent('Spondy Feedback');
+    const subject = encodeURIComponent('Fibro Feedback');
     const body = encodeURIComponent(feedbackText.trim() + (user?.email ? `\n\n— ${user.email}` : ''));
     Linking.openURL(`mailto:joseph.brockbank@gmail.com?subject=${subject}&body=${body}`);
     setFeedbackText('');
@@ -1313,7 +1308,7 @@ export default function ProfileScreen() {
               <SummarySection label="About you" isDark={isDark} first />
               {profile?.biological_sex && <SummaryRow label="Biological sex" value={BIOLOGICAL_SEX_LABELS[profile.biological_sex]} isDark={isDark} />}
               {profile?.age_range && <SummaryRow label="Age range" value={AGE_RANGE_LABELS[profile.age_range]} isDark={isDark} />}
-              {profile?.diagnosis_years && <SummaryRow label="Years with AS" value={DIAGNOSIS_YEARS_LABELS[profile.diagnosis_years]} isDark={isDark} />}
+              {profile?.diagnosis_years && <SummaryRow label="Years with fibromyalgia" value={DIAGNOSIS_YEARS_LABELS[profile.diagnosis_years]} isDark={isDark} />}
               {profile?.severity && <SummaryRow label="Disease activity" value={SEVERITY_LABELS[profile.severity]} isDark={isDark} />}
               {profile?.morning_stiffness && <SummaryRow label="Morning stiffness" value={MORNING_STIFFNESS_LABELS[profile.morning_stiffness]} isDark={isDark} />}
             </>
@@ -1526,7 +1521,7 @@ export default function ProfileScreen() {
             <SectionHeader label="Health data" isDark={isDark} />
             <View style={[styles.card, { backgroundColor: cardBg, borderColor: cardBorder }]}>
               <View style={styles.healthSimpleRow}>
-                <Text style={[styles.healthSimpleName, { color: textPrimary }]}>Apple Health</Text>
+                <Text style={[styles.healthSimpleName, { color: textPrimary }]}>{Platform.OS === 'ios' ? 'Apple Health' : 'Health Connect'}</Text>
                 <View style={{ flex: 1 }} />
                 {healthConnected && (
                   <View style={[styles.healthConnectedBadge, { backgroundColor: Colors.success + '22' }]}>
@@ -1787,21 +1782,21 @@ export default function ProfileScreen() {
             Further reading:
           </Text>
           <TouchableOpacity
-            onPress={() => Linking.openURL('https://nass.co.uk')}
+            onPress={() => Linking.openURL('https://www.fmaware.org')}
             activeOpacity={0.7}
             style={styles.sourceLink}
           >
             <Text style={[styles.sourceLinkText, { color: Colors.primary }]}>{t('profile_privacy.sources_nass')}</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            onPress={() => Linking.openURL('https://spondylitis.org')}
+            onPress={() => Linking.openURL('https://www.fmauk.org')}
             activeOpacity={0.7}
             style={styles.sourceLink}
           >
             <Text style={[styles.sourceLinkText, { color: Colors.primary }]}>{t('profile_privacy.sources_saa')}</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            onPress={() => Linking.openURL('https://www.basdai.com')}
+            onPress={() => Linking.openURL('https://www.myalgia.com')}
             activeOpacity={0.7}
             style={styles.sourceLink}
           >

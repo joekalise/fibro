@@ -5,7 +5,7 @@ import { supabase } from './supabase';
 import { fetchTodayHealthData, isHealthConnected } from './healthKit';
 import { saveHealthData } from './database';
 
-const TASK_NAME = 'SPONDY_HEALTH_SYNC';
+const TASK_NAME = 'FIBRO_HEALTH_SYNC';
 
 function localDateString(offsetDays = 0): string {
   const d = new Date();

@@ -27,8 +27,7 @@ import { generateWeeklyInsight, WeeklyInsight } from '@/services/aiInsights';
 import { getAiConsent } from '@/services/aiConsent';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useHealthHistory } from '@/hooks/useHealthHistory';
-import { useBasdai } from '@/hooks/useBasdai';
-import { DailyLog, Flare, Mood, UserProfile, HealthData, BasdaiScore } from '@/types';
+import { DailyLog, Flare, Mood, UserProfile, HealthData } from '@/types';
 import { ProfileButton } from '@/components/common/ProfileButton';
 import { InfoButton } from '@/components/common/InfoButton';
 import { DragSlider } from '@/components/common/DragSlider';
@@ -45,7 +44,7 @@ interface InsightCache {
 const CACHE_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 
 function insightCacheKey(userId: string): string {
-  return `@spondy_insight_cache_${userId}`;
+  return `@fibro_insight_cache_${userId}`;
 }
 
 async function loadInsightCache(userId: string): Promise<InsightCache | null> {
@@ -154,7 +153,8 @@ function TrendChart({
       })}
 
       {labels.map((label, i) => {
-        if (i % 2 !== 0) return null;
+        const step = Math.max(1, Math.ceil(pointCount / 7));
+        if (i % step !== 0) return null;
         return (
           <SvgText
             key={`x-${i}`}
@@ -502,212 +502,19 @@ function ChatDataCard({ isDark, onPress }: { isDark: boolean; onPress: () => voi
   );
 }
 
-// ─── BASDAI helpers ────────────────────────────────────────────────────────────
+// ─── FIQ placeholder card ─────────────────────────────────────────────────────
 
-function basdaiInterpretation(score: number): { label: string; color: string } {
-  if (score < 2) return { label: 'Low activity', color: Colors.success };
-  if (score < 4) return { label: 'Moderate', color: Colors.warning };
-  if (score < 6) return { label: 'High (biologic threshold)', color: Colors.error };
-  return { label: 'Very high', color: Colors.error };
-}
-
-// ─── BasdaiModal ──────────────────────────────────────────────────────────────
-
-const BASDAI_QUESTIONS = [
-  { key: 'q1', text: 'How would you describe the overall level of fatigue/tiredness?' },
-  { key: 'q2', text: 'How would you describe the overall level of AS neck, back or hip pain?' },
-  { key: 'q3', text: 'How would you describe the overall level of pain/swelling in joints other than neck, back or hips?' },
-  { key: 'q4', text: 'How would you describe the overall level of discomfort from tender areas (enthesitis)?' },
-  { key: 'q5', text: 'How would you describe the overall level of morning stiffness severity from the time you wake up?' },
-  { key: 'q6', text: 'How long does your morning stiffness last? (0=none, 10=2+ hours)' },
-] as const;
-
-interface BasdaiModalProps {
-  visible: boolean;
-  onClose: () => void;
-  onSave: (answers: { q1: number; q2: number; q3: number; q4: number; q5: number; q6: number }) => Promise<void>;
-  isDark: boolean;
-}
-
-function BasdaiModal({ visible, onClose, onSave, isDark }: BasdaiModalProps) {
-  const [q1, setQ1] = useState(5);
-  const [q2, setQ2] = useState(5);
-  const [q3, setQ3] = useState(5);
-  const [q4, setQ4] = useState(5);
-  const [q5, setQ5] = useState(5);
-  const [q6, setQ6] = useState(5);
-  const [isSaving, setIsSaving] = useState(false);
-  const [showResult, setShowResult] = useState(false);
-
-  const cardBg = isDark ? Colors.surfaceDark : Colors.surface;
-  const textPrimary = isDark ? Colors.textPrimaryDark : Colors.textPrimary;
-  const textSecondary = isDark ? Colors.textSecondaryDark : Colors.textSecondary;
-  const border = isDark ? Colors.borderDark : Colors.border;
-
-  const values = { q1, q2, q3, q4, q5, q6 };
-  const computedScore = parseFloat(((q1 + q2 + q3 + q4 + (q5 + q6) / 2) / 5).toFixed(2));
-  const interp = basdaiInterpretation(computedScore);
-
-  const setters: Record<string, (v: number) => void> = { q1: setQ1, q2: setQ2, q3: setQ3, q4: setQ4, q5: setQ5, q6: setQ6 };
-
-  const handleSave = async () => {
-    setIsSaving(true);
-    try {
-      await onSave(values);
-      onClose();
-      setShowResult(false);
-    } catch {}
-    finally { setIsSaving(false); }
-  };
-
-  function QuestionSlider({ value, setValue }: { value: number; setValue: (v: number) => void }) {
-    return (
-      <DragSlider
-        value={value}
-        onChange={setValue}
-        isDark={isDark}
-        minLabel="0 = None"
-        maxLabel="10 = Severe"
-      />
-    );
-  }
-
-  return (
-    <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
-      <SafeAreaView style={{ flex: 1, backgroundColor: isDark ? Colors.backgroundDark : Colors.background }}>
-        <View style={[styles.basdaiHeader, { borderBottomColor: border }]}>
-          <TouchableOpacity onPress={onClose} style={{ width: 64 }}>
-            <Text style={[styles.basdaiCancelText, { color: textSecondary }]}>Cancel</Text>
-          </TouchableOpacity>
-          <Text style={[styles.basdaiTitle, { color: textPrimary }]}>BASDAI Assessment</Text>
-          <View style={{ width: 64 }} />
-        </View>
-        <ScrollView contentContainerStyle={{ padding: Spacing.lg, gap: Spacing.md }} showsVerticalScrollIndicator={false}>
-          {BASDAI_QUESTIONS.map((q, idx) => (
-            <View key={q.key} style={[styles.basdaiQuestion, { backgroundColor: cardBg, borderColor: border }]}>
-              <Text style={[styles.basdaiQuestionNum, { color: textSecondary }]}>Q{idx + 1}</Text>
-              <Text style={[styles.basdaiQuestionText, { color: textPrimary }]}>{q.text}</Text>
-              <QuestionSlider value={values[q.key as keyof typeof values]} setValue={setters[q.key]} />
-            </View>
-          ))}
-
-          {/* Score preview */}
-          <View style={[styles.basdaiScoreCard, { backgroundColor: cardBg, borderColor: interp.color + '50' }]}>
-            <Text style={[styles.basdaiScoreLabel, { color: textSecondary }]}>Your BASDAI score</Text>
-            <Text style={[styles.basdaiScoreLarge, { color: interp.color }]}>{computedScore.toFixed(1)}<Text style={{ fontSize: FontSize.sm }}>/10</Text></Text>
-            <Text style={[styles.basdaiInterpText, { color: interp.color }]}>{interp.label}</Text>
-            {computedScore >= 4 && (
-              <Text style={[styles.basdaiThresholdNote, { color: textSecondary }]}>
-                Score ≥4 is the clinical threshold for biologic therapy. Consider sharing this with your rheumatologist.
-              </Text>
-            )}
-          </View>
-
-          <TouchableOpacity
-            onPress={handleSave}
-            disabled={isSaving}
-            activeOpacity={0.8}
-            style={[styles.basdaiSaveBtn, { opacity: isSaving ? 0.6 : 1 }]}
-          >
-            {isSaving ? (
-              <ActivityIndicator color="#FFFFFF" size="small" />
-            ) : (
-              <Text style={styles.basdaiSaveBtnText}>Save assessment</Text>
-            )}
-          </TouchableOpacity>
-          <View style={{ height: Spacing.xl }} />
-        </ScrollView>
-      </SafeAreaView>
-    </Modal>
-  );
-}
-
-// ─── BasdaiPromptCard ─────────────────────────────────────────────────────────
-
-const BASDAI_INFO = 'BASDAI (Bath Ankylosing Spondylitis Disease Activity Index) is the standard clinical tool for measuring AS disease activity. You score six questions on a 0-10 scale: fatigue, spinal pain, joint pain, enthesitis, morning stiffness severity, and duration. A score of 4 or above is the threshold at which biologic therapy is typically considered.';
-
-function BasdaiPromptCard({
-  latestScore,
-  daysSince,
-  onPress,
-  isDark,
-}: {
-  latestScore: BasdaiScore | null;
-  daysSince: number | null;
-  onPress: () => void;
-  isDark: boolean;
-}) {
-  const [showInfo, setShowInfo] = useState(false);
-  const cardBg = isDark ? Colors.surfaceDark : Colors.surface;
-  const cardBorder = isDark ? Colors.borderDark : Colors.border;
+function FiqPlaceholderCard({ isDark }: { isDark: boolean }) {
+  const cardBg = isDark ? '#2D1A0E' : '#FFF7ED';
   const textPrimary = isDark ? Colors.textPrimaryDark : Colors.textPrimary;
   const textSecondary = isDark ? Colors.textSecondaryDark : Colors.textSecondary;
 
-  if (!latestScore) {
-    return (
-      <View style={[styles.basdaiPromptCard, { backgroundColor: isDark ? '#2D1A0E' : '#FFF7ED', borderColor: Colors.primary + '40' }]}>
-        <View style={styles.basdaiPromptTitleRow}>
-          <Text style={[styles.basdaiPromptTitle, { color: textPrimary, flex: 1 }]}>Monthly clinical assessment</Text>
-          <TouchableOpacity onPress={() => setShowInfo(v => !v)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} activeOpacity={0.7}>
-            <Text style={[styles.basdaiInfoIcon, { color: showInfo ? Colors.primary : textSecondary }]}>ⓘ</Text>
-          </TouchableOpacity>
-        </View>
-        {showInfo && (
-          <Text style={[styles.basdaiInfoText, { color: textSecondary }]}>{BASDAI_INFO}</Text>
-        )}
-        <TouchableOpacity onPress={onPress} activeOpacity={0.8} style={styles.basdaiTakeBtn}>
-          <Text style={styles.basdaiTakeBtnText}>Take assessment</Text>
-        </TouchableOpacity>
-      </View>
-    );
-  }
-
-  const interp = basdaiInterpretation(latestScore.score);
-  const isDue = daysSince !== null && daysSince >= 30;
-
-  if (!isDue) {
-    return (
-      <View style={[styles.basdaiCompactRow, { backgroundColor: cardBg, borderColor: cardBorder }]}>
-        <View style={{ flex: 1 }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.xs }}>
-            <Text style={[styles.basdaiCompactLabel, { color: textSecondary }]}>BASDAI</Text>
-            <TouchableOpacity onPress={() => setShowInfo(v => !v)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} activeOpacity={0.7}>
-              <Text style={[styles.basdaiInfoIcon, { color: showInfo ? Colors.primary : textSecondary, fontSize: FontSize.xs }]}>ⓘ</Text>
-            </TouchableOpacity>
-          </View>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.xs }}>
-            <Text style={[styles.basdaiCompactScore, { color: interp.color }]}>{latestScore.score.toFixed(1)}</Text>
-            <Text style={[styles.basdaiCompactInterp, { color: interp.color }]}>{interp.label}</Text>
-          </View>
-          {showInfo && (
-            <Text style={[styles.basdaiInfoText, { color: textSecondary, marginTop: Spacing.xs }]}>{BASDAI_INFO}</Text>
-          )}
-          <Text style={[styles.basdaiCompactDate, { color: textSecondary }]}>{daysSince} days ago</Text>
-        </View>
-        <TouchableOpacity onPress={onPress} activeOpacity={0.8} style={styles.basdaiRetakeBtn}>
-          <Text style={[styles.basdaiRetakeBtnText, { color: Colors.primary }]}>Retake</Text>
-        </TouchableOpacity>
-      </View>
-    );
-  }
-
   return (
-    <View style={[styles.basdaiPromptCard, { backgroundColor: isDark ? '#2D1A0E' : '#FFF7ED', borderColor: Colors.warning + '50' }]}>
-      <View style={styles.basdaiPromptTitleRow}>
-        <Text style={[styles.basdaiPromptTitle, { color: textPrimary, flex: 1 }]}>Monthly reassessment due</Text>
-        <TouchableOpacity onPress={() => setShowInfo(v => !v)} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }} activeOpacity={0.7}>
-          <Text style={[styles.basdaiInfoIcon, { color: showInfo ? Colors.primary : textSecondary }]}>ⓘ</Text>
-        </TouchableOpacity>
-      </View>
-      {showInfo && (
-        <Text style={[styles.basdaiInfoText, { color: textSecondary }]}>{BASDAI_INFO}</Text>
-      )}
+    <View style={[styles.basdaiPromptCard, { backgroundColor: cardBg, borderColor: Colors.primary + '40' }]}>
+      <Text style={[styles.basdaiPromptTitle, { color: textPrimary }]}>Monthly FIQ Assessment</Text>
       <Text style={[styles.basdaiPromptBody, { color: textSecondary }]}>
-        Your last BASDAI was {latestScore.score.toFixed(1)} ({interp.label}), {daysSince} days ago. Time to reassess.
+        The Fibromyalgia Impact Questionnaire (FIQ-R) measures how fibromyalgia affects your daily function, overall impact, and symptom severity. Monthly self-assessment coming soon.
       </Text>
-      <TouchableOpacity onPress={onPress} activeOpacity={0.8} style={styles.basdaiTakeBtn}>
-        <Text style={styles.basdaiTakeBtnText}>Take assessment</Text>
-      </TouchableOpacity>
     </View>
   );
 }
@@ -728,9 +535,6 @@ export default function InsightsScreen() {
   const [isPurchasing, setIsPurchasing] = useState(false);
   const [isRestoring, setIsRestoring] = useState(false);
   const { history: healthHistory } = useHealthHistory(28);
-
-  const { latestScore: latestBasdaiScore, daysSinceLastScore: daysSinceLastBasdai, saveScore: saveBasdaiScore } = useBasdai();
-  const [showBasdai, setShowBasdai] = useState(false);
 
   const [aiConsented, setAiConsented] = useState<boolean | null>(null);
   useFocusEffect(useCallback(() => {
@@ -834,10 +638,15 @@ export default function InsightsScreen() {
   const painData = logs.map((l) => l.pain_score);
   const fatigueData = logs.map((l) => l.fatigue_score);
   const moodData = logs.map((l) => moodToScore(l.mood)).filter((v) => v > 0);
+  const axisLabel = (dateStr: string) =>
+    period <= 7
+      ? dayLabel(dateStr)
+      : new Date(dateStr + 'T12:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+
   const moodLabels = logs
     .filter((l) => l.mood !== null)
-    .map((l) => dayLabel(l.date));
-  const chartLabels = logs.map((l) => dayLabel(l.date));
+    .map((l) => axisLabel(l.date));
+  const chartLabels = logs.map((l) => axisLabel(l.date));
 
   const avgPain =
     painData.length > 0
@@ -887,13 +696,8 @@ export default function InsightsScreen() {
           <ProfileButton />
         </View>
 
-        {/* ── BASDAI section ── */}
-        <BasdaiPromptCard
-          latestScore={latestBasdaiScore}
-          daysSince={daysSinceLastBasdai}
-          onPress={() => setShowBasdai(true)}
-          isDark={isDark}
-        />
+        {/* ── FIQ assessment section ── */}
+        <FiqPlaceholderCard isDark={isDark} />
 
         {/* ── AI Insight section — above period selector ── */}
         {!subLoading && (
@@ -1096,13 +900,6 @@ export default function InsightsScreen() {
         </Text>
 
       </ScrollView>
-
-      <BasdaiModal
-        visible={showBasdai}
-        onClose={() => setShowBasdai(false)}
-        onSave={saveBasdaiScore}
-        isDark={isDark}
-      />
 
       <PremiumModal
         visible={showPremiumModal}

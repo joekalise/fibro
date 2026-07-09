@@ -2,7 +2,7 @@ import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { HealthData } from '@/types';
 
-const HEALTH_CONNECTED_KEY = '@spondy_health_connected';
+const HEALTH_CONNECTED_KEY = '@fibro_health_connected';
 
 function getHK(): any | null {
   if (Platform.OS !== 'ios') return null;

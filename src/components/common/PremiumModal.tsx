@@ -9,6 +9,7 @@ import {
   SafeAreaView,
   ActivityIndicator,
   Linking,
+  Platform,
 } from 'react-native';
 import { useTranslation } from 'react-i18next';
 import { Colors } from '@/constants/colors';
@@ -143,7 +144,7 @@ export function PremiumModal({
     {
       icon: '📊',
       title: 'Weekly AI insight report',
-      body: 'Every week, Spondy analyses your logs and surfaces the patterns driving your symptoms.',
+      body: 'Every week, Fibro analyses your logs and surfaces the patterns driving your symptoms.',
     },
     {
       icon: '💬',
@@ -153,7 +154,7 @@ export function PremiumModal({
     {
       icon: '🔮',
       title: 'Flare prediction nudges',
-      body: 'When your patterns suggest a flare is building, Spondy lets you know early — so you can act before it peaks.',
+      body: 'When your patterns suggest a flare is building, Fibro lets you know early — so you can act before it peaks.',
     },
     {
       icon: '🎯',
@@ -183,9 +184,9 @@ export function PremiumModal({
           {/* Header */}
           <View style={styles.header}>
             <Text style={styles.headerEmoji}>✦</Text>
-            <Text style={[styles.headerTitle, { color: textPrimary }]}>Spondy Premium</Text>
+            <Text style={[styles.headerTitle, { color: textPrimary }]}>Fibro Premium</Text>
             <Text style={[styles.headerSubtitle, { color: textSecondary }]}>
-              Understand your AS like never before. Let your data tell the story.
+              Understand your fibromyalgia like never before. Let your data tell the story.
             </Text>
           </View>
 
@@ -221,7 +222,9 @@ export function PremiumModal({
             </Text>
           )}
           <Text style={[styles.pricingNote, { color: textSecondary }]}>
-            {t('subscription.cancel_note')}
+            {Platform.OS === 'ios'
+              ? t('subscription.cancel_note')
+              : t('subscription.cancel_note_android')}
           </Text>
           <View style={styles.legalRow}>
             <Text

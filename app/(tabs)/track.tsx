@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, useMemo } from 'react';
 import { useFocusEffect } from 'expo-router';
 import {
   View,
@@ -27,8 +27,9 @@ import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { ErrorMessage } from '@/components/common/ErrorMessage';
 import { Button } from '@/components/common/Button';
 import { ProfileButton } from '@/components/common/ProfileButton';
-import { DailyLog, Mood, MorningStiffness, DietQuality, DietTrigger } from '@/types';
+import { DailyLog, Mood, MorningStiffness, DietQuality, DietTrigger, FlareTrigger } from '@/types';
 import { logEvent, Events } from '@/services/analytics';
+import { scheduleDailyCheckInFromTomorrow } from '@/services/notifications';
 
 // ─── Date helpers ─────────────────────────────────────────────────────────────
 
@@ -200,6 +201,8 @@ interface DayLogFormProps {
   setPainScore: (n: number) => void;
   fatigueScore: number;
   setFatigueScore: (n: number) => void;
+  brainFogScore: number | null;
+  setBrainFogScore: (n: number) => void;
   stiffness: MorningStiffness | null;
   setStiffness: (v: MorningStiffness) => void;
   mood: Mood | null;
@@ -231,6 +234,7 @@ interface DayLogFormProps {
 function DayLogForm({
   painScore, setPainScore,
   fatigueScore, setFatigueScore,
+  brainFogScore, setBrainFogScore,
   stiffness, setStiffness,
   mood, setMood,
   medsTaken, setMedsTaken,
@@ -276,6 +280,18 @@ function DayLogForm({
           </View>
           <DragSlider value={fatigueScore} onChange={setFatigueScore} isDark={isDark} />
           <Text style={[styles.hint, isDark && styles.textSecDark]}>{t('tracker.fatigue_score_hint')}</Text>
+        </View>
+
+        {/* Divider */}
+        <View style={[styles.symptomDivider, isDark && styles.symptomDividerDark]} />
+
+        {/* Brain fog subsection */}
+        <View style={styles.symptomSubSection}>
+          <View style={styles.symptomSubHeader}>
+            <Text style={[styles.symptomSubLabel, isDark && styles.textSecDark]}>{t('tracker.brain_fog_score')}</Text>
+          </View>
+          <DragSlider value={brainFogScore ?? 0} onChange={setBrainFogScore} isDark={isDark} />
+          <Text style={[styles.hint, isDark && styles.textSecDark]}>{t('tracker.brain_fog_score_hint')}</Text>
         </View>
       </View>
 
@@ -393,7 +409,7 @@ function DayLogForm({
           })}
         </View>
         <Text style={[styles.hint, isDark && styles.textSecDark]}>
-          Common inflammation triggers for AS, tracked for patterns
+          Common dietary triggers for fibromyalgia, tracked for patterns
         </Text>
       </View>
 
@@ -486,9 +502,10 @@ interface DayLogModalProps {
 function DayLogModal({ date, initialLog, userId, tracksMedication, isFemale, isDark, t, onSaved, onClose }: DayLogModalProps) {
   const [painScore, setPainScore] = useState(initialLog?.pain_score ?? 0);
   const [fatigueScore, setFatigueScore] = useState(initialLog?.fatigue_score ?? 0);
+  const [brainFogScore, setBrainFogScore] = useState<number | null>(initialLog?.brain_fog_score ?? 0);
   const [stiffness, setStiffness] = useState<MorningStiffness | null>(initialLog?.stiffness_duration ?? null);
   const [mood, setMood] = useState<Mood | null>(initialLog?.mood ?? null);
-  const [medsTaken, setMedsTaken] = useState<'yes' | 'no' | 'partial'>(initialLog?.medications_taken ?? 'yes');
+  const [medsTaken, setMedsTaken] = useState<'yes' | 'no' | 'partial'>(initialLog?.medications_taken ?? (tracksMedication ? 'yes' : 'no'));
   const [notes, setNotes] = useState(initialLog?.notes ?? '');
   const [dietQuality, setDietQuality] = useState<DietQuality | null>(initialLog?.diet_quality ?? null);
   const [dietTriggers, setDietTriggers] = useState<DietTrigger[]>(initialLog?.diet_triggers ?? []);
@@ -506,6 +523,7 @@ function DayLogModal({ date, initialLog, userId, tracksMedication, isFemale, isD
         date,
         pain_score: painScore,
         fatigue_score: fatigueScore,
+        brain_fog_score: brainFogScore,
         stiffness_duration: stiffness,
         mood,
         medications_taken: medsTaken,
@@ -550,6 +568,7 @@ function DayLogModal({ date, initialLog, userId, tracksMedication, isFemale, isD
           <DayLogForm
             painScore={painScore} setPainScore={setPainScore}
             fatigueScore={fatigueScore} setFatigueScore={setFatigueScore}
+            brainFogScore={brainFogScore} setBrainFogScore={setBrainFogScore}
             stiffness={stiffness} setStiffness={setStiffness}
             mood={mood} setMood={setMood}
             medsTaken={medsTaken} setMedsTaken={setMedsTaken}
@@ -677,38 +696,43 @@ function DatePickerModal({ isDark, maxDate, onSelect, onClose }: DatePickerModal
 // ─── Recent Logs Card ─────────────────────────────────────────────────────────
 
 interface RecentLogsCardProps {
-  logs: DailyLog[];
-  today: string;
+  recentDays: string[];
+  logsByDate: Record<string, DailyLog>;
   isDark: boolean;
   hasOlderLogs: boolean;
-  onEdit: (date: string, log: DailyLog) => void;
+  onOpenDay: (date: string, log: DailyLog | null) => void;
   onBrowseOlder: () => void;
 }
 
-function RecentLogsCard({ logs, isDark, hasOlderLogs, onEdit, onBrowseOlder }: RecentLogsCardProps) {
-  const sorted = [...logs].sort((a, b) => b.date.localeCompare(a.date));
-
+function RecentLogsCard({ recentDays, logsByDate, isDark, hasOlderLogs, onOpenDay, onBrowseOlder }: RecentLogsCardProps) {
   return (
     <View style={[styles.recentCard, isDark && styles.recentCardDark]}>
       <Text style={[styles.recentCardTitle, isDark && styles.textPrimaryDark]}>Recent check-ins</Text>
 
-      {sorted.map((log) => (
-        <TouchableOpacity
-          key={log.date}
-          style={[styles.recentRow, isDark && styles.recentRowDark]}
-          onPress={() => onEdit(log.date, log)}
-          activeOpacity={0.7}
-        >
-          <View style={styles.recentRowLeft}>
-            <Text style={[styles.recentDate, isDark && styles.textPrimaryDark]}>{dateLabelShort(log.date)}</Text>
-            <Text style={[styles.recentStats, isDark && styles.textSecDark]}>
-              Pain {log.pain_score}/10 · Fatigue {log.fatigue_score}/10 · {moodEmoji(log.mood)}
-              {log.diet_quality ? ` · ${dietQualityEmoji(log.diet_quality)}` : ''}
-            </Text>
-          </View>
-          <Text style={[styles.recentChevron, isDark && styles.textSecDark]}>›</Text>
-        </TouchableOpacity>
-      ))}
+      {recentDays.map((date) => {
+        const log = logsByDate[date];
+        return (
+          <TouchableOpacity
+            key={date}
+            style={[styles.recentRow, isDark && styles.recentRowDark]}
+            onPress={() => onOpenDay(date, log ?? null)}
+            activeOpacity={0.7}
+          >
+            <View style={styles.recentRowLeft}>
+              <Text style={[styles.recentDate, isDark && styles.textPrimaryDark]}>{dateLabelShort(date)}</Text>
+              {log ? (
+                <Text style={[styles.recentStats, isDark && styles.textSecDark]}>
+                  Pain {log.pain_score}/10 · Fatigue {log.fatigue_score}/10 · {moodEmoji(log.mood)}
+                  {log.diet_quality ? ` · ${dietQualityEmoji(log.diet_quality)}` : ''}
+                </Text>
+              ) : (
+                <Text style={[styles.recentStats, { color: Colors.primary }]}>+ Log this day</Text>
+              )}
+            </View>
+            <Text style={[styles.recentChevron, isDark && styles.textSecDark]}>›</Text>
+          </TouchableOpacity>
+        );
+      })}
 
       {hasOlderLogs && (
         <TouchableOpacity style={styles.browseOlderBtn} onPress={onBrowseOlder} activeOpacity={0.7}>
@@ -782,6 +806,7 @@ export default function TrackScreen() {
   const [editing, setEditing] = useState(false);
   const [painScore, setPainScore] = useState(0);
   const [fatigueScore, setFatigueScore] = useState(0);
+  const [brainFogScore, setBrainFogScore] = useState<number | null>(0);
   const [stiffness, setStiffness] = useState<MorningStiffness | null>(null);
   const [mood, setMood] = useState<Mood | null>(null);
   const [medsTaken, setMedsTaken] = useState<'yes' | 'no' | 'partial'>('yes');
@@ -800,6 +825,7 @@ export default function TrackScreen() {
     if (todayLog) {
       setPainScore(todayLog.pain_score);
       setFatigueScore(todayLog.fatigue_score);
+      setBrainFogScore(todayLog.brain_fog_score ?? 0);
       setStiffness(todayLog.stiffness_duration);
       setMood(todayLog.mood);
       setMedsTaken(todayLog.medications_taken ?? 'yes');
@@ -813,6 +839,7 @@ export default function TrackScreen() {
     } else {
       setPainScore(0);
       setFatigueScore(0);
+      setBrainFogScore(0);
       setStiffness(null);
       setMood(null);
       setMedsTaken('yes');
@@ -833,8 +860,11 @@ export default function TrackScreen() {
     setIsSaving(true);
     setSaved(false);
     try {
-      await saveLog({ pain_score: painScore, fatigue_score: fatigueScore, stiffness_duration: stiffness, mood, medications_taken: medsTaken, notes, diet_quality: dietQuality, diet_triggers: dietTriggers, exercise_done: exerciseDone, exercise_type: exerciseType, exercise_minutes: exerciseMinutes, period_active: isFemale ? periodActive : null });
+      await saveLog({ pain_score: painScore, fatigue_score: fatigueScore, brain_fog_score: brainFogScore, stiffness_duration: stiffness, mood, medications_taken: medsTaken, notes, diet_quality: dietQuality, diet_triggers: dietTriggers, exercise_done: exerciseDone, exercise_type: exerciseType, exercise_minutes: exerciseMinutes, period_active: isFemale ? periodActive : null });
       logEvent(Events.DAY_LOGGED, { date: localDateString() }).catch(() => {});
+      if (profile?.notification_time) {
+        scheduleDailyCheckInFromTomorrow(profile.notification_time).catch(() => {});
+      }
       setEditing(false);
       setSaved(true);
     } catch {
@@ -845,6 +875,18 @@ export default function TrackScreen() {
   }, [user, saveLog, painScore, fatigueScore, stiffness, mood, medsTaken, notes, dietQuality, dietTriggers, exerciseDone, exerciseType, exerciseMinutes, t]);
 
   const showForm = !todayLogged || editing;
+
+  // Last 7 days (excluding today), newest first — shown in recent card regardless of logged status
+  const recentDays = useMemo(
+    () => Array.from({ length: 7 }, (_, i) => localDateString(i + 1)),
+    [todayStr],
+  );
+
+  const logsByDate = useMemo(() => {
+    const map: Record<string, DailyLog> = {};
+    recentLogs.forEach((l) => { map[l.date] = l; });
+    return map;
+  }, [recentLogs]);
 
   // Yesterday context
   const yesterdayStr = localDateString(1);
@@ -922,6 +964,7 @@ export default function TrackScreen() {
           <DayLogForm
             painScore={painScore} setPainScore={setPainScore}
             fatigueScore={fatigueScore} setFatigueScore={setFatigueScore}
+            brainFogScore={brainFogScore} setBrainFogScore={setBrainFogScore}
             stiffness={stiffness} setStiffness={setStiffness}
             mood={mood} setMood={setMood}
             medsTaken={medsTaken} setMedsTaken={setMedsTaken}
@@ -938,14 +981,14 @@ export default function TrackScreen() {
           />
         )}
 
-        {/* Recent 7-day history — only shown if there are logged days */}
+        {/* Recent 7-day history — show once user has at least one logged day */}
         {recentLogs.length > 0 && (
           <RecentLogsCard
-            logs={recentLogs}
-            today={todayStr}
+            recentDays={recentDays}
+            logsByDate={logsByDate}
             isDark={isDark}
             hasOlderLogs={hasOlderLogs}
-            onEdit={(date, log) => openEntryForDate(date, log)}
+            onOpenDay={(date, log) => openEntryForDate(date, log)}
             onBrowseOlder={() => setShowDatePicker(true)}
           />
         )}

@@ -1,9 +1,6 @@
--- Enable UUID extension
-create extension if not exists "uuid-ossp";
-
 -- Profiles table (mirrors Supabase auth.users)
 create table if not exists public.profiles (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   user_id uuid references auth.users(id) on delete cascade not null unique,
   age_range text,
   diagnosis_years text,
@@ -23,7 +20,7 @@ create table if not exists public.profiles (
 );
 
 create table if not exists public.daily_logs (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   user_id uuid references auth.users(id) on delete cascade not null,
   date date not null,
   pain_score integer check (pain_score >= 0 and pain_score <= 10),
@@ -37,7 +34,7 @@ create table if not exists public.daily_logs (
 );
 
 create table if not exists public.health_data (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   user_id uuid references auth.users(id) on delete cascade not null,
   date date not null,
   steps integer,
@@ -52,7 +49,7 @@ create table if not exists public.health_data (
 );
 
 create table if not exists public.flares (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   user_id uuid references auth.users(id) on delete cascade not null,
   start_date date not null,
   end_date date,
@@ -63,7 +60,7 @@ create table if not exists public.flares (
 );
 
 create table if not exists public.nudges (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   user_id uuid references auth.users(id) on delete cascade not null,
   sent_at timestamptz default now(),
   trigger_type text not null,
@@ -71,7 +68,7 @@ create table if not exists public.nudges (
 );
 
 create table if not exists public.medications (
-  id uuid primary key default uuid_generate_v4(),
+  id uuid primary key default gen_random_uuid(),
   user_id uuid references auth.users(id) on delete cascade not null,
   name text not null,
   dose text,

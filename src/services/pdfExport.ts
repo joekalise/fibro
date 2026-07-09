@@ -1,6 +1,6 @@
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
-import { BasdaiScore, BiologicInjection, DailyLog, Flare, MedicationReminder, UveitisEpisode, UserProfile } from '@/types';
+import { BiologicInjection, DailyLog, Flare, MedicationReminder, UserProfile } from '@/types';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -62,14 +62,12 @@ function stiffnessLabel(v: string | null): string {
 function buildReportHTML(params: {
   logs: DailyLog[];
   flares: Flare[];
-  uveitisEpisodes?: UveitisEpisode[];
   medications: MedicationReminder[];
   biologicInjections?: BiologicInjection[];
   profile: UserProfile;
-  basdaiScores?: BasdaiScore[];
   fromDate?: string;
 }): string {
-  const { logs, flares, uveitisEpisodes = [], medications, biologicInjections = [], profile, basdaiScores } = params;
+  const { logs, flares, medications, biologicInjections = [], profile } = params;
 
   const now = new Date();
   const reportStart = params.fromDate
@@ -88,6 +86,11 @@ function buildReportHTML(params: {
 
   const highPainDays = logs.filter(l => l.pain_score >= 7).length;
   const highFatigueDays = logs.filter(l => l.fatigue_score >= 7).length;
+
+  const brainFogLogs = logs.filter(l => (l as any).brain_fog_score != null);
+  const avgBrainFog = brainFogLogs.length > 0
+    ? (brainFogLogs.reduce((s, l) => s + ((l as any).brain_fog_score ?? 0), 0) / brainFogLogs.length).toFixed(1)
+    : null;
 
   // ── Mood ──────────────────────────────────────────────────────────────────
   const moodCounts: Record<string, number> = { great: 0, good: 0, okay: 0, low: 0, very_low: 0 };
@@ -126,28 +129,15 @@ function buildReportHTML(params: {
   const medList = medications.filter(m => m.active).map(m => `${m.name}${m.dose ? ` ${m.dose}` : ''} (${m.frequency})`).join(', ');
 
   // ── Flare rows ────────────────────────────────────────────────────────────
-  const asFlares = flares.filter(f => !(f as any).flare_type || (f as any).flare_type === 'as');
-  const flareRowsHTML = asFlares.length === 0
-    ? `<tr><td colspan="5" style="text-align:center;color:#78716C;font-style:italic;">No AS flares recorded in this period</td></tr>`
-    : asFlares.map(f => `
+  const flareRowsHTML = flares.length === 0
+    ? `<tr><td colspan="5" style="text-align:center;color:#78716C;font-style:italic;">No flares recorded in this period</td></tr>`
+    : flares.map(f => `
         <tr>
           <td>${fmtDateShort(f.start_date)}</td>
           <td>${f.end_date ? fmtDateShort(f.end_date) : '<em>Ongoing</em>'}</td>
           <td>${flareDays(f.start_date, f.end_date)} days</td>
           <td style="text-transform:capitalize;">${f.severity}</td>
           <td>${f.areas_affected.map(a => a.replace(/_/g, ' ')).join(', ')}</td>
-        </tr>`).join('');
-
-  // ── Uveitis rows ──────────────────────────────────────────────────────────
-  const uveitisRowsHTML = uveitisEpisodes.length === 0
-    ? `<tr><td colspan="5" style="text-align:center;color:#78716C;font-style:italic;">No uveitis episodes recorded in this period</td></tr>`
-    : uveitisEpisodes.map(e => `
-        <tr>
-          <td>${fmtDateShort(e.start_date)}</td>
-          <td>${e.end_date ? fmtDateShort(e.end_date) : '<em>Ongoing</em>'}</td>
-          <td>${flareDays(e.start_date, e.end_date)} days</td>
-          <td style="text-transform:capitalize;">${e.severity}</td>
-          <td>${capitalize(e.affected_eye)} eye${e.treatment_received ? ', treated' : ''}</td>
         </tr>`).join('');
 
   // ── Biologic injections ───────────────────────────────────────────────────
@@ -174,7 +164,7 @@ function buildReportHTML(params: {
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Spondy Health Summary</title>
+  <title>Fibro Health Summary</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -242,8 +232,8 @@ function buildReportHTML(params: {
 <body>
   <div class="header">
     <div class="header-left">
-      <h1>Spondy Health Summary</h1>
-      <p class="subtitle">Ankylosing Spondylitis Tracking Report, for your rheumatologist</p>
+      <h1>Fibro Health Summary</h1>
+      <p class="subtitle">Fibromyalgia Tracking Report, for your doctor or pain specialist</p>
     </div>
     <div class="header-right">
       <div>Generated: ${generatedAt}</div>
@@ -282,7 +272,7 @@ function buildReportHTML(params: {
   </div>
 
   <!-- Pain & Fatigue -->
-  <h2>Pain &amp; Fatigue</h2>
+  <h2>Pain, Fatigue &amp; Brain Fog</h2>
   <div class="stat-grid">
     <div class="stat-box">
       <div class="stat-value">${avgPain}</div>
@@ -293,17 +283,17 @@ function buildReportHTML(params: {
       <div class="stat-label">Avg Fatigue (0–10)</div>
     </div>
     <div class="stat-box">
-      <div class="stat-value">${highPainDays}</div>
-      <div class="stat-label">High Pain Days (≥7)</div>
+      <div class="stat-value">${avgBrainFog ?? '—'}</div>
+      <div class="stat-label">Avg Brain Fog (0–10)</div>
     </div>
     <div class="stat-box">
-      <div class="stat-value">${highFatigueDays}</div>
-      <div class="stat-label">High Fatigue Days (≥7)</div>
+      <div class="stat-value">${highPainDays}</div>
+      <div class="stat-label">High Pain Days (≥7)</div>
     </div>
   </div>
 
   <!-- Morning Stiffness -->
-  <h2>Morning Stiffness</h2>
+  <h2>Morning Stiffness / Pain</h2>
   <div class="stiff-grid">
     <div class="stiff-box">
       <div class="stiff-count">${stiffnessCounts.none ?? 0}</div>
@@ -326,7 +316,7 @@ function buildReportHTML(params: {
       <div class="stiff-label">&gt;2 hours</div>
     </div>
   </div>
-  ${prolongedStiffnessDays > 0 ? `<p class="callout">⚠ ${prolongedStiffnessDays} day${prolongedStiffnessDays > 1 ? 's' : ''} with stiffness lasting over 1 hour. A key indicator of active disease (BASDAI Q5/Q6).</p>` : ''}
+  ${prolongedStiffnessDays > 0 ? `<p class="callout">⚠ ${prolongedStiffnessDays} day${prolongedStiffnessDays > 1 ? 's' : ''} with morning stiffness or pain lasting over 1 hour — a common fibromyalgia symptom worth discussing with your doctor.</p>` : ''}
 
   <!-- Mood -->
   <h2>Mood Distribution</h2>
@@ -341,7 +331,7 @@ function buildReportHTML(params: {
   <!-- Exercise -->
   <h2>Exercise &amp; Activity</h2>
   <p style="font-size:13px;">Exercise logged on <strong>${exerciseDays} of ${logs.length} days</strong> (${exercisePct}%).
-    ${exercisePct >= 50 ? 'Good consistency. Regular movement is one of the best AS management tools.' : exercisePct === 0 ? 'No exercise logged in this period.' : 'Consider increasing frequency. Even short walks count.'}</p>
+    ${exercisePct >= 50 ? 'Good consistency. Gentle paced movement is one of the most effective fibromyalgia management tools.' : exercisePct === 0 ? 'No exercise logged in this period.' : 'Consider increasing frequency with gentle, paced activity.'}</p>
 
   ${topTriggers.length > 0 ? `
   <!-- Diet -->
@@ -352,35 +342,11 @@ function buildReportHTML(params: {
       ${topTriggers.map(([t, n]) => `<tr><td>${TRIGGER_LABELS[t] ?? t}</td><td>${n}</td></tr>`).join('')}
     </tbody>
   </table>
-  <p class="callout">For AS, high starch/wheat, alcohol, processed food, and sugar are common inflammation drivers. Share any diet-pain patterns with your rheumatologist.</p>
+  <p class="callout">Some people with fibromyalgia find that alcohol, high sugar, and processed foods can worsen symptoms. Share any diet-symptom patterns with your healthcare team.</p>
   ` : ''}
 
-  <!-- BASDAI -->
-  ${basdaiScores && basdaiScores.length > 0 ? `
-  <h2>BASDAI Scores</h2>
-  <table>
-    <thead><tr><th>Date</th><th>BASDAI Score</th><th>Interpretation</th><th>Q1 Fatigue</th><th>Q2 Spinal pain</th><th>Q5–6 Stiffness</th></tr></thead>
-    <tbody>
-      ${basdaiScores.map(s => {
-        const interp = s.score < 2 ? 'Low activity' : s.score < 4 ? 'Moderate' : s.score < 6 ? 'High' : 'Very high';
-        const color = s.score < 2 ? '#22C55E' : s.score < 4 ? '#EAB308' : '#EF4444';
-        const stiffAvg = ((s.q5 + s.q6) / 2).toFixed(1);
-        return `<tr>
-          <td>${fmtDateShort(s.date)}</td>
-          <td style="font-weight:700;color:${color};">${s.score.toFixed(1)}/10</td>
-          <td>${interp}</td>
-          <td>${s.q1}/10</td>
-          <td>${s.q2}/10</td>
-          <td>${stiffAvg}/10</td>
-        </tr>`;
-      }).join('')}
-    </tbody>
-  </table>
-  <p class="callout">BASDAI ≥4 indicates high disease activity. This is the threshold at which biologic therapy is typically considered. Scores trend from oldest to newest.</p>
-  ` : ''}
-
-  <!-- AS Flares -->
-  <h2>AS Flare History</h2>
+  <!-- Fibromyalgia Flares -->
+  <h2>Flare History</h2>
   <table>
     <thead>
       <tr><th>Start</th><th>End</th><th>Duration</th><th>Severity</th><th>Areas affected</th></tr>
@@ -388,18 +354,9 @@ function buildReportHTML(params: {
     <tbody>${flareRowsHTML}</tbody>
   </table>
 
-  <!-- Uveitis -->
-  <h2>Uveitis Episodes</h2>
-  <table>
-    <thead>
-      <tr><th>Start</th><th>End</th><th>Duration</th><th>Severity</th><th>Eye / Treatment</th></tr>
-    </thead>
-    <tbody>${uveitisRowsHTML}</tbody>
-  </table>
-
-  <!-- Biologic injections -->
   ${biologicInjections.length > 0 ? `
-  <h2>Biologic Injections</h2>
+  <!-- Injections -->
+  <h2>Injections / Infusions</h2>
   <table>
     <thead><tr><th>Date</th><th>Medication</th><th>Response / Notes</th></tr></thead>
     <tbody>${injectionRowsHTML}</tbody>
@@ -437,7 +394,7 @@ function buildReportHTML(params: {
   ${notesHTML}
 
   <div class="footer">
-    Generated by Spondy &bull; ${generatedAt} &bull; This report is intended as a supplement to, not a replacement for, clinical assessment.
+    Generated by Fibro &bull; ${generatedAt} &bull; This report is intended as a supplement to, not a replacement for, clinical assessment.
   </div>
 </body>
 </html>`;
@@ -448,11 +405,9 @@ function buildReportHTML(params: {
 export async function generateAndShareReport(params: {
   logs: DailyLog[];
   flares: Flare[];
-  uveitisEpisodes?: UveitisEpisode[];
   medications: MedicationReminder[];
   biologicInjections?: BiologicInjection[];
   profile: UserProfile;
-  basdaiScores?: BasdaiScore[];
   fromDate?: string;
 }): Promise<void> {
   const html = buildReportHTML(params);
@@ -465,7 +420,7 @@ export async function generateAndShareReport(params: {
   const dateStamp = new Date().toISOString().split('T')[0];
   await Sharing.shareAsync(uri, {
     mimeType: 'application/pdf',
-    dialogTitle: `spondy_health_summary_${dateStamp}.pdf`,
+    dialogTitle: `fibro_health_summary_${dateStamp}.pdf`,
     UTI: 'com.adobe.pdf',
   });
 }

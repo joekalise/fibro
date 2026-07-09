@@ -1,5 +1,5 @@
 import { supabase } from '@/services/supabase';
-import { BasdaiScore, BiologicInjection, DailyLog, Flare, FlareSeverity, HealthData, MedicationReminder, PainLocation, UveitisEpisode } from '@/types';
+import { BiologicInjection, DailyLog, Flare, FlareSeverity, HealthData, MedicationReminder, PainLocation } from '@/types';
 
 // ─── Daily Logs ─────────────────────────────────────────────────────────────
 
@@ -318,29 +318,6 @@ export async function getHealthDataRange(
   }
 }
 
-// ─── BASDAI ───────────────────────────────────────────────────────────────────
-
-export async function saveBasdaiScore(score: Omit<BasdaiScore, 'id'>): Promise<BasdaiScore> {
-  const { data, error } = await supabase
-    .from('basdai_scores')
-    .upsert(score, { onConflict: 'user_id,date' })
-    .select()
-    .single();
-  if (error) throw error;
-  return data as BasdaiScore;
-}
-
-export async function getBasdaiScores(userId: string, limit = 12): Promise<BasdaiScore[]> {
-  const { data, error } = await supabase
-    .from('basdai_scores')
-    .select('*')
-    .eq('user_id', userId)
-    .order('date', { ascending: false })
-    .limit(limit);
-  if (error) throw error;
-  return (data ?? []) as BasdaiScore[];
-}
-
 // ─── Biologic injections ──────────────────────────────────────────────────────
 
 export async function getBiologicInjections(userId: string): Promise<BiologicInjection[]> {
@@ -366,41 +343,6 @@ export async function addBiologicInjection(inj: Omit<BiologicInjection, 'id'>): 
 
 export async function deleteBiologicInjection(id: string): Promise<void> {
   const { error } = await supabase.from('biologic_injections').delete().eq('id', id);
-  if (error) throw error;
-}
-
-// ─── Uveitis episodes ─────────────────────────────────────────────────────────
-
-export async function getUveitisEpisodes(userId: string): Promise<UveitisEpisode[]> {
-  const { data, error } = await supabase
-    .from('uveitis_episodes')
-    .select('*')
-    .eq('user_id', userId)
-    .order('start_date', { ascending: false });
-  if (error) throw error;
-  return (data ?? []) as UveitisEpisode[];
-}
-
-export async function addUveitisEpisode(ep: Omit<UveitisEpisode, 'id'>): Promise<UveitisEpisode> {
-  const { data, error } = await supabase
-    .from('uveitis_episodes')
-    .insert(ep)
-    .select()
-    .single();
-  if (error) throw error;
-  return data as UveitisEpisode;
-}
-
-export async function endUveitisEpisode(id: string, endDate: string): Promise<void> {
-  const { error } = await supabase
-    .from('uveitis_episodes')
-    .update({ end_date: endDate })
-    .eq('id', id);
-  if (error) throw error;
-}
-
-export async function deleteUveitisEpisode(id: string): Promise<void> {
-  const { error } = await supabase.from('uveitis_episodes').delete().eq('id', id);
   if (error) throw error;
 }
 

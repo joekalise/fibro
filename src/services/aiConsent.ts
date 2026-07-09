@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const KEY = '@spondy_ai_consent';
+const KEY = '@fibro_ai_consent';
 
 export async function getAiConsent(): Promise<boolean | null> {
   try {

@@ -1,12 +1,13 @@
 export type AgeRange = 'under_25' | '25_35' | '35_45' | '45_55' | '55_plus';
 export type BiologicalSex = 'male' | 'female' | 'prefer_not_to_say';
-export type DiagnosisYears = 'under_1' | '1_3' | '3_5' | '5_10' | '10_plus';
+export type DiagnosisYears = 'not_diagnosed' | 'under_1' | '1_3' | '3_5' | '5_10' | '10_plus';
 export type Severity = 'mild' | 'moderate' | 'severe';
 export type Medication =
-  | 'adalimumab'
-  | 'secukinumab'
-  | 'ixekizumab'
-  | 'ustekinumab'
+  | 'duloxetine'
+  | 'pregabalin'
+  | 'milnacipran'
+  | 'amitriptyline'
+  | 'low_dose_naltrexone'
   | 'nsaids_only'
   | 'no_medication'
   | 'other';
@@ -19,20 +20,22 @@ export type PainLocation =
   | 'neck'
   | 'chest'
   | 'jaw'
-  | 'heels'
+  | 'hands_feet'
+  | 'widespread'
   | 'other';
-export type PainType = 'stiffness' | 'sharp_pain' | 'burning' | 'aching' | 'fatigue';
+export type PainType = 'stiffness' | 'sharp_pain' | 'burning' | 'aching' | 'tingling' | 'hypersensitivity' | 'fatigue';
 export type AssociatedCondition =
-  | 'uveitis'
-  | 'psoriasis'
-  | 'ibd'
-  | 'fatigue'
-  | 'brain_fog'
+  | 'sleep_disorder'
+  | 'ibs'
+  | 'restless_legs'
+  | 'headaches'
+  | 'tmj'
   | 'anxiety_depression'
-  | 'enthesitis'
-  | 'peripheral_joint';
+  | 'brain_fog'
+  | 'fatigue';
 
-export type FlareType = 'as' | 'enthesitis' | 'peripheral';
+export type FlareType = 'widespread' | 'localized' | 'fatigue_dominant';
+export type FlareTrigger = 'stress' | 'poor_sleep' | 'overactivity' | 'weather_changes' | 'illness' | 'hormonal_changes' | 'dietary' | 'unknown';
 export type MorningStiffness = 'none' | 'under_30' | '30_60' | '1_2_hours' | 'over_2_hours';
 export type LifestyleChallenge =
   | 'sleep'
@@ -78,6 +81,7 @@ export interface DailyLog {
   date: string;
   pain_score: number;
   fatigue_score: number;
+  brain_fog_score: number | null;
   stiffness_duration: MorningStiffness | null;
   mood: Mood | null;
   notes: string;
@@ -110,6 +114,7 @@ export interface Flare {
   end_date: string | null;
   severity: FlareSeverity;
   areas_affected: string[];
+  triggers: FlareTrigger[];
   notes: string;
   flare_type?: FlareType;
 }
@@ -152,41 +157,19 @@ export interface WelcomeContent {
   watch_summary: string;
 }
 
-export interface BasdaiScore {
+export interface FiqScore {
   id?: string;
   user_id: string;
   date: string;
-  q1: number;
-  q2: number;
-  q3: number;
-  q4: number;
-  q5: number;
-  q6: number;
+  q_function: number;
+  q_work: number;
+  q_wellbeing: number;
+  q_pain: number;
+  q_fatigue: number;
+  q_rest: number;
+  q_stiffness: number;
+  q_anxiety: number;
+  q_depression: number;
+  q_memory: number;
   score: number;
-}
-
-export interface BiologicInjection {
-  id?: string;
-  user_id: string;
-  medication_name: string;
-  injected_at: string;
-  interval_days: number;
-  lot_number: string;
-  notes: string;
-  response_rating: number | null;
-}
-
-export type UveitisEye = 'left' | 'right' | 'both';
-export type UveitisSymptom = 'red_eye' | 'photophobia' | 'blurred_vision' | 'eye_pain' | 'floaters';
-
-export interface UveitisEpisode {
-  id?: string;
-  user_id: string;
-  start_date: string;
-  end_date: string | null;
-  affected_eye: UveitisEye;
-  severity: FlareSeverity;
-  symptoms: UveitisSymptom[];
-  treatment_received: boolean;
-  notes: string;
 }

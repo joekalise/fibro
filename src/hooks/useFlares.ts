@@ -10,10 +10,10 @@ import {
 import { Flare, FlareSeverity, FlareType } from '@/types';
 
 function matchesType(flare: Flare, flareType: FlareType): boolean {
-  return flare.flare_type === flareType || (!flare.flare_type && flareType === 'as');
+  return flare.flare_type === flareType || (!flare.flare_type && flareType === 'widespread');
 }
 
-export function useFlares(flareType: FlareType = 'as'): {
+export function useFlares(flareType: FlareType = 'widespread'): {
   flares: Flare[];
   activeFlare: Flare | null;
   isLoading: boolean;

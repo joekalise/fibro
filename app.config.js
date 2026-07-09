@@ -2,8 +2,8 @@ const isAndroid = process.env.EAS_BUILD_PLATFORM === 'android';
 
 module.exports = {
   expo: {
-    name: 'Spondy',
-    slug: 'spondy',
+    name: 'Fibro',
+    slug: 'fibro',
     version: '1.0.0',
     orientation: 'portrait',
     icon: './assets/icon.png',
@@ -16,11 +16,11 @@ module.exports = {
     assetBundlePatterns: ['**/*'],
     ios: {
       supportsTablet: false,
-      bundleIdentifier: 'com.spondy.app',
+      bundleIdentifier: 'com.fibro.app',
       googleServicesFile: './GoogleService-Info.plist',
       infoPlist: {
         NSHealthShareUsageDescription:
-          'Spondy reads your health data to identify patterns that may relate to your AS symptoms.',
+          'Fibro reads your health data to identify patterns that may relate to your fibromyalgia symptoms.',
         ITSAppUsesNonExemptEncryption: false,
         UIBackgroundModes: ['fetch', 'processing'],
       },
@@ -30,7 +30,7 @@ module.exports = {
         foregroundImage: './assets/adaptive-icon.png',
         backgroundColor: '#F97316',
       },
-      package: 'com.spondy.app',
+      package: 'com.fibro.app',
       googleServicesFile: './google-services.json',
       permissions: [
         'android.permission.RECEIVE_BOOT_COMPLETED',
@@ -57,8 +57,8 @@ module.exports = {
         '@sentry/react-native/expo',
         {
           url: 'https://sentry.io/',
-          project: 'spondy',
-          organization: 'spondy',
+          project: 'fibro',
+          organization: 'fibro',
         },
       ],
       '@react-native-community/datetimepicker',
@@ -66,19 +66,19 @@ module.exports = {
       'expo-updates',
     ],
     updates: {
-      url: 'https://u.expo.dev/d0cda471-dc65-4d6c-b28c-d6e9dde174e6',
+      url: 'https://u.expo.dev/f338949f-07a0-4e19-80bb-a80d703bf83a',
       enabled: true,
       fallbackToCacheTimeout: 0,
       checkAutomatically: 'ON_LOAD',
     },
     runtimeVersion: '1.0.0',
-    scheme: 'spondy',
+    scheme: 'fibro',
     extra: {
       router: {
         origin: false,
       },
       eas: {
-        projectId: 'd0cda471-dc65-4d6c-b28c-d6e9dde174e6',
+        projectId: 'f338949f-07a0-4e19-80bb-a80d703bf83a',
       },
     },
     owner: 'jbrockbanks-organization',

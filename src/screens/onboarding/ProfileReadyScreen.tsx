@@ -15,7 +15,7 @@ import { useTranslation } from 'react-i18next';
 
 import { Button } from '@/components/common/Button';
 import { DragSlider } from '@/components/common/DragSlider';
-import { SpondyMark } from '@/components/common/SpondyMark';
+import { FibroMark } from '@/components/common/FibroMark';
 import { Colors } from '@/constants/colors';
 import { FontSize, Spacing, BorderRadius } from '@/constants/theme';
 import { useProfile } from '@/contexts/ProfileContext';
@@ -97,7 +97,7 @@ export function ProfileReadyScreen() {
           welcome_message: welcomeMessage,
         }),
         AsyncStorage.setItem(
-          `@spondy_welcome_${user.id}`,
+          `@fibro_welcome_${user.id}`,
           JSON.stringify({ insights, watch_summary: watchSummary })
         ),
       ];
@@ -142,7 +142,7 @@ export function ProfileReadyScreen() {
       >
         {/* Header */}
         <View style={styles.header}>
-          <SpondyMark size={60} />
+          <FibroMark size={60} />
           <Text style={[styles.title, isDark && styles.titleDark]}>
             Your profile is ready
           </Text>
@@ -201,8 +201,11 @@ export function ProfileReadyScreen() {
         {/* ── Watch summary ───────────────────────────────────────────────── */}
         {watchSummary.length > 0 && (
           <View style={styles.section}>
-            <Text style={[styles.sectionLabel, { color: textSecondary }]}>What Spondy will watch for you</Text>
-            <View style={[styles.watchCard, { borderColor: Colors.secondary + '50' }]}>
+            <Text style={[styles.sectionLabel, { color: textSecondary }]}>What Fibro will watch for you</Text>
+            <View style={[styles.watchCard, {
+              backgroundColor: isDark ? Colors.surfaceDark : '#EFF6FF',
+              borderColor: Colors.secondary + '50',
+            }]}>
               <Text style={styles.watchIcon}>👀</Text>
               <Text style={[styles.watchText, { color: isDark ? Colors.textPrimaryDark : '#0C4A6E' }]}>
                 {watchSummary}
@@ -292,7 +295,6 @@ const styles = StyleSheet.create({
 
   // Watch
   watchCard: {
-    backgroundColor: '#EFF6FF',
     borderWidth: 1,
     borderRadius: BorderRadius.md,
     padding: Spacing.md,

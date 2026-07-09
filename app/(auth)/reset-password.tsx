@@ -33,7 +33,7 @@ export default function ResetPasswordScreen() {
   useEffect(() => {
     const processUrl = async (url: string | null) => {
       if (!url) return;
-      // URL: spondy://reset-password#access_token=...&refresh_token=...&type=recovery
+      // URL: fibro://reset-password#access_token=...&refresh_token=...&type=recovery
       const fragment = url.split('#')[1];
       if (!fragment) return;
       const params = new URLSearchParams(fragment);

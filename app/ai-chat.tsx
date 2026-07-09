@@ -199,7 +199,7 @@ function LockedState({
 const CHAT_HISTORY_MAX = 50;
 
 function chatStorageKey(userId: string): string {
-  return `@spondy_chat_history_${userId}`;
+  return `@fibro_chat_history_${userId}`;
 }
 
 export default function AIChatScreen() {
