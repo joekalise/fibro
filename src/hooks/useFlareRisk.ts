@@ -84,13 +84,13 @@ export function computeFlareRisk(
   ).length;
   if (poorDietDays >= 2) signals.push('inflammatory_diet');
 
-  // 11. Alcohol on 2+ of last 3 days (known AS flare trigger)
+  // 11. Alcohol on 2+ of last 3 days (known fibromyalgia flare trigger)
   const alcoholDays = recentLogs.filter(
     (l) => (l.diet_triggers ?? []).includes('alcohol' as DietTrigger)
   ).length;
   if (alcoholDays >= 2) signals.push('recent_alcohol');
 
-  // 12. High starch on 2+ of last 3 days (Ebringer hypothesis — starch feeds Klebsiella)
+  // 12. High starch/sugar on 2+ of last 3 days (common fibromyalgia dietary trigger)
   const starchDays = recentLogs.filter(
     (l) => (l.diet_triggers ?? []).includes('high_starch' as DietTrigger)
   ).length;

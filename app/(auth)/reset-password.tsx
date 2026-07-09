@@ -97,7 +97,7 @@ export default function ResetPasswordScreen() {
             </View>
             <Text style={[styles.title, { color: textPrimary }]}>Set new password</Text>
             <Text style={[styles.subtitle, { color: textSecondary }]}>
-              Choose a strong password for your Spondy account.
+              Choose a strong password for your Fibro account.
             </Text>
           </View>
 
