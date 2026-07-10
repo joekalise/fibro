@@ -98,7 +98,6 @@ module.exports = {
       ...(!isAndroid ? ['react-native-health'] : []),
       'expo-background-fetch',
       'expo-task-manager',
-      '@sentry/react-native',
       [
         '@sentry/react-native/expo',
         {
