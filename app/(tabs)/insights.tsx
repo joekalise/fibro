@@ -858,12 +858,15 @@ export default function InsightsScreen() {
 
   const painData = logs.map((l) => l.pain_score);
   const fatigueData = logs.map((l) => l.fatigue_score);
+  const brainFogRaw = logs.filter((l) => l.brain_fog_score !== null);
+  const brainFogData = brainFogRaw.map((l) => l.brain_fog_score as number);
   const moodData = logs.map((l) => moodToScore(l.mood)).filter((v) => v > 0);
   const axisLabel = (dateStr: string) =>
     period <= 7
       ? dayLabel(dateStr)
       : new Date(dateStr + 'T12:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
 
+  const brainFogLabels = brainFogRaw.map((l) => axisLabel(l.date));
   const moodLabels = logs
     .filter((l) => l.mood !== null)
     .map((l) => axisLabel(l.date));
@@ -877,6 +880,11 @@ export default function InsightsScreen() {
   const avgFatigue =
     fatigueData.length > 0
       ? (fatigueData.reduce((a, b) => a + b, 0) / fatigueData.length).toFixed(1)
+      : null;
+
+  const avgBrainFog =
+    brainFogData.length > 0
+      ? (brainFogData.reduce((a, b) => a + b, 0) / brainFogData.length).toFixed(1)
       : null;
 
   let bestDay: string | null = null;
@@ -1056,6 +1064,32 @@ export default function InsightsScreen() {
               </View>
             )}
 
+            {/* Brain fog chart */}
+            {brainFogData.length > 0 && (
+              <View
+                style={[styles.card, { backgroundColor: cardBg, borderColor: cardBorder }]}
+              >
+                <Text style={[styles.cardTitle, { color: textPrimary }]}>
+                  Brain Fog
+                </Text>
+                {allLogs.length < 7 && (
+                  <Text style={[styles.chartHint, { color: textSecondary }]}>
+                    This chart fills out as you log more days.
+                  </Text>
+                )}
+                <TrendChart
+                  series={[
+                    { data: brainFogData, color: '#8B5CF6', label: 'brain fog' },
+                  ]}
+                  labels={brainFogLabels}
+                  height={80}
+                  minVal={0}
+                  maxVal={10}
+                  width={Math.max(10, chartWidth - Spacing.md * 2)}
+                />
+              </View>
+            )}
+
             {/* Patterns card */}
             <View style={[styles.card, { backgroundColor: cardBg, borderColor: cardBorder }]}>
               <Text style={[styles.cardTitle, { color: textPrimary }]}>
@@ -1077,6 +1111,13 @@ export default function InsightsScreen() {
                   value={avgFatigue !== null ? `${avgFatigue}/10` : '—'}
                   isDark={isDark}
                 />
+                {avgBrainFog !== null && (
+                  <StatRow
+                    label="Avg brain fog"
+                    value={`${avgBrainFog}/10`}
+                    isDark={isDark}
+                  />
+                )}
                 {bestDay && (
                   <StatRow
                     label={t('insights.best_day')}
@@ -1641,8 +1682,6 @@ const styles = StyleSheet.create({
   fiqCompactRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderRadius: BorderRadius.md,
-    borderWidth: 1,
     padding: Spacing.sm,
   },
   fiqCompactLabel: {

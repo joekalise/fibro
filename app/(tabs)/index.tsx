@@ -32,6 +32,7 @@ import { PressureData } from '@/services/weather';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { FibroMark } from '@/components/common/FibroMark';
 import { ProfileButton } from '@/components/common/ProfileButton';
+import { InfoButton } from '@/components/common/InfoButton';
 import { sendFlareWarningIfNeeded, evaluateAndSendNudges } from '@/services/notifications';
 import { DailyLog, Flare, Mood, RecoverySnapshot } from '@/types';
 
@@ -373,8 +374,6 @@ function respColor(v: number): string {
 }
 
 function RecoverySignalsCard({ data, isDark }: { data: RecoverySnapshot; isDark: boolean }) {
-  const textSec = isDark ? '#9CA3AF' : '#6B7280';
-
   const items: { label: string; value: string; color: string }[] = [];
 
   if (data.oxygen_saturation !== null) {
@@ -402,16 +401,21 @@ function RecoverySignalsCard({ data, isDark }: { data: RecoverySnapshot; isDark:
   if (items.length === 0) return null;
 
   return (
-    <View style={[styles.card, isDark && styles.cardDark]}>
-      <Text style={[styles.sectionTitle, isDark && styles.textPrimaryDark, { marginBottom: 10 }]}>
+    <View style={[styles.healthCard, isDark && styles.healthCardDark]}>
+      <Text style={[styles.sectionTitle, isDark && styles.textPrimaryDark]}>
         Recovery signals
       </Text>
-      <View style={styles.recoveryGrid}>
-        {items.map((item) => (
-          <View key={item.label} style={[styles.recoveryItem, { backgroundColor: isDark ? '#111827' : '#F9FAFB' }]}>
-            <Text style={[styles.recoveryValue, { color: item.color }]}>{item.value}</Text>
-            <Text style={[styles.recoveryLabel, { color: textSec }]}>{item.label}</Text>
-          </View>
+      <View style={styles.todaySummaryRow}>
+        {items.map((item, i) => (
+          <React.Fragment key={item.label}>
+            <View style={styles.todaySummaryItem}>
+              <Text style={[styles.healthStatValue, { color: item.color }]}>{item.value}</Text>
+              <Text style={[styles.todaySummaryItemLabel, isDark && styles.textSecDark]}>{item.label}</Text>
+            </View>
+            {i < items.length - 1 && (
+              <View style={[styles.todaySummaryDivider, isDark && styles.todaySummaryDividerDark]} />
+            )}
+          </React.Fragment>
         ))}
       </View>
     </View>
@@ -423,11 +427,13 @@ function RecoverySignalsCard({ data, isDark }: { data: RecoverySnapshot; isDark:
 function PressureCard({
   pressure,
   isFetching,
+  fetchError,
   onRefresh,
   isDark,
 }: {
   pressure: PressureData | null;
   isFetching: boolean;
+  fetchError: boolean;
   onRefresh: () => void;
   isDark: boolean;
 }) {
@@ -444,9 +450,15 @@ function PressureCard({
         <Text style={styles.pressureIcon}>🌤️</Text>
         <View style={styles.pressurePromptText}>
           <Text style={[styles.sectionTitle, isDark && styles.textPrimaryDark]}>Track weather pressure</Text>
-          <Text style={[styles.pressureHint, { color: textSec }]}>Barometric pressure can trigger FM flares. Tap to load.</Text>
+          <Text style={[styles.pressureHint, { color: fetchError ? Colors.error : textSec }]}>
+            {fetchError
+              ? 'Could not load — check your connection and tap to retry.'
+              : 'Barometric pressure can trigger FM flares. Tap to load.'}
+          </Text>
         </View>
-        <Text style={styles.pressureEnableLink}>{isFetching ? '…' : 'Load →'}</Text>
+        <Text style={[styles.pressureEnableLink, fetchError && { color: Colors.error }]}>
+          {isFetching ? '…' : fetchError ? 'Retry →' : 'Load →'}
+        </Text>
       </TouchableOpacity>
     );
   }
@@ -464,6 +476,10 @@ function PressureCard({
         <View style={styles.pressureTitleRow}>
           <Text style={styles.pressureIcon}>🌤️</Text>
           <Text style={[styles.sectionTitle, isDark && styles.textPrimaryDark]}>Barometric pressure</Text>
+          <InfoButton
+            title="Why pressure matters"
+            message="Research shows that drops in barometric pressure can trigger or worsen fibromyalgia pain, stiffness, and fatigue. The exact reason isn't fully understood, but changes in pressure may affect tissue inflammation and how pain signals are processed. Many FM patients notice they can 'feel the weather changing' before it happens."
+          />
         </View>
         <Text style={[styles.pressureValue, { color: levelColor }]}>{hpa} hPa</Text>
       </View>
@@ -609,9 +625,9 @@ export default function HomeScreen() {
   const { activeFlare, flares, isLoading: flaresLoading } = useFlares();
   const { history: healthHistory } = useHealthHistory(7);
   const { isConnected: healthConnected, todayData: healthData, recheck: recheckHealth } = useHealthData();
-  const flareRisk = useFlareRisk(logs, activeFlare, healthHistory, recoveryData);
-  const { pressure, isLoading: pressureLoading, isFetching: pressureFetching, refresh: refreshPressure } = useWeatherPressure();
   const recoveryData = useRecoveryData();
+  const flareRisk = useFlareRisk(logs, activeFlare, healthHistory, recoveryData);
+  const { pressure, isLoading: pressureLoading, isFetching: pressureFetching, fetchError: pressureError, refresh: refreshPressure } = useWeatherPressure();
   // Refresh streak and weekly data when returning from Track tab; re-check health connection state
   useFocusEffect(useCallback(() => {
     refreshLog();
@@ -821,6 +837,7 @@ export default function HomeScreen() {
           <PressureCard
             pressure={pressure}
             isFetching={pressureFetching}
+            fetchError={pressureError}
             onRefresh={refreshPressure}
             isDark={isDark}
           />

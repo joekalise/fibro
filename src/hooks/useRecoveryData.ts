@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { RecoverySnapshot } from '@/types';
-import { isHealthConnected, fetchTodayRecoveryData } from '@/services/healthKit';
+import { isHealthConnected, fetchTodayRecoveryData, ensureLatestHealthPermissions } from '@/services/healthKit';
 
 export function useRecoveryData(): RecoverySnapshot | null {
   const [data, setData] = useState<RecoverySnapshot | null>(null);
@@ -11,6 +11,8 @@ export function useRecoveryData(): RecoverySnapshot | null {
       try {
         const connected = await isHealthConnected();
         if (!connected || cancelled) return;
+        await ensureLatestHealthPermissions();
+        if (cancelled) return;
         const today = new Date().toISOString().split('T')[0];
         const snapshot = await fetchTodayRecoveryData(today);
         const hasAny =

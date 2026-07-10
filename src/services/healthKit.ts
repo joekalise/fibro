@@ -3,6 +3,9 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { HealthData, RecoverySnapshot } from '@/types';
 
 const HEALTH_CONNECTED_KEY = '@fibro_health_connected';
+// Bump this when new permission types are added so existing users get re-prompted.
+const HEALTH_PERMISSIONS_VERSION = 2;
+const HEALTH_PERMISSIONS_VERSION_KEY = '@fibro_health_permissions_version';
 
 function getHK(): any | null {
   if (Platform.OS !== 'ios') return null;
@@ -56,6 +59,7 @@ export async function requestHealthPermissions(): Promise<boolean> {
   try {
     await p<void>((cb) => hk.initHealthKit(permissions, cb));
     await AsyncStorage.setItem(HEALTH_CONNECTED_KEY, 'true');
+    await AsyncStorage.setItem(HEALTH_PERMISSIONS_VERSION_KEY, String(HEALTH_PERMISSIONS_VERSION));
     return true;
   } catch (e) {
     console.error('[HealthKit] initHealthKit failed:', e);
@@ -65,6 +69,19 @@ export async function requestHealthPermissions(): Promise<boolean> {
 
 export async function disconnectHealth(): Promise<void> {
   await AsyncStorage.removeItem(HEALTH_CONNECTED_KEY);
+  await AsyncStorage.removeItem(HEALTH_PERMISSIONS_VERSION_KEY);
+}
+
+// Silently re-runs initHealthKit when new permission types have been added.
+// iOS will only show a dialog for types not yet granted — already-granted ones pass silently.
+export async function ensureLatestHealthPermissions(): Promise<void> {
+  const connected = await isHealthConnected();
+  if (!connected) return;
+  try {
+    const stored = await AsyncStorage.getItem(HEALTH_PERMISSIONS_VERSION_KEY);
+    if (Number(stored) >= HEALTH_PERMISSIONS_VERSION) return;
+    await requestHealthPermissions();
+  } catch {}
 }
 
 export type HealthSnapshot = Omit<HealthData, 'id'>;
