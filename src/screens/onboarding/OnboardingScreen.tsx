@@ -792,7 +792,7 @@ export function OnboardingScreen() {
               {t('onboarding.ai_consent.how_used_body')}
             </Text>
 
-            <TouchableOpacity onPress={() => Linking.openURL('https://gist.github.com/joekalise/fb689414dba7ade9f6d7383ccad9cf1f').catch(() => {})}>
+            <TouchableOpacity onPress={() => Linking.openURL('https://gist.github.com/joekalise/a35bb652c6aeef4d03fc9cda1dfd8f25').catch(() => {})}>
               <Text style={[styles.consentPrivacyLink, { color: Colors.primary }]}>
                 View Privacy Policy
               </Text>

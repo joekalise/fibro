@@ -281,7 +281,7 @@ export function SignInScreen() {
             By continuing you agree to our Terms of Service and{' '}
             <Text
               style={styles.termsLink}
-              onPress={() => Linking.openURL('https://gist.github.com/joekalise/fb689414dba7ade9f6d7383ccad9cf1f')}
+              onPress={() => Linking.openURL('https://gist.github.com/joekalise/a35bb652c6aeef4d03fc9cda1dfd8f25')}
             >
               Privacy Policy
             </Text>
