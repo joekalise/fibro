@@ -1,4 +1,39 @@
+const { withDangerousMod } = require('@expo/config-plugins');
+const fs = require('fs');
+const path = require('path');
+
 const isAndroid = process.env.EAS_BUILD_PLATFORM === 'android';
+
+function withFmtFix(config) {
+  return withDangerousMod(config, [
+    'ios',
+    (config) => {
+      const podfilePath = path.join(config.modRequest.platformProjectRoot, 'Podfile');
+      let contents = fs.readFileSync(podfilePath, 'utf-8');
+      if (!contents.includes('fmt_compile_patch')) {
+        // Patch fmt/compile.h in post_install so FMT_COMPILE expands to FMT_STRING
+        // instead of the consteval-based compiled_string variant.
+        // fmt 11.x unconditionally redefines FMT_CONSTEVAL, so compiler flags can't fix this.
+        contents = contents.replace(
+          /post_install do \|installer\|/,
+          `post_install do |installer|
+  # fmt_compile_patch: disable consteval FMT_COMPILE — Apple Clang has broken consteval
+  fmt_compile_patch = "#{installer.sandbox.root}/fmt/include/fmt/compile.h"
+  if File.exist?(fmt_compile_patch)
+    src = File.read(fmt_compile_patch)
+    patched = src.sub(
+      '#if defined(__cpp_if_constexpr) && defined(__cpp_return_type_deduction)',
+      '#if 0 // disabled: consteval FMT_COMPILE breaks Apple Clang'
+    )
+    File.write(fmt_compile_patch, patched) if src != patched
+  end`
+        );
+        fs.writeFileSync(podfilePath, contents);
+      }
+      return config;
+    },
+  ]);
+}
 
 module.exports = {
   expo: {
@@ -31,7 +66,7 @@ module.exports = {
         backgroundColor: '#F97316',
       },
       package: 'com.fibro.app',
-      googleServicesFile: './google-services.json',
+      ...(isAndroid && { googleServicesFile: './google-services.json' }),
       permissions: [
         'android.permission.RECEIVE_BOOT_COMPLETED',
         'android.permission.WAKE_LOCK',
@@ -64,6 +99,17 @@ module.exports = {
       '@react-native-community/datetimepicker',
       '@react-native-firebase/app',
       'expo-updates',
+      [
+        'expo-build-properties',
+        {
+          ios: {
+            extraPods: [
+              { name: 'GoogleUtilities', modular_headers: true },
+            ],
+          },
+        },
+      ],
+      withFmtFix,
     ],
     updates: {
       url: 'https://u.expo.dev/f338949f-07a0-4e19-80bb-a80d703bf83a',

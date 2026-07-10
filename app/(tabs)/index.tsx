@@ -121,7 +121,7 @@ function FibroScoreCard({
     <View style={[styles.card, isDark && styles.cardDark]}>
       <View style={styles.scoreCardHeader}>
         <Text style={[styles.sectionTitle, isDark && styles.textPrimaryDark]}>
-          {t('home.spondy_score')}
+          {t('home.fibro_score')}
         </Text>
         {score !== null && (
           <TouchableOpacity
@@ -176,7 +176,7 @@ function FibroScoreCard({
       ) : (
         <Text style={[styles.noDataText, isDark && styles.textSecDark]}>
           {logs.length === 0
-            ? t('home.spondy_score_no_data')
+            ? t('home.fibro_score_no_data')
             : logs.length === 1
             ? 'Log 2 more days to see your score'
             : 'Log 1 more day to see your score'}
@@ -511,7 +511,7 @@ export default function HomeScreen() {
     await markReviewCompleted();
     const url = Platform.OS === 'android'
       ? 'market://details?id=com.fibro.app'
-      : 'https://apps.apple.com/app/id6767585030?action=write-review';
+      : 'https://apps.apple.com/app/id6789286943?action=write-review';
     await Linking.openURL(url);
   }, [markReviewCompleted]);
 
