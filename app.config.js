@@ -67,7 +67,8 @@ module.exports = {
         NSHealthShareUsageDescription:
           'Fibro reads your health data to identify patterns that may relate to your fibromyalgia symptoms.',
         ITSAppUsesNonExemptEncryption: false,
-        UIBackgroundModes: ['fetch'],
+        UIBackgroundModes: ['fetch', 'processing'],
+        BGTaskSchedulerPermittedIdentifiers: ['FIBRO_HEALTH_SYNC'],
       },
     },
     android: {
