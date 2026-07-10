@@ -1,5 +1,7 @@
 {
   "expo.jsEngine": "hermes",
   "EX_DEV_CLIENT_NETWORK_INSPECTOR": "true",
+  "apple.extraPods": "[{\"name\":\"GoogleUtilities\",\"modular_headers\":true}]",
+  "apple.privacyManifestAggregationEnabled": "true",
   "newArchEnabled": "false"
 }

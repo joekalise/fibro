@@ -47,6 +47,7 @@ function withFmtFix(config) {
 
 module.exports = {
   expo: {
+    newArchEnabled: false,
     name: 'Fibro',
     slug: 'fibro',
     version: '1.0.0',
