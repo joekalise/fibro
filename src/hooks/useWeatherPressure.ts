@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
 import {
-  getLocationPermissionStatus,
   requestLocationPermission,
   fetchPressure,
   getCachedPressure,
@@ -9,48 +8,30 @@ import {
 
 export function useWeatherPressure() {
   const [pressure, setPressure] = useState<PressureData | null>(null);
-  // Start as 'undetermined' — we check asynchronously, but don't call
-  // expo-location on mount. We only load cached pressure from AsyncStorage,
-  // which is safe and doesn't touch native location modules.
-  const [permissionStatus, setPermissionStatus] = useState<'granted' | 'denied' | 'undetermined'>('undetermined');
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    let cancelled = false;
-    async function init() {
-      // Load any cached pressure first (AsyncStorage only — no native calls)
-      const cached = await getCachedPressure();
-      if (!cancelled) setPressure(cached);
-
-      // Now check permission status (lazy-loads expo-location)
-      const status = await getLocationPermissionStatus();
-      if (cancelled) return;
-      setPermissionStatus(status);
-
-      // If already granted and no cached data, fetch fresh
-      if (status === 'granted' && !cached) {
-        const data = await fetchPressure();
-        if (!cancelled) setPressure(data);
-      }
-
-      if (!cancelled) setIsLoading(false);
-    }
-    init();
-    return () => { cancelled = true; };
+    // Only read AsyncStorage on mount — never call expo-location here.
+    // expo-location is only invoked when the user explicitly taps Enable.
+    getCachedPressure()
+      .then((cached) => setPressure(cached))
+      .catch(() => setPressure(null))
+      .finally(() => setIsLoading(false));
   }, []);
 
   const requestPermission = useCallback(async () => {
-    const granted = await requestLocationPermission();
-    if (granted) {
-      setPermissionStatus('granted');
+    try {
+      const granted = await requestLocationPermission();
+      if (!granted) return;
       setIsLoading(true);
       const data = await fetchPressure();
       setPressure(data);
+    } catch {
+      // non-fatal — user just won't see pressure data
+    } finally {
       setIsLoading(false);
-    } else {
-      setPermissionStatus('denied');
     }
   }, []);
 
-  return { pressure, permissionStatus, isLoading, requestPermission };
+  return { pressure, isLoading, requestPermission };
 }

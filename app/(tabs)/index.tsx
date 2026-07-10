@@ -361,18 +361,16 @@ function WeeklyTrends({
 
 function PressureCard({
   pressure,
-  permissionStatus,
   onRequestPermission,
   isDark,
 }: {
   pressure: PressureData | null;
-  permissionStatus: 'granted' | 'denied' | 'undetermined';
   onRequestPermission: () => void;
   isDark: boolean;
 }) {
   const textSec = isDark ? '#9CA3AF' : '#6B7280';
 
-  if (permissionStatus === 'undetermined') {
+  if (!pressure) {
     return (
       <TouchableOpacity
         onPress={onRequestPermission}
@@ -388,8 +386,6 @@ function PressureCard({
       </TouchableOpacity>
     );
   }
-
-  if (permissionStatus === 'denied' || !pressure) return null;
 
   const { pressure: hpa, trend } = pressure;
 
@@ -548,7 +544,7 @@ export default function HomeScreen() {
   const { history: healthHistory } = useHealthHistory(7);
   const { isConnected: healthConnected, todayData: healthData, recheck: recheckHealth } = useHealthData();
   const flareRisk = useFlareRisk(logs, activeFlare, healthHistory);
-  const { pressure, permissionStatus: pressurePermission, isLoading: pressureLoading, requestPermission: requestPressurePermission } = useWeatherPressure();
+  const { pressure, isLoading: pressureLoading, requestPermission: requestPressurePermission } = useWeatherPressure();
   // Refresh streak and weekly data when returning from Track tab; re-check health connection state
   useFocusEffect(useCallback(() => {
     refreshLog();
@@ -754,7 +750,6 @@ export default function HomeScreen() {
         {!pressureLoading && (
           <PressureCard
             pressure={pressure}
-            permissionStatus={pressurePermission}
             onRequestPermission={requestPressurePermission}
             isDark={isDark}
           />
