@@ -1,6 +1,6 @@
 import { Platform } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { HealthData } from '@/types';
+import { HealthData, RecoverySnapshot } from '@/types';
 
 const HEALTH_CONNECTED_KEY = '@fibro_health_connected';
 
@@ -45,6 +45,9 @@ export async function requestHealthPermissions(): Promise<boolean> {
         hk.Constants.Permissions.HeartRateVariability,
         hk.Constants.Permissions.ActiveEnergyBurned,
         hk.Constants.Permissions.Workout,
+        hk.Constants.Permissions.OxygenSaturation,
+        hk.Constants.Permissions.RespiratoryRate,
+        hk.Constants.Permissions.MindfulSession,
       ],
       write: [],
     },
@@ -183,6 +186,73 @@ export async function fetchTodayHealthData(
   try {
     const ws = await p<Array<unknown>>((cb) => hk.getWorkouts(opts, cb));
     base.workouts = ws.length;
+  } catch {}
+
+  return base;
+}
+
+export async function fetchTodayRecoveryData(date: string): Promise<RecoverySnapshot> {
+  const hk = getHK();
+  const base: RecoverySnapshot = {
+    oxygen_saturation: null,
+    respiratory_rate: null,
+    mindful_minutes: null,
+  };
+
+  if (!hk) return base;
+
+  // Sleep window: previous evening 20:00 → current morning 10:00
+  // SpO2 and respiratory rate are most meaningful during sleep
+  const sleepStart = new Date(`${date}T00:00:00`);
+  sleepStart.setDate(sleepStart.getDate() - 1);
+  sleepStart.setHours(20, 0, 0, 0);
+  const sleepEnd = new Date(`${date}T10:00:00`);
+  const sleepOpts = {
+    startDate: sleepStart.toISOString(),
+    endDate: sleepEnd.toISOString(),
+    ascending: false,
+    limit: 100,
+  };
+
+  // SpO2 — average overnight reading
+  try {
+    const samples = await p<Array<{ value: number }>>((cb) =>
+      hk.getOxygenSaturationSamples(sleepOpts, cb)
+    );
+    if (samples.length > 0) {
+      const avg = samples.reduce((sum, s) => sum + s.value, 0) / samples.length;
+      // HealthKit stores as 0-1 fraction; convert to percentage
+      base.oxygen_saturation = Math.round(avg > 1 ? avg : avg * 100);
+    }
+  } catch {}
+
+  // Respiratory rate — average overnight reading
+  try {
+    const samples = await p<Array<{ value: number }>>((cb) =>
+      hk.getRespiratoryRateSamples(sleepOpts, cb)
+    );
+    if (samples.length > 0) {
+      const avg = samples.reduce((sum, s) => sum + s.value, 0) / samples.length;
+      base.respiratory_rate = Math.round(avg * 10) / 10;
+    }
+  } catch {}
+
+  // Mindful minutes — total sessions today
+  try {
+    const dayStart = new Date(`${date}T00:00:00`).toISOString();
+    const dayEnd = new Date(`${date}T23:59:59`).toISOString();
+    const result = await p<{ value: number } | Array<{ startDate: string; endDate: string }>>((cb) =>
+      hk.getMindfulSession({ startDate: dayStart, endDate: dayEnd }, cb)
+    );
+    if (Array.isArray(result)) {
+      // Sum durations if library returns an array of sessions
+      const totalMs = result.reduce((sum, s) => {
+        return sum + (new Date(s.endDate).getTime() - new Date(s.startDate).getTime());
+      }, 0);
+      base.mindful_minutes = Math.round(totalMs / 60000) || null;
+    } else if (result && typeof result.value === 'number') {
+      base.mindful_minutes = Math.round(result.value) || null;
+    }
   } catch {}
 
   return base;

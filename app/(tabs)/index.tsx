@@ -27,12 +27,13 @@ import { useMedicationTracking } from '@/hooks/useMedicationTracking';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useReviewPrompt } from '@/hooks/useReviewPrompt';
 import { useWeatherPressure } from '@/hooks/useWeatherPressure';
+import { useRecoveryData } from '@/hooks/useRecoveryData';
 import { PressureData } from '@/services/weather';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { FibroMark } from '@/components/common/FibroMark';
 import { ProfileButton } from '@/components/common/ProfileButton';
 import { sendFlareWarningIfNeeded, evaluateAndSendNudges } from '@/services/notifications';
-import { DailyLog, Flare, Mood } from '@/types';
+import { DailyLog, Flare, Mood, RecoverySnapshot } from '@/types';
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -357,6 +358,66 @@ function WeeklyTrends({
   );
 }
 
+// ─── Recovery Signals Card ───────────────────────────────────────────────────
+
+function spo2Color(v: number): string {
+  if (v >= 95) return Colors.success;
+  if (v >= 90) return Colors.warning;
+  return Colors.error;
+}
+
+function respColor(v: number): string {
+  if (v >= 12 && v <= 18) return Colors.success;
+  if (v > 18 && v <= 22) return Colors.warning;
+  return Colors.error;
+}
+
+function RecoverySignalsCard({ data, isDark }: { data: RecoverySnapshot; isDark: boolean }) {
+  const textSec = isDark ? '#9CA3AF' : '#6B7280';
+
+  const items: { label: string; value: string; color: string }[] = [];
+
+  if (data.oxygen_saturation !== null) {
+    items.push({
+      label: 'SpO₂',
+      value: `${data.oxygen_saturation}%`,
+      color: spo2Color(data.oxygen_saturation),
+    });
+  }
+  if (data.respiratory_rate !== null) {
+    items.push({
+      label: 'Resp rate',
+      value: `${data.respiratory_rate}/min`,
+      color: respColor(data.respiratory_rate),
+    });
+  }
+  if (data.mindful_minutes !== null && data.mindful_minutes > 0) {
+    items.push({
+      label: 'Mindful',
+      value: `${data.mindful_minutes}m`,
+      color: Colors.success,
+    });
+  }
+
+  if (items.length === 0) return null;
+
+  return (
+    <View style={[styles.card, isDark && styles.cardDark]}>
+      <Text style={[styles.sectionTitle, isDark && styles.textPrimaryDark, { marginBottom: 10 }]}>
+        Recovery signals
+      </Text>
+      <View style={styles.recoveryGrid}>
+        {items.map((item) => (
+          <View key={item.label} style={[styles.recoveryItem, { backgroundColor: isDark ? '#111827' : '#F9FAFB' }]}>
+            <Text style={[styles.recoveryValue, { color: item.color }]}>{item.value}</Text>
+            <Text style={[styles.recoveryLabel, { color: textSec }]}>{item.label}</Text>
+          </View>
+        ))}
+      </View>
+    </View>
+  );
+}
+
 // ─── Barometric Pressure Card ────────────────────────────────────────────────
 
 function PressureCard({
@@ -548,6 +609,7 @@ export default function HomeScreen() {
   const { isConnected: healthConnected, todayData: healthData, recheck: recheckHealth } = useHealthData();
   const flareRisk = useFlareRisk(logs, activeFlare, healthHistory);
   const { pressure, isLoading: pressureLoading, isFetching: pressureFetching, refresh: refreshPressure } = useWeatherPressure();
+  const recoveryData = useRecoveryData();
   // Refresh streak and weekly data when returning from Track tab; re-check health connection state
   useFocusEffect(useCallback(() => {
     refreshLog();
@@ -748,6 +810,9 @@ export default function HomeScreen() {
             </View>
           </View>
         )}
+
+        {/* Recovery signals — SpO2, respiratory rate, mindfulness */}
+        {recoveryData && <RecoverySignalsCard data={recoveryData} isDark={isDark} />}
 
         {/* Weather / barometric pressure */}
         {!pressureLoading && (
@@ -1355,6 +1420,27 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     lineHeight: 30,
     color: Colors.textPrimary,
+  },
+  recoveryGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  recoveryItem: {
+    flex: 1,
+    minWidth: '45%',
+    borderRadius: 8,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+  },
+  recoveryValue: {
+    fontSize: FontSize.lg,
+    fontWeight: '700',
+    marginBottom: 2,
+  },
+  recoveryLabel: {
+    fontSize: FontSize.xs,
+    fontWeight: '500',
   },
   pressurePromptRow: {
     flexDirection: 'row',

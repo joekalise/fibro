@@ -112,6 +112,13 @@ export interface HealthData {
   workouts: number | null;
 }
 
+// In-memory only — not persisted to Supabase (no DB migration needed)
+export interface RecoverySnapshot {
+  oxygen_saturation: number | null; // % average overnight
+  respiratory_rate: number | null;  // breaths/min average overnight
+  mindful_minutes: number | null;   // total mindfulness today
+}
+
 export interface Flare {
   id?: string;
   user_id: string;
