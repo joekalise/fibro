@@ -26,6 +26,8 @@ import { useHealthData } from '@/hooks/useHealthData';
 import { useMedicationTracking } from '@/hooks/useMedicationTracking';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useReviewPrompt } from '@/hooks/useReviewPrompt';
+import { useWeatherPressure } from '@/hooks/useWeatherPressure';
+import { PressureData } from '@/services/weather';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { FibroMark } from '@/components/common/FibroMark';
 import { ProfileButton } from '@/components/common/ProfileButton';
@@ -169,6 +171,8 @@ function FibroScoreCard({
               <FactorRow label={t('score.factor_streak')} value={breakdown.consistencyBonus} />
               <FactorRow label={t('score.factor_mood')} value={breakdown.moodPoints} />
               <FactorRow label={t('score.factor_medication')} value={breakdown.medPoints} />
+              {breakdown.sleepRestorationPoints < 0 && <FactorRow label={t('score.factor_sleep_restoration')} value={breakdown.sleepRestorationPoints} />}
+              {breakdown.sensitivityPoints < 0 && <FactorRow label={t('score.factor_sensitivity')} value={breakdown.sensitivityPoints} />}
             </View>
           )}
         </>
@@ -353,6 +357,64 @@ function WeeklyTrends({
   );
 }
 
+// ─── Barometric Pressure Card ────────────────────────────────────────────────
+
+function PressureCard({
+  pressure,
+  permissionStatus,
+  onRequestPermission,
+  isDark,
+}: {
+  pressure: PressureData | null;
+  permissionStatus: 'granted' | 'denied' | 'undetermined';
+  onRequestPermission: () => void;
+  isDark: boolean;
+}) {
+  const textSec = isDark ? '#9CA3AF' : '#6B7280';
+
+  if (permissionStatus === 'undetermined') {
+    return (
+      <TouchableOpacity
+        onPress={onRequestPermission}
+        style={[styles.card, isDark && styles.cardDark, styles.pressurePromptRow]}
+        activeOpacity={0.8}
+      >
+        <Text style={styles.pressureIcon}>🌤️</Text>
+        <View style={styles.pressurePromptText}>
+          <Text style={[styles.sectionTitle, isDark && styles.textPrimaryDark]}>Track weather pressure</Text>
+          <Text style={[styles.pressureHint, { color: textSec }]}>Barometric pressure can trigger FM flares. Tap to enable.</Text>
+        </View>
+        <Text style={styles.pressureEnableLink}>Enable →</Text>
+      </TouchableOpacity>
+    );
+  }
+
+  if (permissionStatus === 'denied' || !pressure) return null;
+
+  const { pressure: hpa, trend } = pressure;
+
+  const levelLabel = hpa < 1003 ? 'Low pressure' : hpa < 1013 ? 'Variable' : 'Stable';
+  const levelColor = hpa < 1003 ? Colors.error : hpa < 1013 ? Colors.warning : Colors.success;
+  const trendIcon = trend === 'falling' ? '⬇' : trend === 'rising' ? '⬆' : '→';
+  const trendLabel = trend === 'falling' ? 'dropping' : trend === 'rising' ? 'rising' : 'steady';
+
+  return (
+    <View style={[styles.card, isDark && styles.cardDark]}>
+      <View style={styles.pressureHeaderRow}>
+        <View style={styles.pressureTitleRow}>
+          <Text style={styles.pressureIcon}>🌤️</Text>
+          <Text style={[styles.sectionTitle, isDark && styles.textPrimaryDark]}>Barometric pressure</Text>
+        </View>
+        <Text style={[styles.pressureValue, { color: levelColor }]}>{hpa} hPa</Text>
+      </View>
+      <View style={styles.pressureSubRow}>
+        <Text style={[styles.pressureLevel, { color: levelColor }]}>{levelLabel}</Text>
+        <Text style={[styles.pressureTrend, { color: textSec }]}>  {trendIcon} Pressure {trendLabel}</Text>
+      </View>
+    </View>
+  );
+}
+
 // ─── Flare Risk Card ──────────────────────────────────────────────────────────
 
 const SIGNAL_LABELS: Record<string, string> = {
@@ -368,6 +430,9 @@ const SIGNAL_LABELS: Record<string, string> = {
   inflammatory_diet: '🍽️ Inflammatory diet',
   recent_alcohol: '🍷 Recent alcohol',
   caffeine_intake: '☕ Caffeine today',
+  unrefreshed_sleep: '😪 Unrefreshed sleep',
+  sensitivity_spike: '⚡ High sensitivity days',
+  boom_bust_risk: '🔄 Activity pacing risk',
 };
 
 function FlareRiskCard({
@@ -483,6 +548,7 @@ export default function HomeScreen() {
   const { history: healthHistory } = useHealthHistory(7);
   const { isConnected: healthConnected, todayData: healthData, recheck: recheckHealth } = useHealthData();
   const flareRisk = useFlareRisk(logs, activeFlare, healthHistory);
+  const { pressure, permissionStatus: pressurePermission, isLoading: pressureLoading, requestPermission: requestPressurePermission } = useWeatherPressure();
   // Refresh streak and weekly data when returning from Track tab; re-check health connection state
   useFocusEffect(useCallback(() => {
     refreshLog();
@@ -682,6 +748,16 @@ export default function HomeScreen() {
               )}
             </View>
           </View>
+        )}
+
+        {/* Weather / barometric pressure */}
+        {!pressureLoading && (
+          <PressureCard
+            pressure={pressure}
+            permissionStatus={pressurePermission}
+            onRequestPermission={requestPressurePermission}
+            isDark={isDark}
+          />
         )}
 
         {/* 4. Fibro score — horizontal design */}
@@ -1280,6 +1356,52 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     lineHeight: 30,
     color: Colors.textPrimary,
+  },
+  pressurePromptRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  pressureIcon: {
+    fontSize: 22,
+  },
+  pressurePromptText: {
+    flex: 1,
+  },
+  pressureHint: {
+    fontSize: 12,
+    marginTop: 2,
+  },
+  pressureEnableLink: {
+    color: Colors.primary,
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  pressureHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  pressureTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  pressureValue: {
+    fontSize: FontSize.lg,
+    fontWeight: '700',
+  },
+  pressureSubRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 4,
+  },
+  pressureLevel: {
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  pressureTrend: {
+    fontSize: 13,
   },
 
 });

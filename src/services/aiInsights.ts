@@ -93,7 +93,12 @@ function buildHealthSummary(healthHistory: HealthData[]): string {
   return lines.join('\n');
 }
 
-function buildDataSummary(logs: DailyLog[], flares: Flare[], healthHistory?: HealthData[]): string {
+function buildDataSummary(
+  logs: DailyLog[],
+  flares: Flare[],
+  healthHistory?: HealthData[],
+  pressureData?: { pressure: number; trend: string } | null
+): string {
   if (logs.length === 0) {
     return 'No tracking data available for this period.';
   }
@@ -244,6 +249,13 @@ ${avgPainHigh ? `- Avg pain on high-activity days: ${avgPainHigh}/10` : ''}${avg
     wellbeingSection = `\n\nSLEEP RESTORATION & SENSITIVITY:${restedLine}${sensLine}`;
   }
 
+  // Barometric pressure context
+  let pressureSection = '';
+  if (pressureData) {
+    const level = pressureData.pressure < 1003 ? 'low (flare-risk range)' : pressureData.pressure < 1013 ? 'variable' : 'stable/high';
+    pressureSection = `\n\nBAROMETRIC PRESSURE: ${pressureData.pressure} hPa — ${level}, trend: ${pressureData.trend}. Note: falling or low barometric pressure is a commonly reported fibromyalgia flare trigger.`;
+  }
+
   // Period section
   let periodSection = '';
   const periodLogs = logs.filter(l => l.period_active === true);
@@ -270,7 +282,7 @@ FLARES:
 ${flareSummary}
 
 USER NOTES (free text from check-ins):
-${notes || '  None'}${dietSection}${healthSection}${exerciseSection}${periodSection}${pacingSection}${wellbeingSection}
+${notes || '  None'}${dietSection}${healthSection}${exerciseSection}${pressureSection}${periodSection}${pacingSection}${wellbeingSection}
 `.trim();
 }
 
@@ -300,9 +312,10 @@ export async function generateWeeklyInsight(params: {
   flares: Flare[];
   profile: UserProfile;
   healthHistory?: HealthData[];
+  pressureData?: { pressure: number; trend: string } | null;
   aiContext?: string;
 }): Promise<WeeklyInsight> {
-  const { logs, flares, profile, healthHistory, aiContext } = params;
+  const { logs, flares, profile, healthHistory, pressureData, aiContext } = params;
 
   const systemPrompt = `You are Fibro, a warm and knowledgeable health companion for someone living with fibromyalgia.
 Analyse the user's data and respond with a JSON object in exactly this structure:
@@ -328,7 +341,7 @@ Rules:
 
 ${buildProfileSummary(profile)}
 
-${buildDataSummary(logs, flares, healthHistory)}
+${buildDataSummary(logs, flares, healthHistory, pressureData)}
 ${aiContext ? `\nAdditional context: ${aiContext}` : ''}`;
 
   try {
@@ -357,9 +370,10 @@ export async function sendChatMessage(params: {
   flares: Flare[];
   profile: UserProfile;
   healthHistory?: HealthData[];
+  pressureData?: { pressure: number; trend: string } | null;
   aiContext?: string;
 }): Promise<string> {
-  const { messages, logs, flares, profile, healthHistory, aiContext } = params;
+  const { messages, logs, flares, profile, healthHistory, pressureData, aiContext } = params;
 
   const systemPrompt = `You are Fibro AI, a warm and knowledgeable health companion for someone living with fibromyalgia.
 You have access to the user's tracking data and can help them understand their patterns, potential triggers, and fibromyalgia management.
@@ -368,7 +382,7 @@ Here is the user's profile and recent data:
 
 ${buildProfileSummary(profile)}
 
-${buildDataSummary(logs, flares, healthHistory)}
+${buildDataSummary(logs, flares, healthHistory, pressureData)}
 ${aiContext ? `\nAdditional context from user: ${aiContext}` : ''}
 
 Guidelines for your responses:

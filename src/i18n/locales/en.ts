@@ -550,6 +550,8 @@ export default {
     factor_streak: 'Logging streak',
     factor_mood: 'Mood',
     factor_medication: 'Medication adherence',
+    factor_sleep_restoration: 'Unrefreshed sleep',
+    factor_sensitivity: 'Sensitivity days',
   },
   profile_alerts: {
     error_save_profile: 'Failed to save profile. Please try again.',

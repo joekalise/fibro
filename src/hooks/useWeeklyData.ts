@@ -11,6 +11,8 @@ export interface ScoreBreakdown {
   consistencyBonus: number;
   moodPoints: number;
   medPoints: number;
+  sleepRestorationPoints: number;
+  sensitivityPoints: number;
   logCount: number;
 }
 
@@ -78,8 +80,18 @@ function computeScore(
   const moodPts = Math.round(avgMoodRaw * 0.5);
   const medPts = Math.round(avgMedRaw * 0.5);
 
+  // Non-restorative sleep: -3 per day explicitly logged as unrefreshed
+  const unrefreshedCount = logs.filter((l) => l.woke_rested === false).length;
+  const sleepRestorationPts = unrefreshedCount > 0 ? -(unrefreshedCount * 3) : 0;
+
+  // Central sensitization: -2 per high-sensitivity day
+  const sensitivityCount = logs.filter((l) => l.high_sensitivity_day === true).length;
+  const sensitivityPts = sensitivityCount > 0 ? -(sensitivityCount * 2) : 0;
+
   const score = Math.round(
-    Math.min(100, Math.max(0, base + painPts + fatiguePts - flarePen + consistencyBonus + moodPts + medPts))
+    Math.min(100, Math.max(0,
+      base + painPts + fatiguePts - flarePen + consistencyBonus + moodPts + medPts + sleepRestorationPts + sensitivityPts
+    ))
   );
 
   const breakdown: ScoreBreakdown = {
@@ -90,6 +102,8 @@ function computeScore(
     consistencyBonus,
     moodPoints: moodPts,
     medPoints: medPts,
+    sleepRestorationPoints: sleepRestorationPts,
+    sensitivityPoints: sensitivityPts,
     logCount: count,
   };
 

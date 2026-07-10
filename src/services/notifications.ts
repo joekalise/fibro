@@ -262,7 +262,7 @@ export async function evaluateAndSendNudges(
   ).length;
   if (poorDietDays >= 3) {
     const message =
-      "Your diet has been more inflammatory this week. Starchy, processed, or sugary foods may worsen fibromyalgia symptoms. Even small changes help.";
+      "Your diet has been more inflammatory this week. Processed, sugary, or trigger foods may worsen fibromyalgia symptoms. Even small changes help.";
     await sendNudge('Diet check', message);
     await saveNudgeToDb(userId, 'diet', message);
     return;
@@ -277,6 +277,36 @@ export async function evaluateAndSendNudges(
       "You've logged alcohol several days running. Alcohol can worsen fibromyalgia symptoms and disrupt sleep. Your body might appreciate a break.";
     await sendNudge('Diet check', message);
     await saveNudgeToDb(userId, 'diet_alcohol', message);
+    return;
+  }
+
+  // Rule 7: high activity 2+ of last 3 days — boom-bust pacing warning
+  const highActivityDays = recent.filter((l) => l.activity_level === 'high').length;
+  if (highActivityDays >= 2) {
+    const message =
+      "You've had a lot of high-activity days recently. Fibromyalgia often causes a delayed crash after exertion — consider building in a lighter day to stay ahead of it.";
+    await sendNudge('Pacing check', message);
+    await saveNudgeToDb(userId, 'pacing', message);
+    return;
+  }
+
+  // Rule 8: high sensitivity 2+ of last 3 days — central sensitization signal
+  const sensitivityDays = recent.filter((l) => l.high_sensitivity_day === true).length;
+  if (sensitivityDays >= 2) {
+    const message =
+      "You've flagged high sensitivity over the past couple of days. Your nervous system may be overloaded — try reducing stimulation where you can and be gentle with yourself.";
+    await sendNudge('Sensitivity check', message);
+    await saveNudgeToDb(userId, 'sensitivity', message);
+    return;
+  }
+
+  // Rule 9: unrefreshed sleep 3+ of last 3 days
+  const unrefreshedDays = recent.filter((l) => l.woke_rested === false).length;
+  if (unrefreshedDays >= 3) {
+    const message =
+      "You've woken unrefreshed for several mornings in a row. Non-restorative sleep is one of fibromyalgia's biggest drivers — it's worth reviewing your sleep habits or mentioning it to your doctor.";
+    await sendNudge('Sleep quality check', message);
+    await saveNudgeToDb(userId, 'unrefreshed_sleep', message);
     return;
   }
 }

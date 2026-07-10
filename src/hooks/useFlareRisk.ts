@@ -96,6 +96,18 @@ export function computeFlareRisk(
   ).length;
   if (caffeineDays >= 2) signals.push('caffeine_intake');
 
+  // 13. Unrefreshed sleep on 2+ of last 3 days (non-restorative sleep is a core FM driver)
+  const unrefreshedDays = recentLogs.filter((l) => l.woke_rested === false).length;
+  if (unrefreshedDays >= 2) signals.push('unrefreshed_sleep');
+
+  // 14. High sensitivity on 2+ of last 3 days (central sensitization signal)
+  const sensitivityDays = recentLogs.filter((l) => l.high_sensitivity_day === true).length;
+  if (sensitivityDays >= 2) signals.push('sensitivity_spike');
+
+  // 15. High activity on 2+ of last 3 days — boom-bust / PEM risk
+  const highActivityDays = recentLogs.filter((l) => l.activity_level === 'high').length;
+  if (highActivityDays >= 2) signals.push('boom_bust_risk');
+
   // ── HealthKit signals (best-effort, only fire when we have enough data) ──────
 
   if (healthHistory && healthHistory.length >= 3) {

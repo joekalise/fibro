@@ -82,6 +82,7 @@ module.exports = {
       permissions: [
         'android.permission.RECEIVE_BOOT_COMPLETED',
         'android.permission.WAKE_LOCK',
+        'android.permission.ACCESS_COARSE_LOCATION',
       ],
     },
     plugins: [
@@ -97,6 +98,13 @@ module.exports = {
       // iOS-only plugins
       ...(!isAndroid ? [['expo-apple-authentication']] : []),
       ...(!isAndroid ? ['react-native-health'] : []),
+      [
+        'expo-location',
+        {
+          locationWhenInUsePermission:
+            'Fibro uses your location to check local barometric pressure, which can affect fibromyalgia symptoms.',
+        },
+      ],
       'expo-background-fetch',
       'expo-task-manager',
       [
