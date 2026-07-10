@@ -54,8 +54,9 @@ export async function requestHealthPermissions(): Promise<boolean> {
     await p<void>((cb) => hk.initHealthKit(permissions, cb));
     await AsyncStorage.setItem(HEALTH_CONNECTED_KEY, 'true');
     return true;
-  } catch {
-    return false;
+  } catch (e) {
+    console.error('[HealthKit] initHealthKit failed:', e);
+    throw e;
   }
 }
 

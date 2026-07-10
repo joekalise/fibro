@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { Alert } from 'react-native';
 import { HealthData } from '@/types';
 import {
   isHealthKitAvailable,
@@ -101,6 +102,9 @@ export function useHealthData(): UseHealthDataResult {
         await sync();
       }
       return granted;
+    } catch (e) {
+      Alert.alert('HealthKit Error', String(e));
+      return false;
     } finally {
       setIsLoading(false);
     }
