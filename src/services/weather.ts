@@ -12,13 +12,21 @@ export interface PressureData {
 const CACHE_KEY = '@fibro_pressure_cache';
 
 export async function getLocationPermissionStatus(): Promise<'granted' | 'denied' | 'undetermined'> {
-  const { status } = await Location.getForegroundPermissionsAsync();
-  return status as 'granted' | 'denied' | 'undetermined';
+  try {
+    const { status } = await Location.getForegroundPermissionsAsync();
+    return status as 'granted' | 'denied' | 'undetermined';
+  } catch {
+    return 'denied';
+  }
 }
 
 export async function requestLocationPermission(): Promise<boolean> {
-  const { status } = await Location.requestForegroundPermissionsAsync();
-  return status === 'granted';
+  try {
+    const { status } = await Location.requestForegroundPermissionsAsync();
+    return status === 'granted';
+  } catch {
+    return false;
+  }
 }
 
 export async function getCachedPressure(): Promise<PressureData | null> {
