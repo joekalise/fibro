@@ -90,11 +90,11 @@ export function computeFlareRisk(
   ).length;
   if (alcoholDays >= 2) signals.push('recent_alcohol');
 
-  // 12. High starch/sugar on 2+ of last 3 days (common fibromyalgia dietary trigger)
-  const starchDays = recentLogs.filter(
-    (l) => (l.diet_triggers ?? []).includes('high_starch' as DietTrigger)
+  // 12. Caffeine on 2+ of last 3 days (common fibromyalgia sleep/symptom trigger)
+  const caffeineDays = recentLogs.filter(
+    (l) => (l.diet_triggers ?? []).includes('caffeine' as DietTrigger)
   ).length;
-  if (starchDays >= 2) signals.push('high_starch_intake');
+  if (caffeineDays >= 2) signals.push('caffeine_intake');
 
   // ── HealthKit signals (best-effort, only fire when we have enough data) ──────
 

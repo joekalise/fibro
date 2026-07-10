@@ -27,7 +27,7 @@ import { LoadingSpinner } from '@/components/common/LoadingSpinner';
 import { ErrorMessage } from '@/components/common/ErrorMessage';
 import { Button } from '@/components/common/Button';
 import { ProfileButton } from '@/components/common/ProfileButton';
-import { DailyLog, Mood, MorningStiffness, DietQuality, DietTrigger, FlareTrigger } from '@/types';
+import { DailyLog, Mood, MorningStiffness, DietQuality, DietTrigger, ActivityLevel, FlareTrigger } from '@/types';
 import { logEvent, Events } from '@/services/analytics';
 import { scheduleDailyCheckInFromTomorrow } from '@/services/notifications';
 
@@ -139,7 +139,7 @@ const DIET_QUALITY_OPTIONS: { value: DietQuality; label: string; color: string }
 ];
 
 const DIET_TRIGGER_OPTIONS: { value: DietTrigger; label: string }[] = [
-  { value: 'high_starch', label: 'Starch/wheat' },
+  { value: 'caffeine', label: 'Caffeine' },
   { value: 'alcohol', label: 'Alcohol' },
   { value: 'processed', label: 'Processed food' },
   { value: 'high_sugar', label: 'High sugar' },
@@ -225,6 +225,12 @@ interface DayLogFormProps {
   isFemale: boolean;
   periodActive: boolean;
   setPeriodActive: (v: boolean) => void;
+  activityLevel: ActivityLevel | null;
+  setActivityLevel: (v: ActivityLevel | null) => void;
+  wokeRested: boolean | null;
+  setWokeRested: (v: boolean | null) => void;
+  highSensitivityDay: boolean;
+  setHighSensitivityDay: (v: boolean) => void;
   isDark: boolean;
   t: (key: string, opts?: Record<string, unknown>) => string;
   isSaving: boolean;
@@ -246,6 +252,9 @@ function DayLogForm({
   exerciseMinutes, setExerciseMinutes,
   tracksMedication,
   isFemale, periodActive, setPeriodActive,
+  activityLevel, setActivityLevel,
+  wokeRested, setWokeRested,
+  highSensitivityDay, setHighSensitivityDay,
   isDark, t, isSaving, onSave,
 }: DayLogFormProps) {
   const stiffnessOptions = STIFFNESS_OPTIONS.map((opt) => ({ value: opt.value, label: t(opt.labelKey) }));
@@ -465,6 +474,63 @@ function DayLogForm({
         )}
       </View>
 
+      {/* Pacing */}
+      <View style={[styles.section, isDark && styles.sectionDark]}>
+        <Text style={[styles.sectionLabel, isDark && styles.textPrimaryDark]}>{t('tracker.activity_level')}</Text>
+        <View style={styles.chipRow}>
+          {(['low', 'moderate', 'high'] as ActivityLevel[]).map((level) => {
+            const selected = activityLevel === level;
+            const color = level === 'low' ? '#16A34A' : level === 'moderate' ? '#D97706' : '#DC2626';
+            return (
+              <TouchableOpacity
+                key={level}
+                onPress={() => setActivityLevel(selected ? null : level)}
+                activeOpacity={0.7}
+                style={[
+                  styles.chip,
+                  isDark && styles.chipDark,
+                  selected && { backgroundColor: color + '22', borderColor: color },
+                ]}
+              >
+                <Text style={[
+                  styles.chipText,
+                  isDark && !selected && styles.chipTextDark,
+                  selected && { color, fontWeight: '700' },
+                ]}>
+                  {t(`tracker.activity_${level}`)}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+        <Text style={[styles.hint, isDark && styles.textSecDark]}>{t('tracker.activity_level_hint')}</Text>
+      </View>
+
+      {/* Sleep restoration + sensitivity */}
+      <View style={[styles.section, isDark && styles.sectionDark]}>
+        <View style={styles.periodRow}>
+          <Text style={[styles.sectionLabel, isDark && styles.textPrimaryDark, { marginBottom: 0 }]}>{t('tracker.woke_rested')}</Text>
+          <Switch
+            value={wokeRested === true}
+            onValueChange={(v) => setWokeRested(v ? true : false)}
+            trackColor={{ true: Colors.primary, false: isDark ? Colors.borderDark : Colors.border }}
+            thumbColor="#FFFFFF"
+          />
+        </View>
+        <Text style={[styles.hint, isDark && styles.textSecDark, { marginTop: 4 }]}>{t('tracker.woke_rested_hint')}</Text>
+
+        <View style={[styles.periodRow, { marginTop: Spacing.sm }]}>
+          <Text style={[styles.sectionLabel, isDark && styles.textPrimaryDark, { marginBottom: 0 }]}>{t('tracker.high_sensitivity_day')}</Text>
+          <Switch
+            value={highSensitivityDay}
+            onValueChange={setHighSensitivityDay}
+            trackColor={{ true: '#DC2626', false: isDark ? Colors.borderDark : Colors.border }}
+            thumbColor="#FFFFFF"
+          />
+        </View>
+        <Text style={[styles.hint, isDark && styles.textSecDark, { marginTop: 4 }]}>{t('tracker.high_sensitivity_day_hint')}</Text>
+      </View>
+
       {/* Notes — last thing before save */}
       <View style={[styles.section, isDark && styles.sectionDark]}>
         <Text style={[styles.sectionLabel, isDark && styles.textPrimaryDark]}>{t('tracker.notes')}</Text>
@@ -513,6 +579,9 @@ function DayLogModal({ date, initialLog, userId, tracksMedication, isFemale, isD
   const [exerciseType, setExerciseType] = useState<string | null>(initialLog?.exercise_type ?? null);
   const [exerciseMinutes, setExerciseMinutes] = useState<number | null>(initialLog?.exercise_minutes ?? null);
   const [periodActive, setPeriodActive] = useState(initialLog?.period_active ?? false);
+  const [activityLevel, setActivityLevel] = useState<ActivityLevel | null>((initialLog?.activity_level as ActivityLevel) ?? null);
+  const [wokeRested, setWokeRested] = useState<boolean | null>(initialLog?.woke_rested ?? null);
+  const [highSensitivityDay, setHighSensitivityDay] = useState(initialLog?.high_sensitivity_day ?? false);
   const [isSaving, setIsSaving] = useState(false);
 
   const handleSave = async () => {
@@ -534,6 +603,9 @@ function DayLogModal({ date, initialLog, userId, tracksMedication, isFemale, isD
         exercise_type: exerciseType,
         exercise_minutes: exerciseMinutes,
         period_active: isFemale ? periodActive : null,
+        activity_level: activityLevel,
+        woke_rested: wokeRested,
+        high_sensitivity_day: highSensitivityDay,
       });
       if (saved) {
         logEvent(Events.DAY_LOGGED, { date }).catch(() => {});
@@ -580,6 +652,9 @@ function DayLogModal({ date, initialLog, userId, tracksMedication, isFemale, isD
             exerciseMinutes={exerciseMinutes} setExerciseMinutes={setExerciseMinutes}
             tracksMedication={tracksMedication}
             isFemale={isFemale} periodActive={periodActive} setPeriodActive={setPeriodActive}
+            activityLevel={activityLevel} setActivityLevel={setActivityLevel}
+            wokeRested={wokeRested} setWokeRested={setWokeRested}
+            highSensitivityDay={highSensitivityDay} setHighSensitivityDay={setHighSensitivityDay}
             isDark={isDark} t={t}
             isSaving={isSaving} onSave={handleSave}
           />
@@ -817,6 +892,9 @@ export default function TrackScreen() {
   const [exerciseType, setExerciseType] = useState<string | null>(null);
   const [exerciseMinutes, setExerciseMinutes] = useState<number | null>(null);
   const [periodActive, setPeriodActive] = useState(false);
+  const [activityLevel, setActivityLevel] = useState<ActivityLevel | null>(null);
+  const [wokeRested, setWokeRested] = useState<boolean | null>(null);
+  const [highSensitivityDay, setHighSensitivityDay] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [saved, setSaved] = useState(false);
 
@@ -836,6 +914,9 @@ export default function TrackScreen() {
       setExerciseType(todayLog.exercise_type ?? null);
       setExerciseMinutes(todayLog.exercise_minutes ?? null);
       setPeriodActive(todayLog.period_active ?? false);
+      setActivityLevel((todayLog.activity_level as ActivityLevel) ?? null);
+      setWokeRested(todayLog.woke_rested ?? null);
+      setHighSensitivityDay(todayLog.high_sensitivity_day ?? false);
     } else {
       setPainScore(0);
       setFatigueScore(0);
@@ -850,6 +931,9 @@ export default function TrackScreen() {
       setExerciseType(null);
       setExerciseMinutes(null);
       setPeriodActive(false);
+      setActivityLevel(null);
+      setWokeRested(null);
+      setHighSensitivityDay(false);
     }
     setEditing(false);
     setSaved(false);
@@ -860,7 +944,7 @@ export default function TrackScreen() {
     setIsSaving(true);
     setSaved(false);
     try {
-      await saveLog({ pain_score: painScore, fatigue_score: fatigueScore, brain_fog_score: brainFogScore, stiffness_duration: stiffness, mood, medications_taken: medsTaken, notes, diet_quality: dietQuality, diet_triggers: dietTriggers, exercise_done: exerciseDone, exercise_type: exerciseType, exercise_minutes: exerciseMinutes, period_active: isFemale ? periodActive : null });
+      await saveLog({ pain_score: painScore, fatigue_score: fatigueScore, brain_fog_score: brainFogScore, stiffness_duration: stiffness, mood, medications_taken: medsTaken, notes, diet_quality: dietQuality, diet_triggers: dietTriggers, exercise_done: exerciseDone, exercise_type: exerciseType, exercise_minutes: exerciseMinutes, period_active: isFemale ? periodActive : null, activity_level: activityLevel, woke_rested: wokeRested, high_sensitivity_day: highSensitivityDay });
       logEvent(Events.DAY_LOGGED, { date: localDateString() }).catch(() => {});
       if (profile?.notification_time) {
         scheduleDailyCheckInFromTomorrow(profile.notification_time).catch(() => {});
@@ -976,6 +1060,9 @@ export default function TrackScreen() {
             exerciseMinutes={exerciseMinutes} setExerciseMinutes={setExerciseMinutes}
             tracksMedication={tracksMedication}
             isFemale={isFemale} periodActive={periodActive} setPeriodActive={setPeriodActive}
+            activityLevel={activityLevel} setActivityLevel={setActivityLevel}
+            wokeRested={wokeRested} setWokeRested={setWokeRested}
+            highSensitivityDay={highSensitivityDay} setHighSensitivityDay={setHighSensitivityDay}
             isDark={isDark} t={t}
             isSaving={isSaving} onSave={handleSaveToday}
           />

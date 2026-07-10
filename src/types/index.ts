@@ -48,12 +48,14 @@ export type FlareSeverity = 'mild' | 'moderate' | 'severe';
 export type DietQuality = 'clean' | 'mostly_clean' | 'mixed' | 'poor';
 export type DietTrigger =
   | 'alcohol'
+  | 'caffeine'
   | 'processed'
   | 'high_sugar'
-  | 'high_starch'
   | 'dairy'
   | 'red_meat'
   | 'nightshades';
+
+export type ActivityLevel = 'low' | 'moderate' | 'high';
 
 export interface UserProfile {
   id?: string;
@@ -92,6 +94,9 @@ export interface DailyLog {
   exercise_minutes: number | null;
   exercise_type: string | null;
   period_active?: boolean | null;
+  activity_level?: ActivityLevel | null;
+  woke_rested?: boolean | null;
+  high_sensitivity_day?: boolean | null;
 }
 
 export interface HealthData {
@@ -155,6 +160,17 @@ export interface WelcomeContent {
   welcome_message: string;
   insights: string[];
   watch_summary: string;
+}
+
+export interface BiologicInjection {
+  id?: string;
+  user_id: string;
+  medication_name: string;
+  injected_at: string;
+  interval_days: number;
+  lot_number: string;
+  notes: string;
+  response_rating: number | null;
 }
 
 export interface FiqScore {

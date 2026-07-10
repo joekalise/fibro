@@ -1,6 +1,6 @@
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
-import { BiologicInjection, DailyLog, Flare, MedicationReminder, UserProfile } from '@/types';
+import { DailyLog, Flare, MedicationReminder, UserProfile } from '@/types';
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -63,11 +63,10 @@ function buildReportHTML(params: {
   logs: DailyLog[];
   flares: Flare[];
   medications: MedicationReminder[];
-  biologicInjections?: BiologicInjection[];
   profile: UserProfile;
   fromDate?: string;
 }): string {
-  const { logs, flares, medications, biologicInjections = [], profile } = params;
+  const { logs, flares, medications, profile } = params;
 
   const now = new Date();
   const reportStart = params.fromDate
@@ -114,8 +113,8 @@ function buildReportHTML(params: {
 
   // ── Diet ──────────────────────────────────────────────────────────────────
   const TRIGGER_LABELS: Record<string, string> = {
-    alcohol: 'Alcohol', processed: 'Processed food', high_sugar: 'High sugar',
-    high_starch: 'High starch/wheat', dairy: 'Dairy', red_meat: 'Red meat', nightshades: 'Nightshades',
+    alcohol: 'Alcohol', caffeine: 'Caffeine', processed: 'Processed food',
+    high_sugar: 'High sugar', dairy: 'Dairy', red_meat: 'Red meat', nightshades: 'Nightshades',
   };
   const dietLogs = logs.filter(l => l.diet_quality !== null);
   const triggerCounts: Record<string, number> = {};
@@ -138,16 +137,6 @@ function buildReportHTML(params: {
           <td>${flareDays(f.start_date, f.end_date)} days</td>
           <td style="text-transform:capitalize;">${f.severity}</td>
           <td>${f.areas_affected.map(a => a.replace(/_/g, ' ')).join(', ')}</td>
-        </tr>`).join('');
-
-  // ── Biologic injections ───────────────────────────────────────────────────
-  const injectionRowsHTML = biologicInjections.length === 0
-    ? `<tr><td colspan="3" style="text-align:center;color:#78716C;font-style:italic;">No injections recorded</td></tr>`
-    : biologicInjections.map(i => `
-        <tr>
-          <td>${fmtDateShort(i.injected_at.split('T')[0])}</td>
-          <td>${i.medication_name}${i.lot_number ? ` (lot: ${i.lot_number})` : ''}</td>
-          <td>${i.response_rating !== null ? `${i.response_rating}/5` : '—'}${i.notes ? ` · ${i.notes}` : ''}</td>
         </tr>`).join('');
 
   // ── Notes HTML ────────────────────────────────────────────────────────────
@@ -354,15 +343,6 @@ function buildReportHTML(params: {
     <tbody>${flareRowsHTML}</tbody>
   </table>
 
-  ${biologicInjections.length > 0 ? `
-  <!-- Injections -->
-  <h2>Injections / Infusions</h2>
-  <table>
-    <thead><tr><th>Date</th><th>Medication</th><th>Response / Notes</th></tr></thead>
-    <tbody>${injectionRowsHTML}</tbody>
-  </table>
-  ` : ''}
-
   <!-- Medication adherence -->
   <h2>Medication Adherence</h2>
   <div class="adherence-row">
@@ -406,7 +386,6 @@ export async function generateAndShareReport(params: {
   logs: DailyLog[];
   flares: Flare[];
   medications: MedicationReminder[];
-  biologicInjections?: BiologicInjection[];
   profile: UserProfile;
   fromDate?: string;
 }): Promise<void> {

@@ -153,8 +153,8 @@ function buildDataSummary(logs: DailyLog[], flares: Flare[], healthHistory?: Hea
 
   // Diet summary
   const TRIGGER_LABELS: Record<string, string> = {
-    alcohol: 'Alcohol', processed: 'Processed food', high_sugar: 'High sugar',
-    high_starch: 'High starch/wheat', dairy: 'Dairy', red_meat: 'Red meat', nightshades: 'Nightshades',
+    alcohol: 'Alcohol', caffeine: 'Caffeine', processed: 'Processed food',
+    high_sugar: 'High sugar', dairy: 'Dairy', red_meat: 'Red meat', nightshades: 'Nightshades',
   };
   let dietSection = '';
   const dietLogs = logs.filter((l) => l.diet_quality !== null);
@@ -195,6 +195,55 @@ ${topTriggers ? `- Most frequent triggers: ${topTriggers}` : '- No specific trig
     exerciseSection = `\n\nEXERCISE: Logged exercise on ${exerciseDays.length} of ${logs.length} days (${pct}%). Note: graded exercise is one of the most evidence-based fibromyalgia management strategies.`;
   }
 
+  // Pacing / activity level + PEM detection
+  let pacingSection = '';
+  const activityLogs = logs.filter(l => (l as any).activity_level);
+  if (activityLogs.length >= 3) {
+    const highDays = activityLogs.filter(l => (l as any).activity_level === 'high');
+    const lowDays = activityLogs.filter(l => (l as any).activity_level === 'low');
+    const avgPainHigh = highDays.length > 0
+      ? (highDays.reduce((s, l) => s + l.pain_score, 0) / highDays.length).toFixed(1) : null;
+    const avgPainLow = lowDays.length > 0
+      ? (lowDays.reduce((s, l) => s + l.pain_score, 0) / lowDays.length).toFixed(1) : null;
+
+    // PEM detection: look for pain/fatigue spike 1-2 days after high-activity days
+    const sortedLogs = [...logs].sort((a, b) => a.date.localeCompare(b.date));
+    let pemPairs = 0;
+    for (let i = 0; i < sortedLogs.length; i++) {
+      if ((sortedLogs[i] as any).activity_level !== 'high') continue;
+      const crashDay = sortedLogs[i + 1] ?? sortedLogs[i + 2];
+      if (crashDay && (crashDay.pain_score > sortedLogs[i].pain_score + 1.5 || crashDay.fatigue_score > sortedLogs[i].fatigue_score + 1.5)) {
+        pemPairs++;
+      }
+    }
+
+    const pemNote = pemPairs >= 2
+      ? `\n- Post-exertional malaise pattern detected: ${pemPairs} times, symptoms spiked 1-2 days after high-activity days. This is a classic fibromyalgia PEM pattern — worth mentioning to the user.`
+      : '';
+    pacingSection = `\n\nPACING / ACTIVITY LEVELS (${activityLogs.length} days logged):
+- High activity days: ${highDays.length}, Moderate: ${activityLogs.filter(l => (l as any).activity_level === 'moderate').length}, Low: ${lowDays.length}
+${avgPainHigh ? `- Avg pain on high-activity days: ${avgPainHigh}/10` : ''}${avgPainLow ? ` vs low-activity days: ${avgPainLow}/10` : ''}${pemNote}`;
+  }
+
+  // Sleep restoration and sensitivity
+  let wellbeingSection = '';
+  const restedLogs = logs.filter(l => (l as any).woke_rested !== null && (l as any).woke_rested !== undefined);
+  const sensitivityLogs = logs.filter(l => (l as any).high_sensitivity_day === true);
+  if (restedLogs.length > 0 || sensitivityLogs.length > 0) {
+    const restedDays = restedLogs.filter(l => (l as any).woke_rested === true).length;
+    const unrestedDays = restedLogs.filter(l => (l as any).woke_rested === false).length;
+    const avgPainUnrested = unrestedDays > 0
+      ? (restedLogs.filter(l => (l as any).woke_rested === false).reduce((s, l) => s + l.pain_score, 0) / unrestedDays).toFixed(1)
+      : null;
+    const restedLine = restedLogs.length > 0
+      ? `\n- Woke rested: ${restedDays} days yes, ${unrestedDays} days no${avgPainUnrested ? ` (avg pain on unrefreshed days: ${avgPainUnrested}/10)` : ''}`
+      : '';
+    const sensLine = sensitivityLogs.length > 0
+      ? `\n- High sensitivity days: ${sensitivityLogs.length} (heightened allodynia/sensory sensitivity)`
+      : '';
+    wellbeingSection = `\n\nSLEEP RESTORATION & SENSITIVITY:${restedLine}${sensLine}`;
+  }
+
   // Period section
   let periodSection = '';
   const periodLogs = logs.filter(l => l.period_active === true);
@@ -221,7 +270,7 @@ FLARES:
 ${flareSummary}
 
 USER NOTES (free text from check-ins):
-${notes || '  None'}${dietSection}${healthSection}${exerciseSection}${periodSection}
+${notes || '  None'}${dietSection}${healthSection}${exerciseSection}${periodSection}${pacingSection}${wellbeingSection}
 `.trim();
 }
 
@@ -233,7 +282,7 @@ function buildProfileSummary(profile: UserProfile): string {
 USER PROFILE:
 ${sexLine}- Age range: ${profile.age_range ?? 'not specified'}
 - Time since fibromyalgia diagnosis: ${profile.diagnosis_years ?? 'not specified'}
-- Current disease activity: ${profile.severity ?? 'not specified'}
+- Current symptom severity: ${profile.severity ?? 'not specified'}
 - Medications: ${profile.medications.join(', ') || 'none'}
 - Pain locations: ${profile.pain_locations.join(', ') || 'none specified'}
 - Pain types: ${profile.pain_types.join(', ') || 'none specified'}

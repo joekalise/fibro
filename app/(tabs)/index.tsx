@@ -23,7 +23,6 @@ import { useFlares } from '@/hooks/useFlares';
 import { useFlareRisk } from '@/hooks/useFlareRisk';
 import { useHealthHistory } from '@/hooks/useHealthHistory';
 import { useHealthData } from '@/hooks/useHealthData';
-import { useBiologicInjections } from '@/hooks/useBiologicInjections';
 import { useMedicationTracking } from '@/hooks/useMedicationTracking';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useReviewPrompt } from '@/hooks/useReviewPrompt';
@@ -368,7 +367,7 @@ const SIGNAL_LABELS: Record<string, string> = {
   low_activity: '🚶 Reduced activity',
   inflammatory_diet: '🍽️ Inflammatory diet',
   recent_alcohol: '🍷 Recent alcohol',
-  high_starch_intake: '🌾 High starch intake',
+  caffeine_intake: '☕ Caffeine today',
 };
 
 function FlareRiskCard({
@@ -484,17 +483,6 @@ export default function HomeScreen() {
   const { history: healthHistory } = useHealthHistory(7);
   const { isConnected: healthConnected, todayData: healthData, recheck: recheckHealth } = useHealthData();
   const flareRisk = useFlareRisk(logs, activeFlare, healthHistory);
-  const { injections: biologicInjections } = useBiologicInjections();
-
-  const nextBiologicDue = useMemo(() => {
-    if (biologicInjections.length === 0) return null;
-    const last = biologicInjections[0];
-    const due = new Date(last.injected_at + 'T12:00:00');
-    due.setDate(due.getDate() + last.interval_days);
-    const daysUntil = Math.ceil((due.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
-    return { name: last.medication_name, daysUntil, dueDate: due.toISOString().split('T')[0] };
-  }, [biologicInjections]);
-
   // Refresh streak and weekly data when returning from Track tab; re-check health connection state
   useFocusEffect(useCallback(() => {
     refreshLog();
@@ -586,26 +574,6 @@ export default function HomeScreen() {
             isPremium={isPremium}
             onChatPress={() => router.push('/ai-chat')}
           />
-        )}
-
-        {/* 2c. Biologic countdown */}
-        {nextBiologicDue && (
-          <View style={[styles.biologicCard, isDark && styles.biologicCardDark]}>
-            <Text style={[styles.biologicTitle, isDark && styles.textPrimaryDark]}>
-              {nextBiologicDue.name}
-            </Text>
-            <Text style={[
-              styles.biologicCountdown,
-              { color: nextBiologicDue.daysUntil <= 0 ? Colors.error : nextBiologicDue.daysUntil <= 2 ? Colors.warning : Colors.success }
-            ]}>
-              {nextBiologicDue.daysUntil <= 0
-                ? 'Due today'
-                : nextBiologicDue.daysUntil === 1
-                ? 'Due tomorrow'
-                : `Due in ${nextBiologicDue.daysUntil} days`}
-
-            </Text>
-          </View>
         )}
 
         {/* 3. Check-in hero (before logging) or today summary (after logging) */}
@@ -1314,28 +1282,4 @@ const styles = StyleSheet.create({
     color: Colors.textPrimary,
   },
 
-  // Biologic countdown card
-  biologicCard: {
-    backgroundColor: Colors.surface,
-    borderRadius: BorderRadius.md,
-    padding: Spacing.md,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  biologicCardDark: {
-    backgroundColor: Colors.surfaceDark,
-    borderColor: Colors.borderDark,
-  },
-  biologicTitle: {
-    fontSize: FontSize.sm,
-    fontWeight: '600',
-    color: Colors.textPrimary,
-  },
-  biologicCountdown: {
-    fontSize: FontSize.sm,
-    fontWeight: '700',
-  },
 });

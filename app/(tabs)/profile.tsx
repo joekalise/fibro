@@ -35,7 +35,6 @@ import { useSubscription } from '@/hooks/useSubscription';
 import { useFlares } from '@/hooks/useFlares';
 import { useHealthData } from '@/hooks/useHealthData';
 import { useMedicationTracking } from '@/hooks/useMedicationTracking';
-import { useBiologicInjections, BIOLOGIC_INTERVALS } from '@/hooks/useBiologicInjections';
 import { scheduleDailyCheckIn, cancelNotification } from '@/services/notifications';
 import { PremiumModal } from '@/components/common/PremiumModal';
 import { logEvent, Events } from '@/services/analytics';
@@ -44,7 +43,6 @@ import { generateAndShareReport } from '@/services/pdfExport';
 import { getDailyLogs, deleteAllUserData } from '@/services/database';
 import {
   MedicationReminder,
-  BiologicInjection,
   AgeRange,
   BiologicalSex,
   DiagnosisYears,
@@ -286,6 +284,7 @@ function EditSectionHeader({ label, color }: { label: string; color: string }) {
 }
 
 function ProfileEditModal({ visible, onClose, profile, onSave, isDark }: ProfileEditModalProps) {
+  const { t } = useTranslation();
   const bg = isDark ? Colors.backgroundDark : Colors.background;
   const cardBorder = isDark ? Colors.borderDark : Colors.border;
   const textPrimary = isDark ? Colors.textPrimaryDark : Colors.textPrimary;
@@ -380,7 +379,7 @@ function ProfileEditModal({ visible, onClose, profile, onSave, isDark }: Profile
             <OptionCard key={v} style={compactCard} label={DIAGNOSIS_YEARS_LABELS[v]} isSelected={diagnosisYears === v} onPress={() => setDiagnosisYears(v)} />
           ))}
 
-          <Text style={[styles.editFieldLabel, { color: textSecondary }]}>Disease activity</Text>
+          <Text style={[styles.editFieldLabel, { color: textSecondary }]}>Symptom severity</Text>
           {(['mild', 'moderate', 'severe'] as Severity[]).map(v => (
             <OptionCard key={v} style={compactCard} label={SEVERITY_LABELS[v]} isSelected={severity === v} onPress={() => setSeverity(v)} />
           ))}
@@ -686,138 +685,6 @@ function AddMedicationModal({
   );
 }
 
-// ─── LogInjectionModal ────────────────────────────────────────────────────────
-
-const BIOLOGIC_MEDS = ['adalimumab', 'secukinumab', 'ixekizumab', 'ustekinumab'];
-
-interface LogInjectionModalProps {
-  visible: boolean;
-  onClose: () => void;
-  onSave: (inj: Omit<BiologicInjection, 'id' | 'user_id'>) => Promise<void>;
-  defaultMedicationName: string;
-  isDark: boolean;
-}
-
-function LogInjectionModal({ visible, onClose, onSave, defaultMedicationName, isDark }: LogInjectionModalProps) {
-  const today = new Date().toISOString().split('T')[0];
-  const [medicationName, setMedicationName] = useState(defaultMedicationName);
-  const [injectedAt, setInjectedAt] = useState(today);
-  const [intervalDays, setIntervalDays] = useState(
-    BIOLOGIC_INTERVALS[defaultMedicationName.toLowerCase()] ?? 14
-  );
-  const [lotNumber, setLotNumber] = useState('');
-  const [notes, setNotes] = useState('');
-  const [isSaving, setIsSaving] = useState(false);
-
-  const cardBg = isDark ? Colors.surfaceDark : Colors.surface;
-  const cardBorder = isDark ? Colors.borderDark : Colors.border;
-  const textPrimary = isDark ? Colors.textPrimaryDark : Colors.textPrimary;
-  const textSecondary = isDark ? Colors.textSecondaryDark : Colors.textSecondary;
-  const inputBg = isDark ? Colors.backgroundDark : Colors.background;
-
-  React.useEffect(() => {
-    if (visible) {
-      setMedicationName(defaultMedicationName);
-      setInjectedAt(today);
-      setIntervalDays(BIOLOGIC_INTERVALS[defaultMedicationName.toLowerCase()] ?? 14);
-      setLotNumber('');
-      setNotes('');
-    }
-  }, [visible, defaultMedicationName]);
-
-  async function handleSave() {
-    setIsSaving(true);
-    try {
-      await onSave({
-        medication_name: medicationName,
-        injected_at: injectedAt,
-        interval_days: intervalDays,
-        lot_number: lotNumber,
-        notes,
-        response_rating: null,
-      });
-      onClose();
-    } catch (err) {
-      Alert.alert(t('common.error'), t('profile_alerts.error_save_injection'));
-    } finally {
-      setIsSaving(false);
-    }
-  }
-
-  return (
-    <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
-      <View style={styles.modalOverlay}>
-        <View style={[styles.modalContainer, { backgroundColor: cardBg, borderColor: cardBorder }]}>
-          <Text style={[styles.modalTitle, { color: textPrimary }]}>Log injection</Text>
-
-          <Text style={[styles.fieldLabel, { color: textSecondary }]}>Medication</Text>
-          <TextInput
-            style={[styles.textInput, { backgroundColor: inputBg, borderColor: cardBorder, color: textPrimary }]}
-            value={medicationName}
-            onChangeText={setMedicationName}
-            placeholder="Medication name"
-            placeholderTextColor={textSecondary}
-          />
-
-          <Text style={[styles.fieldLabel, { color: textSecondary }]}>Date (YYYY-MM-DD)</Text>
-          <TextInput
-            style={[styles.textInput, { backgroundColor: inputBg, borderColor: cardBorder, color: textPrimary }]}
-            value={injectedAt}
-            onChangeText={setInjectedAt}
-            placeholder="YYYY-MM-DD"
-            placeholderTextColor={textSecondary}
-          />
-
-          <Text style={[styles.fieldLabel, { color: textSecondary }]}>Interval (days)</Text>
-          <View style={styles.chipsRow}>
-            {[14, 28, 84].map((d) => (
-              <TouchableOpacity
-                key={d}
-                onPress={() => setIntervalDays(d)}
-                activeOpacity={0.8}
-                style={[styles.chip, { backgroundColor: intervalDays === d ? Colors.primary : inputBg, borderColor: intervalDays === d ? Colors.primary : cardBorder }]}
-              >
-                <Text style={[styles.chipText, { color: intervalDays === d ? '#FFFFFF' : textSecondary }]}>{d}d</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-
-          <Text style={[styles.fieldLabel, { color: textSecondary }]}>Lot number (optional)</Text>
-          <TextInput
-            style={[styles.textInput, { backgroundColor: inputBg, borderColor: cardBorder, color: textPrimary }]}
-            value={lotNumber}
-            onChangeText={setLotNumber}
-            placeholder="e.g. ABC123"
-            placeholderTextColor={textSecondary}
-          />
-
-          <Text style={[styles.fieldLabel, { color: textSecondary }]}>Notes (optional)</Text>
-          <TextInput
-            style={[styles.textInput, { backgroundColor: inputBg, borderColor: cardBorder, color: textPrimary }]}
-            value={notes}
-            onChangeText={setNotes}
-            placeholder="Any notes..."
-            placeholderTextColor={textSecondary}
-          />
-
-          <View style={styles.modalActions}>
-            <TouchableOpacity onPress={onClose} style={[styles.modalCancelBtn, { borderColor: cardBorder }]} activeOpacity={0.8}>
-              <Text style={[styles.modalCancelText, { color: textSecondary }]}>Cancel</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={handleSave} disabled={isSaving} style={[styles.modalSaveBtn, { opacity: isSaving ? 0.6 : 1 }]} activeOpacity={0.8}>
-              {isSaving ? (
-                <ActivityIndicator color="#FFFFFF" size="small" />
-              ) : (
-                <Text style={styles.modalSaveText}>Save</Text>
-              )}
-            </TouchableOpacity>
-          </View>
-        </View>
-      </View>
-    </Modal>
-  );
-}
-
 // ─── Main screen ──────────────────────────────────────────────────────────────
 
 export default function ProfileScreen() {
@@ -833,7 +700,6 @@ export default function ProfileScreen() {
   const { flares } = useFlares();
   const { isSubscribed, isLoading: subLoading, monthlyPrice, trialDays, purchase, restore } = useSubscription();
   const { tracks: tracksMedication, setTracks: setTracksMedication } = useMedicationTracking();
-  const { injections: biologicInjections, logInjection, deleteInjection: deleteBiologicInj } = useBiologicInjections();
   const {
     isAvailable: healthAvailable,
     isConnected: healthConnected,
@@ -855,8 +721,6 @@ export default function ProfileScreen() {
   const [editingName, setEditingName] = useState(false);
   const [nameValue, setNameValue] = useState(profile?.preferred_name ?? '');
   const [showEditProfile, setShowEditProfile] = useState(false);
-  const [showLogInjection, setShowLogInjection] = useState(false);
-  const [injectionDefaultMed, setInjectionDefaultMed] = useState('');
   const [reminderEnabled, setReminderEnabled] = useState(true);
   const [showPremiumModal, setShowPremiumModal] = useState(false);
   const [showTimePicker, setShowTimePicker] = useState(false);
@@ -1086,7 +950,6 @@ export default function ProfileScreen() {
         logs,
         flares,
         medications,
-        biologicInjections,
         profile,
         fromDate: reportFromDate || undefined,
       });
@@ -1097,7 +960,7 @@ export default function ProfileScreen() {
     } finally {
       setIsGeneratingReport(false);
     }
-  }, [user, profile, flares, medications, biologicInjections, reportFromDate, t]);
+  }, [user, profile, flares, medications, reportFromDate, t]);
 
   const handlePurchase = useCallback(async () => {
     setIsPurchasing(true);
@@ -1309,7 +1172,7 @@ export default function ProfileScreen() {
               {profile?.biological_sex && <SummaryRow label="Biological sex" value={BIOLOGICAL_SEX_LABELS[profile.biological_sex]} isDark={isDark} />}
               {profile?.age_range && <SummaryRow label="Age range" value={AGE_RANGE_LABELS[profile.age_range]} isDark={isDark} />}
               {profile?.diagnosis_years && <SummaryRow label="Years with fibromyalgia" value={DIAGNOSIS_YEARS_LABELS[profile.diagnosis_years]} isDark={isDark} />}
-              {profile?.severity && <SummaryRow label="Disease activity" value={SEVERITY_LABELS[profile.severity]} isDark={isDark} />}
+              {profile?.severity && <SummaryRow label="Symptom severity" value={SEVERITY_LABELS[profile.severity]} isDark={isDark} />}
               {profile?.morning_stiffness && <SummaryRow label="Morning stiffness" value={MORNING_STIFFNESS_LABELS[profile.morning_stiffness]} isDark={isDark} />}
             </>
           ) : null}
@@ -1549,82 +1412,6 @@ export default function ProfileScreen() {
         {/* ── TREATMENT ─────────────────────────────────────────────────────── */}
         <SectionHeader label="Treatment" isDark={isDark} />
 
-        {/* ── Biologic injections card ─────────────────────────────────────── */}
-        {profile?.medications && profile.medications.some(m => BIOLOGIC_MEDS.includes(m)) && (
-          <View style={[styles.card, { backgroundColor: cardBg, borderColor: cardBorder }]}>
-            <View style={styles.cardHeader}>
-              <Text style={[styles.cardTitle, { color: textPrimary }]}>Biologic injections</Text>
-              <TouchableOpacity
-                onPress={() => {
-                  const firstBiologic = profile.medications.find(m => BIOLOGIC_MEDS.includes(m)) ?? '';
-                  setInjectionDefaultMed(MEDICATION_LABELS[firstBiologic] ?? firstBiologic);
-                  setShowLogInjection(true);
-                }}
-                activeOpacity={0.8}
-              >
-                <Text style={styles.editLink}>+ Log injection</Text>
-              </TouchableOpacity>
-            </View>
-
-            {/* Per-biologic next due date */}
-            {profile.medications.filter(m => BIOLOGIC_MEDS.includes(m)).map(med => {
-              const lastInj = biologicInjections.find(i =>
-                i.medication_name.toLowerCase().includes(med.toLowerCase()) ||
-                (MEDICATION_LABELS[med] ?? '').toLowerCase().includes(i.medication_name.toLowerCase())
-              );
-              if (!lastInj) return (
-                <View key={med} style={styles.injectionRow}>
-                  <Text style={[styles.injectionMedName, { color: textPrimary }]}>{MEDICATION_LABELS[med] ?? med}</Text>
-                  <Text style={[styles.injectionDue, { color: textSecondary }]}>No injections logged</Text>
-                </View>
-              );
-              const due = new Date(lastInj.injected_at + 'T12:00:00');
-              due.setDate(due.getDate() + lastInj.interval_days);
-              const daysUntil = Math.ceil((due.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
-              const dueColor = daysUntil <= 0 ? Colors.error : daysUntil <= 2 ? Colors.warning : Colors.success;
-              return (
-                <View key={med} style={styles.injectionRow}>
-                  <View style={{ flex: 1 }}>
-                    <Text style={[styles.injectionMedName, { color: textPrimary }]}>{MEDICATION_LABELS[med] ?? med}</Text>
-                    <Text style={[styles.injectionLastDate, { color: textSecondary }]}>Last: {lastInj.injected_at}</Text>
-                  </View>
-                  <Text style={[styles.injectionDue, { color: dueColor, fontWeight: '700' }]}>
-                    {daysUntil <= 0 ? 'Due today' : daysUntil === 1 ? 'Due tomorrow' : `Due in ${daysUntil} days`}
-                  </Text>
-                </View>
-              );
-            })}
-
-            {/* Recent injection history */}
-            {biologicInjections.length > 0 && (
-              <>
-                <View style={[styles.medSectionDivider, { borderTopColor: cardBorder, marginTop: Spacing.xs }]} />
-                <Text style={[styles.medSectionLabel, { color: textSecondary, marginTop: Spacing.sm, marginBottom: Spacing.xs }]}>
-                  Recent injections
-                </Text>
-                {biologicInjections.slice(0, 3).map((inj) => (
-                  <View key={inj.id} style={[styles.medRow, { borderBottomColor: cardBorder }]}>
-                    <View style={styles.medInfo}>
-                      <Text style={[styles.medName, { color: textPrimary }]}>{inj.medication_name}</Text>
-                      <Text style={[styles.medDose, { color: textSecondary }]}>{inj.injected_at} · {inj.interval_days}d interval</Text>
-                    </View>
-                    <TouchableOpacity
-                      onPress={() => Alert.alert(inj.medication_name, 'Remove this injection record?', [
-                        { text: 'Cancel', style: 'cancel' },
-                        { text: 'Remove', style: 'destructive', onPress: () => deleteBiologicInj(inj.id!) },
-                      ])}
-                      activeOpacity={0.7}
-                      hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                    >
-                      <Text style={styles.deleteIcon}>✕</Text>
-                    </TouchableOpacity>
-                  </View>
-                ))}
-              </>
-            )}
-          </View>
-        )}
-
         {/* ── Share with my doctor ────────────────────────────────────────── */}
         <View style={[styles.card, { backgroundColor: cardBg, borderColor: cardBorder }]}>
           <View style={styles.cardHeader}>
@@ -1637,7 +1424,7 @@ export default function ProfileScreen() {
               color={textSecondary}
             />
           </View>
-          {/* From date — last rheumatology appointment */}
+          {/* From date — last appointment */}
           <View style={styles.reportDateRow}>
             <Text style={[styles.reportDateLabel, { color: textSecondary }]}>From last appointment:</Text>
             {editingReportFromDate ? (
@@ -1800,7 +1587,7 @@ export default function ProfileScreen() {
             activeOpacity={0.7}
             style={styles.sourceLink}
           >
-            <Text style={[styles.sourceLinkText, { color: Colors.primary }]}>{t('profile_privacy.sources_basdai')}</Text>
+            <Text style={[styles.sourceLinkText, { color: Colors.primary }]}>{t('profile_privacy.sources_fiq')}</Text>
           </TouchableOpacity>
         </View>
 
@@ -1830,14 +1617,6 @@ export default function ProfileScreen() {
         onClose={() => setShowEditProfile(false)}
         profile={profile}
         onSave={saveProfile}
-        isDark={isDark}
-      />
-
-      <LogInjectionModal
-        visible={showLogInjection}
-        onClose={() => setShowLogInjection(false)}
-        onSave={logInjection}
-        defaultMedicationName={injectionDefaultMed}
         isDark={isDark}
       />
 
