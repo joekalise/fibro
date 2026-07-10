@@ -1,13 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// expo-location is required lazily inside each function so that a missing or
-// mis-configured native module never causes a top-level import to throw and
-// crash the JS bundle at startup.
-function getLocation() {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  return require('expo-location') as typeof import('expo-location');
-}
-
 export type PressureTrend = 'rising' | 'falling' | 'stable';
 
 export interface PressureData {
@@ -17,26 +9,6 @@ export interface PressureData {
 }
 
 const CACHE_KEY = '@fibro_pressure_cache';
-
-export async function getLocationPermissionStatus(): Promise<'granted' | 'denied' | 'undetermined'> {
-  try {
-    const Location = getLocation();
-    const { status } = await Location.getForegroundPermissionsAsync();
-    return status as 'granted' | 'denied' | 'undetermined';
-  } catch {
-    return 'denied';
-  }
-}
-
-export async function requestLocationPermission(): Promise<boolean> {
-  try {
-    const Location = getLocation();
-    const { status } = await Location.requestForegroundPermissionsAsync();
-    return status === 'granted';
-  } catch {
-    return false;
-  }
-}
 
 export async function getCachedPressure(): Promise<PressureData | null> {
   try {
@@ -50,17 +22,30 @@ export async function getCachedPressure(): Promise<PressureData | null> {
   }
 }
 
+// Resolve approximate coordinates via IP geolocation — no native modules,
+// no permission prompt, city-level accuracy which is sufficient for pressure.
+async function getCoordinates(): Promise<{ latitude: number; longitude: number } | null> {
+  try {
+    const res = await fetch('https://ipapi.co/json/');
+    const json = await res.json();
+    if (typeof json.latitude === 'number' && typeof json.longitude === 'number') {
+      return { latitude: json.latitude, longitude: json.longitude };
+    }
+    return null;
+  } catch {
+    return null;
+  }
+}
+
 export async function fetchPressure(): Promise<PressureData | null> {
   try {
     const cached = await getCachedPressure();
     if (cached) return cached;
 
-    const Location = getLocation();
-    const location = await Location.getCurrentPositionAsync({
-      accuracy: Location.Accuracy.Low,
-    });
-    const { latitude, longitude } = location.coords;
+    const coords = await getCoordinates();
+    if (!coords) return null;
 
+    const { latitude, longitude } = coords;
     const url =
       `https://api.open-meteo.com/v1/forecast` +
       `?latitude=${latitude.toFixed(4)}&longitude=${longitude.toFixed(4)}` +

@@ -361,11 +361,13 @@ function WeeklyTrends({
 
 function PressureCard({
   pressure,
-  onRequestPermission,
+  isFetching,
+  onRefresh,
   isDark,
 }: {
   pressure: PressureData | null;
-  onRequestPermission: () => void;
+  isFetching: boolean;
+  onRefresh: () => void;
   isDark: boolean;
 }) {
   const textSec = isDark ? '#9CA3AF' : '#6B7280';
@@ -373,16 +375,17 @@ function PressureCard({
   if (!pressure) {
     return (
       <TouchableOpacity
-        onPress={onRequestPermission}
+        onPress={onRefresh}
+        disabled={isFetching}
         style={[styles.card, isDark && styles.cardDark, styles.pressurePromptRow]}
         activeOpacity={0.8}
       >
         <Text style={styles.pressureIcon}>🌤️</Text>
         <View style={styles.pressurePromptText}>
           <Text style={[styles.sectionTitle, isDark && styles.textPrimaryDark]}>Track weather pressure</Text>
-          <Text style={[styles.pressureHint, { color: textSec }]}>Barometric pressure can trigger FM flares. Tap to enable.</Text>
+          <Text style={[styles.pressureHint, { color: textSec }]}>Barometric pressure can trigger FM flares. Tap to load.</Text>
         </View>
-        <Text style={styles.pressureEnableLink}>Enable →</Text>
+        <Text style={styles.pressureEnableLink}>{isFetching ? '…' : 'Load →'}</Text>
       </TouchableOpacity>
     );
   }
@@ -544,7 +547,7 @@ export default function HomeScreen() {
   const { history: healthHistory } = useHealthHistory(7);
   const { isConnected: healthConnected, todayData: healthData, recheck: recheckHealth } = useHealthData();
   const flareRisk = useFlareRisk(logs, activeFlare, healthHistory);
-  const { pressure, isLoading: pressureLoading, requestPermission: requestPressurePermission } = useWeatherPressure();
+  const { pressure, isLoading: pressureLoading, isFetching: pressureFetching, refresh: refreshPressure } = useWeatherPressure();
   // Refresh streak and weekly data when returning from Track tab; re-check health connection state
   useFocusEffect(useCallback(() => {
     refreshLog();
@@ -750,7 +753,8 @@ export default function HomeScreen() {
         {!pressureLoading && (
           <PressureCard
             pressure={pressure}
-            onRequestPermission={requestPressurePermission}
+            isFetching={pressureFetching}
+            onRefresh={refreshPressure}
             isDark={isDark}
           />
         )}

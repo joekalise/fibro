@@ -67,9 +67,7 @@ module.exports = {
       infoPlist: {
         NSHealthShareUsageDescription:
           'Fibro reads your health data to identify patterns that may relate to your fibromyalgia symptoms.',
-        NSLocationWhenInUseUsageDescription:
-          'Fibro uses your location to check local barometric pressure, which can affect fibromyalgia symptoms.',
-        ITSAppUsesNonExemptEncryption: false,
+ITSAppUsesNonExemptEncryption: false,
         UIBackgroundModes: ['fetch', 'processing'],
         BGTaskSchedulerPermittedIdentifiers: ['FIBRO_HEALTH_SYNC'],
       },
@@ -84,8 +82,7 @@ module.exports = {
       permissions: [
         'android.permission.RECEIVE_BOOT_COMPLETED',
         'android.permission.WAKE_LOCK',
-        'android.permission.ACCESS_COARSE_LOCATION',
-      ],
+        ],
     },
     plugins: [
       'expo-router',
@@ -100,13 +97,6 @@ module.exports = {
       // iOS-only plugins
       ...(!isAndroid ? [['expo-apple-authentication']] : []),
       ...(!isAndroid ? ['react-native-health'] : []),
-      [
-        'expo-location',
-        {
-          locationWhenInUsePermission:
-            'Fibro uses your location to check local barometric pressure, which can affect fibromyalgia symptoms.',
-        },
-      ],
       'expo-background-fetch',
       'expo-task-manager',
       [
