@@ -22,12 +22,12 @@ import { Colors } from '@/constants/colors';
 import { FontSize, Spacing, BorderRadius } from '@/constants/theme';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/contexts/ProfileContext';
-import { getDailyLogs, getFlares, getStreak } from '@/services/database';
+import { getDailyLogs, getFlares, getStreak, saveFiqScore, getLatestFiqScore } from '@/services/database';
 import { generateWeeklyInsight, WeeklyInsight } from '@/services/aiInsights';
 import { getAiConsent } from '@/services/aiConsent';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useHealthHistory } from '@/hooks/useHealthHistory';
-import { DailyLog, Flare, Mood, UserProfile, HealthData } from '@/types';
+import { DailyLog, FiqScore, Flare, Mood, UserProfile, HealthData } from '@/types';
 import { ProfileButton } from '@/components/common/ProfileButton';
 import { InfoButton } from '@/components/common/InfoButton';
 import { DragSlider } from '@/components/common/DragSlider';
@@ -502,20 +502,232 @@ function ChatDataCard({ isDark, onPress }: { isDark: boolean; onPress: () => voi
   );
 }
 
-// ─── FIQ placeholder card ─────────────────────────────────────────────────────
+// ─── FIQ Assessment ───────────────────────────────────────────────────────────
 
-function FiqPlaceholderCard({ isDark }: { isDark: boolean }) {
+const FIQ_QUESTIONS: Array<{ key: keyof Omit<FiqScore, 'id' | 'user_id' | 'date' | 'score'>; text: string; minLabel: string; maxLabel: string }> = [
+  { key: 'q_function',   text: 'How difficult was it to manage daily tasks — cooking, shopping, or self-care?', minLabel: 'No difficulty', maxLabel: 'Impossible' },
+  { key: 'q_work',       text: 'How much did fibromyalgia prevent you from working or doing your usual activities?', minLabel: 'No effect', maxLabel: 'Completely prevented' },
+  { key: 'q_wellbeing',  text: 'How did you feel overall?', minLabel: 'Feeling good', maxLabel: 'Feeling terrible' },
+  { key: 'q_pain',       text: 'How severe was your pain?', minLabel: 'No pain', maxLabel: 'Worst possible pain' },
+  { key: 'q_fatigue',    text: 'How fatigued or exhausted were you?', minLabel: 'Not fatigued', maxLabel: 'Severely fatigued' },
+  { key: 'q_rest',       text: 'How rested did you feel when you woke up?', minLabel: 'Well rested', maxLabel: 'Not rested at all' },
+  { key: 'q_stiffness',  text: 'How severe was your stiffness?', minLabel: 'No stiffness', maxLabel: 'Very severe stiffness' },
+  { key: 'q_anxiety',    text: 'How anxious or tense were you?', minLabel: 'Not anxious', maxLabel: 'Very anxious' },
+  { key: 'q_depression', text: 'How depressed or sad were you?', minLabel: 'Not depressed', maxLabel: 'Very depressed' },
+  { key: 'q_memory',     text: 'How much did memory problems or brain fog affect you?', minLabel: 'Not at all', maxLabel: 'Severely' },
+];
+
+function fiqInterpretation(score: number): { label: string; color: string } {
+  if (score < 40) return { label: 'Mild impact', color: '#22C55E' };
+  if (score < 60) return { label: 'Moderate impact', color: '#F59E0B' };
+  return { label: 'Severe impact', color: '#EF4444' };
+}
+
+function FiqCard({ isDark, userId }: { isDark: boolean; userId: string }) {
   const cardBg = isDark ? '#2D1A0E' : '#FFF7ED';
+  const surfaceBg = isDark ? Colors.surfaceDark : Colors.surface;
   const textPrimary = isDark ? Colors.textPrimaryDark : Colors.textPrimary;
   const textSecondary = isDark ? Colors.textSecondaryDark : Colors.textSecondary;
 
+  const [latest, setLatest] = useState<FiqScore | null>(null);
+  const [showModal, setShowModal] = useState(false);
+  const [loaded, setLoaded] = useState(false);
+
+  const load = useCallback(async () => {
+    try {
+      const s = await getLatestFiqScore(userId);
+      setLatest(s);
+    } catch {}
+    setLoaded(true);
+  }, [userId]);
+
+  useFocusEffect(useCallback(() => { load(); }, [load]));
+
+  const canRetake = !latest || (() => {
+    const days = (Date.now() - new Date(latest.date).getTime()) / 86400000;
+    return days >= 28;
+  })();
+
+  const interp = latest ? fiqInterpretation(latest.score) : null;
+
+  if (!loaded) return null;
+
   return (
-    <View style={[styles.basdaiPromptCard, { backgroundColor: cardBg, borderColor: Colors.primary + '40' }]}>
-      <Text style={[styles.basdaiPromptTitle, { color: textPrimary }]}>Monthly FIQ Assessment</Text>
-      <Text style={[styles.basdaiPromptBody, { color: textSecondary }]}>
-        The Fibromyalgia Impact Questionnaire (FIQ-R) measures how fibromyalgia affects your daily function, overall impact, and symptom severity. Monthly self-assessment coming soon.
-      </Text>
-    </View>
+    <>
+      <View style={[styles.basdaiPromptCard, { backgroundColor: cardBg, borderColor: Colors.primary + '40' }]}>
+        <View style={styles.basdaiPromptTitleRow}>
+          <Text style={[styles.basdaiPromptTitle, { color: textPrimary }]}>Monthly FIQ Assessment</Text>
+          <InfoButton
+            title="About the FIQ"
+            message="The Fibromyalgia Impact Questionnaire measures how fibromyalgia affects your daily life across 10 dimensions. Scores range from 0–100; higher scores indicate greater impact. Complete it monthly to track changes over time."
+            color={textSecondary}
+          />
+        </View>
+
+        {latest ? (
+          <View style={styles.basdaiCompactRow}>
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.basdaiCompactLabel, { color: textSecondary }]}>FIQ Score</Text>
+              <Text style={[styles.basdaiCompactScore, { color: textPrimary }]}>{latest.score.toFixed(0)}<Text style={[styles.basdaiCompactLabel, { color: textSecondary }]}>/100</Text></Text>
+              <Text style={[styles.basdaiCompactInterp, { color: interp!.color }]}>{interp!.label}</Text>
+              <Text style={[styles.basdaiCompactDate, { color: textSecondary }]}>
+                {new Date(latest.date + 'T12:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+              </Text>
+            </View>
+            {canRetake && (
+              <TouchableOpacity onPress={() => setShowModal(true)} activeOpacity={0.8} style={[styles.basdaiRetakeBtn, { borderColor: Colors.primary }]}>
+                <Text style={[styles.basdaiRetakeBtnText, { color: Colors.primary }]}>Retake</Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        ) : (
+          <>
+            <Text style={[styles.basdaiPromptBody, { color: textSecondary }]}>
+              10 questions · ~3 minutes · tracks how fibromyalgia is affecting your daily life
+            </Text>
+            <TouchableOpacity onPress={() => setShowModal(true)} activeOpacity={0.8} style={styles.basdaiTakeBtn}>
+              <Text style={styles.basdaiTakeBtnText}>Take Assessment</Text>
+            </TouchableOpacity>
+          </>
+        )}
+      </View>
+
+      <FiqModal
+        visible={showModal}
+        isDark={isDark}
+        userId={userId}
+        onDone={(saved) => {
+          setShowModal(false);
+          if (saved) load();
+        }}
+      />
+    </>
+  );
+}
+
+function FiqModal({ visible, isDark, userId, onDone }: { visible: boolean; isDark: boolean; userId: string; onDone: (saved: boolean) => void }) {
+  const bg = isDark ? Colors.backgroundDark : Colors.background;
+  const cardBg = isDark ? Colors.surfaceDark : Colors.surface;
+  const textPrimary = isDark ? Colors.textPrimaryDark : Colors.textPrimary;
+  const textSecondary = isDark ? Colors.textSecondaryDark : Colors.textSecondary;
+
+  const initialAnswers = () => Object.fromEntries(FIQ_QUESTIONS.map(q => [q.key, 5])) as Record<string, number>;
+  const [step, setStep] = useState(0);
+  const [answers, setAnswers] = useState<Record<string, number>>(initialAnswers);
+  const [saving, setSaving] = useState(false);
+
+  // Reset when modal opens
+  useEffect(() => {
+    if (visible) { setStep(0); setAnswers(initialAnswers()); }
+  }, [visible]);
+
+  const totalScore = FIQ_QUESTIONS.reduce((sum, q) => sum + (answers[q.key] ?? 5), 0);
+  const isLastQuestion = step === FIQ_QUESTIONS.length - 1;
+  const isResultStep = step === FIQ_QUESTIONS.length;
+  const interp = fiqInterpretation(totalScore);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      const today = new Date().toISOString().split('T')[0];
+      const scoreRow: Omit<FiqScore, 'id'> = {
+        user_id: userId,
+        date: today,
+        score: totalScore,
+        ...Object.fromEntries(FIQ_QUESTIONS.map(q => [q.key, answers[q.key]])) as any,
+      };
+      await saveFiqScore(scoreRow);
+      onDone(true);
+    } catch (e) {
+      Alert.alert('Error', 'Could not save your assessment. Please try again.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const q = !isResultStep ? FIQ_QUESTIONS[step] : null;
+
+  return (
+    <Modal visible={visible} animationType="slide" presentationStyle="pageSheet">
+      <SafeAreaView style={{ flex: 1, backgroundColor: bg }}>
+        {/* Header */}
+        <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm, borderBottomWidth: 1, borderBottomColor: isDark ? Colors.borderDark : Colors.border }}>
+          <Text style={[styles.basdaiTitle, { color: textPrimary }]}>FIQ Assessment</Text>
+          <TouchableOpacity onPress={() => onDone(false)} activeOpacity={0.7}>
+            <Text style={[styles.basdaiCancelText, { color: textSecondary }]}>Cancel</Text>
+          </TouchableOpacity>
+        </View>
+
+        <ScrollView contentContainerStyle={{ padding: Spacing.md, flexGrow: 1 }}>
+          {!isResultStep && q ? (
+            <View style={styles.basdaiQuestion}>
+              {/* Progress */}
+              <Text style={[styles.basdaiQuestionNum, { color: textSecondary }]}>
+                Question {step + 1} of {FIQ_QUESTIONS.length}
+              </Text>
+              <Text style={[styles.basdaiQuestionText, { color: textPrimary }]}>{q.text}</Text>
+
+              <DragSlider
+                value={answers[q.key] ?? 5}
+                onChange={(v) => setAnswers(prev => ({ ...prev, [q.key]: v }))}
+                isDark={isDark}
+                min={0}
+                max={10}
+                minLabel={q.minLabel}
+                maxLabel={q.maxLabel}
+              />
+
+              <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginTop: Spacing.xl }}>
+                {step > 0 ? (
+                  <TouchableOpacity onPress={() => setStep(s => s - 1)} activeOpacity={0.8} style={[styles.basdaiStepBtn, { backgroundColor: isDark ? Colors.surfaceDark : Colors.surface, borderColor: isDark ? Colors.borderDark : Colors.border }]}>
+                    <Text style={[styles.basdaiStepBtnText, { color: textPrimary }]}>Back</Text>
+                  </TouchableOpacity>
+                ) : <View style={{ flex: 1 }} />}
+                <TouchableOpacity
+                  onPress={() => setStep(s => s + 1)}
+                  activeOpacity={0.8}
+                  style={[styles.basdaiStepBtn, { backgroundColor: Colors.primary, borderColor: Colors.primary }]}
+                >
+                  <Text style={[styles.basdaiStepBtnText, { color: '#fff' }]}>{isLastQuestion ? 'See Result' : 'Next'}</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          ) : (
+            <View>
+              <View style={[styles.basdaiScoreCard, { backgroundColor: isDark ? Colors.surfaceDark : Colors.surface, borderColor: isDark ? Colors.borderDark : Colors.border }]}>
+                <Text style={[styles.basdaiScoreLabel, { color: textSecondary }]}>Your FIQ Score</Text>
+                <Text style={[styles.basdaiScoreLarge, { color: interp.color }]}>{totalScore.toFixed(0)}<Text style={[styles.basdaiScoreLabel, { color: textSecondary }]}> / 100</Text></Text>
+                <Text style={[styles.basdaiInterpText, { color: interp.color }]}>{interp.label}</Text>
+                <Text style={[styles.basdaiThresholdNote, { color: textSecondary }]}>0–39 mild · 40–59 moderate · 60–100 severe</Text>
+              </View>
+
+              {/* Per-question breakdown */}
+              <View style={[styles.basdaiScoreCard, { backgroundColor: isDark ? Colors.surfaceDark : Colors.surface, borderColor: isDark ? Colors.borderDark : Colors.border, marginTop: Spacing.sm }]}>
+                {FIQ_QUESTIONS.map((q, i) => (
+                  <View key={q.key} style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 6, borderTopWidth: i === 0 ? 0 : 1, borderTopColor: isDark ? Colors.borderDark : Colors.border }}>
+                    <Text style={[styles.basdaiHint, { color: textSecondary, flex: 1, marginRight: 8 }]}>{q.minLabel.replace('Not ', '').replace('No ', '')}</Text>
+                    <Text style={[styles.basdaiHint, { color: textPrimary, fontWeight: '600' }]}>{answers[q.key]}/10</Text>
+                  </View>
+                ))}
+              </View>
+
+              <View style={{ flexDirection: 'row', gap: Spacing.sm, marginTop: Spacing.md }}>
+                <TouchableOpacity onPress={() => setStep(FIQ_QUESTIONS.length - 1)} activeOpacity={0.8} style={[styles.basdaiStepBtn, { flex: 1, backgroundColor: isDark ? Colors.surfaceDark : Colors.surface, borderColor: isDark ? Colors.borderDark : Colors.border }]}>
+                  <Text style={[styles.basdaiStepBtnText, { color: textPrimary }]}>Back</Text>
+                </TouchableOpacity>
+                <TouchableOpacity onPress={handleSave} disabled={saving} activeOpacity={0.8} style={[styles.basdaiSaveBtn, { flex: 2, opacity: saving ? 0.6 : 1 }]}>
+                  <Text style={styles.basdaiSaveBtnText}>{saving ? 'Saving…' : 'Save Assessment'}</Text>
+                </TouchableOpacity>
+              </View>
+
+              <Text style={[styles.basdaiHint, { color: textSecondary, textAlign: 'center', marginTop: Spacing.md }]}>
+                The FIQ is a clinical tool for tracking fibromyalgia impact over time, not a diagnostic instrument.
+              </Text>
+            </View>
+          )}
+        </ScrollView>
+      </SafeAreaView>
+    </Modal>
   );
 }
 
@@ -697,7 +909,7 @@ export default function InsightsScreen() {
         </View>
 
         {/* ── FIQ assessment section ── */}
-        <FiqPlaceholderCard isDark={isDark} />
+        {user && <FiqCard isDark={isDark} userId={user.id} />}
 
         {/* ── AI Insight section — above period selector ── */}
         {!subLoading && (

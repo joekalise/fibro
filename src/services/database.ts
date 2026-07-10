@@ -1,5 +1,5 @@
 import { supabase } from '@/services/supabase';
-import { BiologicInjection, DailyLog, Flare, FlareSeverity, HealthData, MedicationReminder, PainLocation } from '@/types';
+import { BiologicInjection, DailyLog, Flare, FlareSeverity, FiqScore, HealthData, MedicationReminder, PainLocation } from '@/types';
 
 // ─── Daily Logs ─────────────────────────────────────────────────────────────
 
@@ -389,6 +389,39 @@ export async function getStreak(userId: string): Promise<number> {
   }
 }
 
+// ─── FIQ Scores ──────────────────────────────────────────────────────────────
+
+export async function saveFiqScore(score: Omit<FiqScore, 'id'>): Promise<void> {
+  const { error } = await supabase
+    .from('fiq_scores')
+    .upsert(score, { onConflict: 'user_id,date' });
+  if (error) throw error;
+}
+
+export async function getLatestFiqScore(userId: string): Promise<FiqScore | null> {
+  const { data, error } = await supabase
+    .from('fiq_scores')
+    .select('*')
+    .eq('user_id', userId)
+    .order('date', { ascending: false })
+    .limit(1)
+    .single();
+  if (error && error.code === 'PGRST116') return null;
+  if (error) throw error;
+  return data as FiqScore;
+}
+
+export async function getFiqScores(userId: string, limit = 12): Promise<FiqScore[]> {
+  const { data, error } = await supabase
+    .from('fiq_scores')
+    .select('*')
+    .eq('user_id', userId)
+    .order('date', { ascending: false })
+    .limit(limit);
+  if (error) throw error;
+  return (data ?? []) as FiqScore[];
+}
+
 // ─── Delete all user data ─────────────────────────────────────────────────────
 
 export async function deleteAllUserData(userId: string): Promise<void> {
@@ -398,7 +431,7 @@ export async function deleteAllUserData(userId: string): Promise<void> {
     'uveitis_episodes',
     'medications',
     'biologic_injections',
-    'basdai_scores',
+    'fiq_scores',
     'profiles',
   ] as const;
 
