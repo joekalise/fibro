@@ -1,5 +1,12 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as Location from 'expo-location';
+
+// expo-location is required lazily inside each function so that a missing or
+// mis-configured native module never causes a top-level import to throw and
+// crash the JS bundle at startup.
+function getLocation() {
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  return require('expo-location') as typeof import('expo-location');
+}
 
 export type PressureTrend = 'rising' | 'falling' | 'stable';
 
@@ -13,6 +20,7 @@ const CACHE_KEY = '@fibro_pressure_cache';
 
 export async function getLocationPermissionStatus(): Promise<'granted' | 'denied' | 'undetermined'> {
   try {
+    const Location = getLocation();
     const { status } = await Location.getForegroundPermissionsAsync();
     return status as 'granted' | 'denied' | 'undetermined';
   } catch {
@@ -22,6 +30,7 @@ export async function getLocationPermissionStatus(): Promise<'granted' | 'denied
 
 export async function requestLocationPermission(): Promise<boolean> {
   try {
+    const Location = getLocation();
     const { status } = await Location.requestForegroundPermissionsAsync();
     return status === 'granted';
   } catch {
@@ -46,6 +55,7 @@ export async function fetchPressure(): Promise<PressureData | null> {
     const cached = await getCachedPressure();
     if (cached) return cached;
 
+    const Location = getLocation();
     const location = await Location.getCurrentPositionAsync({
       accuracy: Location.Accuracy.Low,
     });
@@ -62,7 +72,6 @@ export async function fetchPressure(): Promise<PressureData | null> {
     const currentPressure: number = json.current?.surface_pressure;
     if (!currentPressure) return null;
 
-    // Trend: find current hour in hourly array, compare to +6h
     const times: string[] = json.hourly?.time ?? [];
     const pressures: number[] = json.hourly?.surface_pressure ?? [];
     const now = new Date();
