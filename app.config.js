@@ -10,22 +10,32 @@ function withFmtFix(config) {
     (config) => {
       const podfilePath = path.join(config.modRequest.platformProjectRoot, 'Podfile');
       let contents = fs.readFileSync(podfilePath, 'utf-8');
-      if (!contents.includes('fmt_compile_patch')) {
-        // Patch fmt/compile.h in post_install so FMT_COMPILE expands to FMT_STRING
-        // instead of the consteval-based compiled_string variant.
-        // fmt 11.x unconditionally redefines FMT_CONSTEVAL, so compiler flags can't fix this.
+      if (!contents.includes('fmt_consteval_patch')) {
+        // fmt 11.x enables consteval on Apple Clang 14+ but the consteval constructor for
+        // basic_format_string is rejected by Apple Clang with "not a constant expression".
+        // Two patches together fix this:
+        //   1. base.h: change FMT_CONSTEVAL from consteval → constexpr so the constructor
+        //      can be called from non-constant-expression contexts.
+        //   2. compile.h: disable the compiled_string path so FMT_COMPILE expands to
+        //      FMT_STRING (detail::compile_string base) rather than compiled_string.
         contents = contents.replace(
           /post_install do \|installer\|/,
           `post_install do |installer|
-  # fmt_compile_patch: disable consteval FMT_COMPILE — Apple Clang has broken consteval
-  fmt_compile_patch = "#{installer.sandbox.root}/fmt/include/fmt/compile.h"
-  if File.exist?(fmt_compile_patch)
-    src = File.read(fmt_compile_patch)
+  # fmt_consteval_patch: Apple Clang bug — consteval basic_format_string ctor is rejected
+  fmt_base = "#{installer.sandbox.root}/fmt/include/fmt/base.h"
+  if File.exist?(fmt_base)
+    src = File.read(fmt_base)
+    patched = src.gsub('#  define FMT_CONSTEVAL consteval', '#  define FMT_CONSTEVAL constexpr')
+    File.write(fmt_base, patched) if src != patched
+  end
+  fmt_compile = "#{installer.sandbox.root}/fmt/include/fmt/compile.h"
+  if File.exist?(fmt_compile)
+    src = File.read(fmt_compile)
     patched = src.sub(
       '#if defined(__cpp_if_constexpr) && defined(__cpp_return_type_deduction)',
       '#if 0 // disabled: consteval FMT_COMPILE breaks Apple Clang'
     )
-    File.write(fmt_compile_patch, patched) if src != patched
+    File.write(fmt_compile, patched) if src != patched
   end`
         );
         fs.writeFileSync(podfilePath, contents);

@@ -13,12 +13,7 @@ install! 'cocoapods',
 
 prepare_react_native_project!
 
-$RNFirebaseAsStaticFramework = true
-
-# Required for FirebaseCoreInternal (Swift) to import GoogleUtilities as a static library
-pod 'GoogleUtilities', :modular_headers => true
-
-target 'Spondy' do
+target 'Fibro' do
   use_expo_modules!
 
   if ENV['EXPO_USE_COMMUNITY_AUTOLINKING'] == '1'
@@ -48,21 +43,28 @@ target 'Spondy' do
   )
 
   post_install do |installer|
+  # fmt_consteval_patch: Apple Clang bug — consteval basic_format_string ctor is rejected
+  fmt_base = "#{installer.sandbox.root}/fmt/include/fmt/base.h"
+  if File.exist?(fmt_base)
+    src = File.read(fmt_base)
+    patched = src.gsub('#  define FMT_CONSTEVAL consteval', '#  define FMT_CONSTEVAL constexpr')
+    File.write(fmt_base, patched) if src != patched
+  end
+  fmt_compile = "#{installer.sandbox.root}/fmt/include/fmt/compile.h"
+  if File.exist?(fmt_compile)
+    src = File.read(fmt_compile)
+    patched = src.sub(
+      '#if defined(__cpp_if_constexpr) && defined(__cpp_return_type_deduction)',
+      '#if 0 // disabled: consteval FMT_COMPILE breaks Apple Clang'
+    )
+    File.write(fmt_compile, patched) if src != patched
+  end
     react_native_post_install(
       installer,
       config[:reactNativePath],
       :mac_catalyst_enabled => false,
       :ccache_enabled => podfile_properties['apple.ccacheEnabled'] == 'true',
     )
-
-    # Fix fmt library consteval compilation error — fmt is incompatible with C++20
-    installer.pods_project.targets.each do |target|
-      if target.name == 'fmt'
-        target.build_configurations.each do |config|
-          config.build_settings['CLANG_CXX_LANGUAGE_STANDARD'] = 'c++17'
-        end
-      end
-    end
 
     # This is necessary for Xcode 14, because it signs resource bundles by default
     # when building for devices.
