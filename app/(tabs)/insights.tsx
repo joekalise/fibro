@@ -25,6 +25,7 @@ import { useProfile } from '@/contexts/ProfileContext';
 import { getDailyLogs, getFlares, getStreak, saveFiqScore, getLatestFiqScore } from '@/services/database';
 import { generateWeeklyInsight, WeeklyInsight } from '@/services/aiInsights';
 import { getCachedPressure } from '@/services/weather';
+import { fetchTodayRecoveryData } from '@/services/healthKit';
 import { getAiConsent } from '@/services/aiConsent';
 import { useSubscription } from '@/hooks/useSubscription';
 import { useHealthHistory } from '@/hooks/useHealthHistory';
@@ -236,12 +237,17 @@ function AIInsightCard({ logs, flares, profile, healthHistory, isDark }: AIInsig
     setError(null);
     setExpandedIdx(null);
     try {
-      const pressureData = await getCachedPressure();
+      const today = new Date().toISOString().split('T')[0];
+      const [pressureData, recoveryData] = await Promise.all([
+        getCachedPressure(),
+        fetchTodayRecoveryData(today).catch(() => null),
+      ]);
       const result = await generateWeeklyInsight({
         logs,
         flares,
         healthHistory,
         pressureData,
+        recoveryData,
         profile: profile ?? {
           user_id: user.id,
           age_range: null,

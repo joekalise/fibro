@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Platform } from 'react-native';
 import * as Notifications from 'expo-notifications';
-import { DailyLog, MedicationReminder } from '@/types';
+import { DailyLog, MedicationReminder, RecoverySnapshot } from '@/types';
 import { supabase } from '@/services/supabase';
 
 const ANDROID_CHANNEL = 'fibro-reminders';
@@ -198,7 +198,8 @@ export async function sendNudge(title: string, body: string): Promise<void> {
 
 export async function evaluateAndSendNudges(
   userId: string,
-  logs: DailyLog[]
+  logs: DailyLog[],
+  recovery?: RecoverySnapshot | null
 ): Promise<void> {
   if (logs.length < 3) return;
 
@@ -308,6 +309,28 @@ export async function evaluateAndSendNudges(
     await sendNudge('Sleep quality check', message);
     await saveNudgeToDb(userId, 'unrefreshed_sleep', message);
     return;
+  }
+
+  // Rule 10: low overnight SpO₂ (from HealthKit)
+  if (recovery?.oxygen_saturation !== null && recovery?.oxygen_saturation !== undefined) {
+    if (recovery.oxygen_saturation < 94) {
+      const message =
+        `Your overnight SpO₂ was ${recovery.oxygen_saturation}% — lower than the normal range. Poor sleep oxygenation can worsen fibromyalgia pain and fatigue. It may be worth mentioning to your doctor.`;
+      await sendNudge('Sleep oxygen check', message);
+      await saveNudgeToDb(userId, 'low_spo2', message);
+      return;
+    }
+  }
+
+  // Rule 11: elevated sleep respiratory rate (from HealthKit)
+  if (recovery?.respiratory_rate !== null && recovery?.respiratory_rate !== undefined) {
+    if (recovery.respiratory_rate > 20) {
+      const message =
+        `Your respiratory rate during sleep was ${recovery.respiratory_rate} breaths/min — higher than normal. This can indicate your nervous system is under stress, which is common during fibromyalgia flares.`;
+      await sendNudge('Recovery check', message);
+      await saveNudgeToDb(userId, 'elevated_resp_rate', message);
+      return;
+    }
   }
 }
 

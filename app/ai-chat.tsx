@@ -27,6 +27,7 @@ import { useProfile } from '@/contexts/ProfileContext';
 import { useHealthHistory } from '@/hooks/useHealthHistory';
 import { sendChatMessage } from '@/services/aiInsights';
 import { getCachedPressure } from '@/services/weather';
+import { fetchTodayRecoveryData } from '@/services/healthKit';
 import { getAiConsent } from '@/services/aiConsent';
 import { getDailyLogs } from '@/services/database';
 import { logEvent, Events } from '@/services/analytics';
@@ -332,13 +333,18 @@ export default function AIChatScreen() {
         ? [{ role: 'user' as const, content: trimmed }]
         : history;
 
-      const pressureData = await getCachedPressure();
+      const today = new Date().toISOString().split('T')[0];
+      const [pressureData, recoveryData] = await Promise.all([
+        getCachedPressure(),
+        fetchTodayRecoveryData(today).catch(() => null),
+      ]);
       const response = await sendChatMessage({
         messages: fullHistory,
         logs,
         flares,
         healthHistory,
         pressureData,
+        recoveryData,
         profile: profile ?? {
           user_id: user?.id ?? '',
           age_range: null,

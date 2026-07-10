@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { DailyLog, Flare, HealthData, Mood, DietTrigger } from '@/types';
+import { DailyLog, Flare, HealthData, Mood, DietTrigger, RecoverySnapshot } from '@/types';
 
 export type FlareRiskLevel = 'none' | 'watch' | 'warning';
 
@@ -27,7 +27,8 @@ function moodToScore(mood: Mood | null): number {
 export function computeFlareRisk(
   logs: DailyLog[],
   activeFlare: Flare | null,
-  healthHistory?: HealthData[]
+  healthHistory?: HealthData[],
+  recovery?: RecoverySnapshot | null
 ): FlareRisk {
   // Already in a flare — no separate warning needed
   if (activeFlare) return { level: 'none', signals: [] };
@@ -148,6 +149,18 @@ export function computeFlareRisk(
     if (lowStepDays >= 2) signals.push('low_activity');
   }
 
+  // ── Recovery signals (today's HealthKit data) ─────────────────────────────
+
+  // 16. Low overnight SpO₂ — hypoxia during sleep worsens FM pain and fatigue
+  if (recovery?.oxygen_saturation !== null && recovery?.oxygen_saturation !== undefined) {
+    if (recovery.oxygen_saturation < 94) signals.push('low_spo2');
+  }
+
+  // 17. Elevated respiratory rate during sleep — autonomic arousal / poor recovery
+  if (recovery?.respiratory_rate !== null && recovery?.respiratory_rate !== undefined) {
+    if (recovery.respiratory_rate > 18) signals.push('elevated_resp_rate');
+  }
+
   if (signals.length >= 3) return { level: 'warning', signals };
   if (signals.length >= 2) return { level: 'watch', signals };
   return { level: 'none', signals };
@@ -156,10 +169,11 @@ export function computeFlareRisk(
 export function useFlareRisk(
   logs: DailyLog[],
   activeFlare: Flare | null,
-  healthHistory?: HealthData[]
+  healthHistory?: HealthData[],
+  recovery?: RecoverySnapshot | null
 ): FlareRisk {
   return useMemo(
-    () => computeFlareRisk(logs, activeFlare, healthHistory),
-    [logs, activeFlare, healthHistory]
+    () => computeFlareRisk(logs, activeFlare, healthHistory, recovery),
+    [logs, activeFlare, healthHistory, recovery]
   );
 }

@@ -1,5 +1,5 @@
 import { supabase } from '@/services/supabase';
-import { DailyLog, Flare, HealthData, UserProfile } from '@/types';
+import { DailyLog, Flare, HealthData, UserProfile, RecoverySnapshot } from '@/types';
 
 export interface WeeklyInsight {
   summary: string;
@@ -97,7 +97,8 @@ function buildDataSummary(
   logs: DailyLog[],
   flares: Flare[],
   healthHistory?: HealthData[],
-  pressureData?: { pressure: number; trend: string } | null
+  pressureData?: { pressure: number; trend: string } | null,
+  recoveryData?: RecoverySnapshot | null
 ): string {
   if (logs.length === 0) {
     return 'No tracking data available for this period.';
@@ -256,6 +257,26 @@ ${avgPainHigh ? `- Avg pain on high-activity days: ${avgPainHigh}/10` : ''}${avg
     pressureSection = `\n\nBAROMETRIC PRESSURE: ${pressureData.pressure} hPa — ${level}, trend: ${pressureData.trend}. Note: falling or low barometric pressure is a commonly reported fibromyalgia flare trigger.`;
   }
 
+  // Recovery signals (today's HealthKit data)
+  let recoverySection = '';
+  if (recoveryData) {
+    const lines: string[] = [];
+    if (recoveryData.oxygen_saturation !== null) {
+      const flag = recoveryData.oxygen_saturation < 94 ? ' ⚠️ below normal — may worsen FM pain and fatigue' : ' (normal range)';
+      lines.push(`SpO₂: ${recoveryData.oxygen_saturation}%${flag}`);
+    }
+    if (recoveryData.respiratory_rate !== null) {
+      const flag = recoveryData.respiratory_rate > 18 ? ' ⚠️ elevated — indicates autonomic arousal/poor recovery' : ' (normal range)';
+      lines.push(`Sleep respiratory rate: ${recoveryData.respiratory_rate} breaths/min${flag}`);
+    }
+    if (recoveryData.mindful_minutes !== null && recoveryData.mindful_minutes > 0) {
+      lines.push(`Mindfulness today: ${recoveryData.mindful_minutes} min`);
+    }
+    if (lines.length > 0) {
+      recoverySection = `\n\nRECOVERY SIGNALS (today):\n${lines.map(l => `- ${l}`).join('\n')}`;
+    }
+  }
+
   // Period section
   let periodSection = '';
   const periodLogs = logs.filter(l => l.period_active === true);
@@ -282,7 +303,7 @@ FLARES:
 ${flareSummary}
 
 USER NOTES (free text from check-ins):
-${notes || '  None'}${dietSection}${healthSection}${exerciseSection}${pressureSection}${periodSection}${pacingSection}${wellbeingSection}
+${notes || '  None'}${dietSection}${healthSection}${exerciseSection}${pressureSection}${recoverySection}${periodSection}${pacingSection}${wellbeingSection}
 `.trim();
 }
 
@@ -313,9 +334,10 @@ export async function generateWeeklyInsight(params: {
   profile: UserProfile;
   healthHistory?: HealthData[];
   pressureData?: { pressure: number; trend: string } | null;
+  recoveryData?: RecoverySnapshot | null;
   aiContext?: string;
 }): Promise<WeeklyInsight> {
-  const { logs, flares, profile, healthHistory, pressureData, aiContext } = params;
+  const { logs, flares, profile, healthHistory, pressureData, recoveryData, aiContext } = params;
 
   const systemPrompt = `You are Fibro, a warm and knowledgeable health companion for someone living with fibromyalgia.
 Analyse the user's data and respond with a JSON object in exactly this structure:
@@ -341,7 +363,7 @@ Rules:
 
 ${buildProfileSummary(profile)}
 
-${buildDataSummary(logs, flares, healthHistory, pressureData)}
+${buildDataSummary(logs, flares, healthHistory, pressureData, recoveryData)}
 ${aiContext ? `\nAdditional context: ${aiContext}` : ''}`;
 
   try {
@@ -371,9 +393,10 @@ export async function sendChatMessage(params: {
   profile: UserProfile;
   healthHistory?: HealthData[];
   pressureData?: { pressure: number; trend: string } | null;
+  recoveryData?: RecoverySnapshot | null;
   aiContext?: string;
 }): Promise<string> {
-  const { messages, logs, flares, profile, healthHistory, pressureData, aiContext } = params;
+  const { messages, logs, flares, profile, healthHistory, pressureData, recoveryData, aiContext } = params;
 
   const systemPrompt = `You are Fibro AI, a warm and knowledgeable health companion for someone living with fibromyalgia.
 You have access to the user's tracking data and can help them understand their patterns, potential triggers, and fibromyalgia management.
@@ -382,7 +405,7 @@ Here is the user's profile and recent data:
 
 ${buildProfileSummary(profile)}
 
-${buildDataSummary(logs, flares, healthHistory, pressureData)}
+${buildDataSummary(logs, flares, healthHistory, pressureData, recoveryData)}
 ${aiContext ? `\nAdditional context from user: ${aiContext}` : ''}
 
 Guidelines for your responses:

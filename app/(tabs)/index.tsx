@@ -493,6 +493,8 @@ const SIGNAL_LABELS: Record<string, string> = {
   unrefreshed_sleep: '😪 Unrefreshed sleep',
   sensitivity_spike: '⚡ High sensitivity days',
   boom_bust_risk: '🔄 Activity pacing risk',
+  low_spo2: '🫁 Low overnight SpO₂',
+  elevated_resp_rate: '😤 Elevated sleep resp rate',
 };
 
 function FlareRiskCard({
@@ -607,7 +609,7 @@ export default function HomeScreen() {
   const { activeFlare, flares, isLoading: flaresLoading } = useFlares();
   const { history: healthHistory } = useHealthHistory(7);
   const { isConnected: healthConnected, todayData: healthData, recheck: recheckHealth } = useHealthData();
-  const flareRisk = useFlareRisk(logs, activeFlare, healthHistory);
+  const flareRisk = useFlareRisk(logs, activeFlare, healthHistory, recoveryData);
   const { pressure, isLoading: pressureLoading, isFetching: pressureFetching, refresh: refreshPressure } = useWeatherPressure();
   const recoveryData = useRecoveryData();
   // Refresh streak and weekly data when returning from Track tab; re-check health connection state
@@ -639,7 +641,7 @@ export default function HomeScreen() {
   // Proactive nudges — sleep, pain trend, fatigue, mood (once per day max)
   useEffect(() => {
     if (!user || logs.length < 3) return;
-    evaluateAndSendNudges(user.id, logs).catch(() => {});
+    evaluateAndSendNudges(user.id, logs, recoveryData).catch(() => {});
   }, [user, logs]);
 
   const greetingKey = getGreetingKey();
