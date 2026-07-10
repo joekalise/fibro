@@ -36,7 +36,7 @@ import { setUserId } from '@/services/analytics';
 import * as Sentry from '@sentry/react-native';
 
 Sentry.init({
-  dsn: 'https://8abbabe2fad0e65279837042df5da6f6@o4511371993350144.ingest.de.sentry.io/4511371996758096',
+  dsn: 'https://ee0afbc84e37f6e8a81d607d52b1bc09@o4511371993350144.ingest.de.sentry.io/4511710523686992',
   enableLogs: true,
   // Session replay disabled — health app with sensitive user data
   replaysSessionSampleRate: 0,

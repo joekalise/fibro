@@ -236,7 +236,7 @@ export function PremiumModal({
             <Text style={[styles.legalDot, { color: textSecondary }]}> · </Text>
             <Text
               style={[styles.legalLink, { color: textSecondary }]}
-              onPress={() => Linking.openURL('https://gist.github.com/joekalise/fb689414dba7ade9f6d7383ccad9cf1f')}
+              onPress={() => Linking.openURL('https://gist.github.com/joekalise/a35bb652c6aeef4d03fc9cda1dfd8f25')}
             >
               {t('subscription.privacy_policy')}
             </Text>

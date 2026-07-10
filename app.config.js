@@ -103,7 +103,7 @@ module.exports = {
         {
           url: 'https://sentry.io/',
           project: 'fibro',
-          organization: 'fibro',
+          organization: 'spondy',
         },
       ],
       '@react-native-community/datetimepicker',

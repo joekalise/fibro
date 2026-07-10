@@ -29,8 +29,7 @@
         "EXPO_PUBLIC_SUPABASE_URL": "https://pmeifcykstbiccdvvkwh.supabase.co",
         "EXPO_PUBLIC_SUPABASE_ANON_KEY": "sb_publishable_OtbradaQ-XLwlhmQZOBqVQ_h5kc1ADp",
         "EXPO_PUBLIC_REVENUECAT_IOS_KEY": "appl_LJMSfNOYmzIIvCXJpelYCxLjCkf",
-        "EXPO_PUBLIC_REVENUECAT_ANDROID_KEY": "goog_PMkIySOHMPWcPlXcYjMThsvWXVS",
-        "SENTRY_DISABLE_AUTO_UPLOAD": "true"
+        "EXPO_PUBLIC_REVENUECAT_ANDROID_KEY": "goog_PMkIySOHMPWcPlXcYjMThsvWXVS"
       }
     },
     "production-android": {
