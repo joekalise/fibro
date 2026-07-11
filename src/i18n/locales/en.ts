@@ -304,6 +304,7 @@ export default {
     duration_days: '{{days}} days',
     duration_ongoing: 'Ongoing',
     log_flare_title: 'Log flare',
+    log_as_title: 'Log a flare',
     resolve_flare_title: 'Resolve flare',
     trigger_stress: 'Stress',
     trigger_poor_sleep: 'Poor sleep',

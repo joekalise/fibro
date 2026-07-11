@@ -9,6 +9,8 @@ import {
   TextInput,
   Alert,
   useColorScheme,
+  KeyboardAvoidingView,
+  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
@@ -318,72 +320,79 @@ function StartFlareModal({ visible, onClose, onConfirm, isDark, title, locationO
 
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
-      <View style={styles.modalOverlay}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.modalOverlay}
+      >
         <View style={[styles.modalSheet, isDark && styles.modalSheetDark]}>
           <View style={styles.modalHandle} />
-          <Text style={[styles.modalTitle, isDark && styles.textPrimaryDark]}>{title}</Text>
+          <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+            <Text style={[styles.modalTitle, isDark && styles.textPrimaryDark]}>{title}</Text>
 
-          <Text style={[styles.modalSectionLabel, isDark && styles.textPrimaryDark]}>
-            {t('flares.flare_severity')}
-          </Text>
-          <View style={styles.chipRow}>
-            {SEVERITIES.map((sev) => {
-              const selected = severity === sev;
-              const color = SEVERITY_COLOR[sev];
-              return (
-                <TouchableOpacity
-                  key={sev}
-                  onPress={() => setSeverity(sev)}
-                  style={[styles.chip, isDark && styles.chipDark, selected && { backgroundColor: color + '22', borderColor: color }]}
-                  activeOpacity={0.7}
-                >
-                  <Text style={[styles.chipText, isDark && styles.textSecDark, selected && { color, fontWeight: '700' }]}>
-                    {t(`flares.severity_${sev}`)}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
+            <Text style={[styles.modalSectionLabel, isDark && styles.textPrimaryDark]}>
+              {t('flares.flare_severity')}
+            </Text>
+            <View style={styles.chipRow}>
+              {SEVERITIES.map((sev) => {
+                const selected = severity === sev;
+                const color = SEVERITY_COLOR[sev];
+                return (
+                  <TouchableOpacity
+                    key={sev}
+                    onPress={() => setSeverity(sev)}
+                    style={[styles.chip, isDark && styles.chipDark, selected && { backgroundColor: color + '22', borderColor: color }]}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={[styles.chipText, isDark && styles.textSecDark, selected && { color, fontWeight: '700' }]}>
+                      {t(`flares.severity_${sev}`)}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
 
-          <Text style={[styles.modalSectionLabel, isDark && styles.textPrimaryDark]}>
-            Location (optional)
-          </Text>
-          <View style={styles.chipRow}>
-            {locationOptions.map((loc) => {
-              const selected = areas.includes(loc.value);
-              return (
-                <TouchableOpacity
-                  key={loc.value}
-                  onPress={() => toggleArea(loc.value)}
-                  style={[styles.chip, isDark && styles.chipDark, selected && styles.chipSelected]}
-                  activeOpacity={0.7}
-                >
-                  <Text style={[styles.chipText, isDark && styles.textSecDark, selected && styles.chipTextSelected]}>
-                    {loc.label}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
+            <Text style={[styles.modalSectionLabel, isDark && styles.textPrimaryDark]}>
+              Location (optional)
+            </Text>
+            <View style={styles.chipRow}>
+              {locationOptions.map((loc) => {
+                const selected = areas.includes(loc.value);
+                return (
+                  <TouchableOpacity
+                    key={loc.value}
+                    onPress={() => toggleArea(loc.value)}
+                    style={[styles.chip, isDark && styles.chipDark, selected && styles.chipSelected]}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={[styles.chipText, isDark && styles.textSecDark, selected && styles.chipTextSelected]}>
+                      {loc.label}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
+            </View>
 
-          <Text style={[styles.modalSectionLabel, isDark && styles.textPrimaryDark]}>
-            {t('flares.notes')}
-          </Text>
-          <TextInput
-            style={[styles.notesInput, isDark && styles.notesInputDark]}
-            placeholder={t('flares.notes_placeholder')}
-            placeholderTextColor={isDark ? Colors.textSecondaryDark : Colors.textSecondary}
-            value={notes}
-            onChangeText={setNotes}
-            multiline
-            numberOfLines={3}
-            textAlignVertical="top"
-          />
+            <Text style={[styles.modalSectionLabel, isDark && styles.textPrimaryDark]}>
+              {t('flares.notes')}
+            </Text>
+            <TextInput
+              style={[styles.notesInput, isDark && styles.notesInputDark]}
+              placeholder={t('flares.notes_placeholder')}
+              placeholderTextColor={isDark ? Colors.textSecondaryDark : Colors.textSecondary}
+              value={notes}
+              onChangeText={setNotes}
+              multiline
+              numberOfLines={3}
+              textAlignVertical="top"
+              returnKeyType="done"
+              blurOnSubmit
+            />
 
-          <Button label={t('flares.log_flare_button')} onPress={handleConfirm} isLoading={isSaving} style={styles.modalConfirmButton} />
-          <Button label={t('common.cancel')} onPress={onClose} variant="ghost" />
+            <Button label={t('flares.log_flare_button')} onPress={handleConfirm} isLoading={isSaving} style={styles.modalConfirmButton} />
+            <Button label={t('common.cancel')} onPress={onClose} variant="ghost" />
+          </ScrollView>
         </View>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }
