@@ -52,8 +52,9 @@ export type DietTrigger =
   | 'processed'
   | 'high_sugar'
   | 'dairy'
-  | 'red_meat'
-  | 'nightshades';
+  | 'gluten'
+  | 'nightshades'
+  | 'msg_additives';
 
 export type ActivityLevel = 'low' | 'moderate' | 'high';
 

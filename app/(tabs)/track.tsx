@@ -144,8 +144,9 @@ const DIET_TRIGGER_OPTIONS: { value: DietTrigger; label: string }[] = [
   { value: 'processed', label: 'Processed food' },
   { value: 'high_sugar', label: 'High sugar' },
   { value: 'dairy', label: 'Dairy' },
-  { value: 'red_meat', label: 'Red meat' },
+  { value: 'gluten', label: 'Gluten' },
   { value: 'nightshades', label: 'Nightshades' },
+  { value: 'msg_additives', label: 'MSG / additives' },
 ];
 
 const EXERCISE_TYPE_OPTIONS: { value: string; label: string }[] = [
@@ -387,7 +388,7 @@ function DayLogForm({
             );
           })}
         </View>
-        <Text style={[styles.sectionSubLabel, isDark && styles.textSecDark]}>Notable today</Text>
+        <Text style={[styles.sectionSubLabel, isDark && styles.textSecDark]}>{t('tracker.food_triggers_label')}</Text>
         <View style={styles.chipRow}>
           {DIET_TRIGGER_OPTIONS.map((opt) => {
             const selected = dietTriggers.includes(opt.value);
@@ -418,7 +419,7 @@ function DayLogForm({
           })}
         </View>
         <Text style={[styles.hint, isDark && styles.textSecDark]}>
-          Common dietary triggers for fibromyalgia, tracked for patterns
+          {t('tracker.food_triggers_hint')}
         </Text>
       </View>
 

@@ -373,56 +373,7 @@ function respColor(v: number): string {
   return Colors.error;
 }
 
-function RecoverySignalsCard({ data, isDark }: { data: RecoverySnapshot; isDark: boolean }) {
-  const items: { label: string; value: string; color: string }[] = [];
-
-  if (data.oxygen_saturation !== null) {
-    items.push({
-      label: 'SpO₂',
-      value: `${data.oxygen_saturation}%`,
-      color: spo2Color(data.oxygen_saturation),
-    });
-  }
-  if (data.respiratory_rate !== null) {
-    items.push({
-      label: 'Resp rate',
-      value: `${data.respiratory_rate}/min`,
-      color: respColor(data.respiratory_rate),
-    });
-  }
-  if (data.mindful_minutes !== null && data.mindful_minutes > 0) {
-    items.push({
-      label: 'Mindful',
-      value: `${data.mindful_minutes}m`,
-      color: Colors.success,
-    });
-  }
-
-  if (items.length === 0) return null;
-
-  return (
-    <View style={[styles.healthCard, isDark && styles.healthCardDark]}>
-      <Text style={[styles.sectionTitle, isDark && styles.textPrimaryDark]}>
-        Recovery signals
-      </Text>
-      <View style={styles.todaySummaryRow}>
-        {items.map((item, i) => (
-          <React.Fragment key={item.label}>
-            <View style={styles.todaySummaryItem}>
-              <Text style={[styles.healthStatValue, { color: item.color }]}>{item.value}</Text>
-              <Text style={[styles.todaySummaryItemLabel, isDark && styles.textSecDark]}>{item.label}</Text>
-            </View>
-            {i < items.length - 1 && (
-              <View style={[styles.todaySummaryDivider, isDark && styles.todaySummaryDividerDark]} />
-            )}
-          </React.Fragment>
-        ))}
-      </View>
-    </View>
-  );
-}
-
-// ─── Barometric Pressure Card ────────────────────────────────────────────────
+// ─── Barometric Pressure Card ────────────────────────────────────────────────────
 
 function PressureCard({
   pressure,
@@ -437,6 +388,7 @@ function PressureCard({
   onRefresh: () => void;
   isDark: boolean;
 }) {
+  const { t } = useTranslation();
   const textSec = isDark ? '#9CA3AF' : '#6B7280';
 
   if (!pressure) {
@@ -449,15 +401,13 @@ function PressureCard({
       >
         <Text style={styles.pressureIcon}>🌤️</Text>
         <View style={styles.pressurePromptText}>
-          <Text style={[styles.sectionTitle, isDark && styles.textPrimaryDark]}>Track weather pressure</Text>
+          <Text style={[styles.sectionTitle, isDark && styles.textPrimaryDark]}>{t('health.pressure_load_title')}</Text>
           <Text style={[styles.pressureHint, { color: fetchError ? Colors.error : textSec }]}>
-            {fetchError
-              ? 'Could not load — check your connection and tap to retry.'
-              : 'Barometric pressure can trigger FM flares. Tap to load.'}
+            {fetchError ? t('health.pressure_error_hint') : t('health.pressure_load_hint')}
           </Text>
         </View>
         <Text style={[styles.pressureEnableLink, fetchError && { color: Colors.error }]}>
-          {isFetching ? '…' : fetchError ? 'Retry →' : 'Load →'}
+          {isFetching ? t('health.pressure_fetching') : fetchError ? t('health.pressure_retry_btn') : t('health.pressure_load_btn')}
         </Text>
       </TouchableOpacity>
     );
@@ -465,20 +415,20 @@ function PressureCard({
 
   const { pressure: hpa, trend } = pressure;
 
-  const levelLabel = hpa < 1003 ? 'Low pressure' : hpa < 1013 ? 'Variable' : 'Stable';
+  const levelLabel = hpa < 1003 ? t('health.pressure_level_low') : hpa < 1013 ? t('health.pressure_level_variable') : t('health.pressure_level_stable');
   const levelColor = hpa < 1003 ? Colors.error : hpa < 1013 ? Colors.warning : Colors.success;
   const trendIcon = trend === 'falling' ? '⬇' : trend === 'rising' ? '⬆' : '→';
-  const trendLabel = trend === 'falling' ? 'dropping' : trend === 'rising' ? 'rising' : 'steady';
+  const trendLabel = trend === 'falling' ? t('health.pressure_trend_falling') : trend === 'rising' ? t('health.pressure_trend_rising') : t('health.pressure_trend_stable');
 
   return (
     <View style={[styles.card, isDark && styles.cardDark]}>
       <View style={styles.pressureHeaderRow}>
         <View style={styles.pressureTitleRow}>
           <Text style={styles.pressureIcon}>🌤️</Text>
-          <Text style={[styles.sectionTitle, isDark && styles.textPrimaryDark]}>Barometric pressure</Text>
+          <Text style={[styles.sectionTitle, isDark && styles.textPrimaryDark]}>{t('health.pressure_title')}</Text>
           <InfoButton
-            title="Why pressure matters"
-            message="Research shows that drops in barometric pressure can trigger or worsen fibromyalgia pain, stiffness, and fatigue. The exact reason isn't fully understood, but changes in pressure may affect tissue inflammation and how pain signals are processed. Many FM patients notice they can 'feel the weather changing' before it happens."
+            title={t('health.pressure_info_title')}
+            message={t('health.pressure_info_message')}
           />
         </View>
         <Text style={[styles.pressureValue, { color: levelColor }]}>{hpa} hPa</Text>
@@ -749,7 +699,7 @@ export default function HomeScreen() {
                 <Text style={[styles.todaySummaryValue, { color: painDotColor(todayLog.pain_score) }]}>
                   {todayLog.pain_score}
                 </Text>
-                <Text style={[styles.todaySummaryItemLabel, isDark && styles.textSecDark]}>Pain</Text>
+                <Text style={[styles.todaySummaryItemLabel, isDark && styles.textSecDark]}>{t('home.pain')}</Text>
               </View>
               <View style={[styles.todaySummaryDivider, isDark && styles.todaySummaryDividerDark]} />
               <View style={styles.todaySummaryItem}>
@@ -758,14 +708,14 @@ export default function HomeScreen() {
                 }]}>
                   {todayLog.fatigue_score}
                 </Text>
-                <Text style={[styles.todaySummaryItemLabel, isDark && styles.textSecDark]}>Fatigue</Text>
+                <Text style={[styles.todaySummaryItemLabel, isDark && styles.textSecDark]}>{t('home.fatigue')}</Text>
               </View>
               <View style={[styles.todaySummaryDivider, isDark && styles.todaySummaryDividerDark]} />
               <View style={styles.todaySummaryItem}>
                 <Text style={styles.todaySummaryMoodEmoji}>
                   {todayLog.mood === 'great' ? '😄' : todayLog.mood === 'good' ? '🙂' : todayLog.mood === 'okay' ? '😐' : todayLog.mood === 'low' ? '😔' : todayLog.mood === 'very_low' ? '😞' : '—'}
                 </Text>
-                <Text style={[styles.todaySummaryItemLabel, isDark && styles.textSecDark]}>Mood</Text>
+                <Text style={[styles.todaySummaryItemLabel, isDark && styles.textSecDark]}>{t('home.mood')}</Text>
               </View>
               {tracksMeds && (
                 <>
@@ -776,7 +726,7 @@ export default function HomeScreen() {
                     }]}>
                       {todayLog.medications_taken === 'yes' ? '✓' : todayLog.medications_taken === 'partial' ? '~' : '✗'}
                     </Text>
-                    <Text style={[styles.todaySummaryItemLabel, isDark && styles.textSecDark]}>Meds</Text>
+                    <Text style={[styles.todaySummaryItemLabel, isDark && styles.textSecDark]}>{t('home.meds')}</Text>
                   </View>
                 </>
               )}
@@ -784,53 +734,80 @@ export default function HomeScreen() {
           </View>
         ) : null}
 
-        {/* Health data — shown after logging, when Apple Health is connected */}
-        {todayLogged && healthConnected && healthData && (
+        {/* Combined health card — activity (steps/sleep/HRV) + overnight recovery signals */}
+        {((todayLogged && healthConnected && healthData) || recoveryData) && (
           <View style={[styles.healthCard, isDark && styles.healthCardDark]}>
             <Text style={[styles.sectionTitle, isDark && styles.textPrimaryDark]}>
               {t('health.today_context')}
             </Text>
-            <View style={styles.todaySummaryRow}>
-              {healthData.steps !== null && (
-                <>
+            {todayLogged && healthConnected && healthData && (
+              <View style={styles.todaySummaryRow}>
+                {healthData.steps !== null && (
+                  <>
+                    <View style={styles.todaySummaryItem}>
+                      <Text style={[styles.healthStatValue, { color: stepsColor(healthData.steps) }]}>
+                        {(healthData.steps / 1000).toFixed(1)}k
+                      </Text>
+                      <Text style={[styles.todaySummaryItemLabel, isDark && styles.textSecDark]}>{t('health.steps')}</Text>
+                    </View>
+                    {(healthData.sleep_duration !== null || healthData.hrv !== null) && (
+                      <View style={[styles.todaySummaryDivider, isDark && styles.todaySummaryDividerDark]} />
+                    )}
+                  </>
+                )}
+                {healthData.sleep_duration !== null && (
+                  <>
+                    <View style={styles.todaySummaryItem}>
+                      <Text style={[styles.healthStatValue, { color: sleepColor(healthData.sleep_duration) }]}>
+                        {healthData.sleep_duration}h
+                      </Text>
+                      <Text style={[styles.todaySummaryItemLabel, isDark && styles.textSecDark]}>{t('health.sleep')}</Text>
+                    </View>
+                    {healthData.hrv !== null && (
+                      <View style={[styles.todaySummaryDivider, isDark && styles.todaySummaryDividerDark]} />
+                    )}
+                  </>
+                )}
+                {healthData.hrv !== null && (
                   <View style={styles.todaySummaryItem}>
-                    <Text style={[styles.healthStatValue, { color: stepsColor(healthData.steps) }]}>
-                      {(healthData.steps / 1000).toFixed(1)}k
+                    <Text style={[styles.healthStatValue, { color: hrvColor(healthData.hrv) }]}>
+                      {healthData.hrv}
                     </Text>
-                    <Text style={[styles.todaySummaryItemLabel, isDark && styles.textSecDark]}>Steps</Text>
+                    <Text style={[styles.todaySummaryItemLabel, isDark && styles.textSecDark]}>{t('health.hrv')}</Text>
                   </View>
-                  {(healthData.sleep_duration !== null || healthData.hrv !== null) && (
-                    <View style={[styles.todaySummaryDivider, isDark && styles.todaySummaryDividerDark]} />
-                  )}
-                </>
-              )}
-              {healthData.sleep_duration !== null && (
-                <>
-                  <View style={styles.todaySummaryItem}>
-                    <Text style={[styles.healthStatValue, { color: sleepColor(healthData.sleep_duration) }]}>
-                      {healthData.sleep_duration}h
-                    </Text>
-                    <Text style={[styles.todaySummaryItemLabel, isDark && styles.textSecDark]}>Sleep</Text>
-                  </View>
-                  {healthData.hrv !== null && (
-                    <View style={[styles.todaySummaryDivider, isDark && styles.todaySummaryDividerDark]} />
-                  )}
-                </>
-              )}
-              {healthData.hrv !== null && (
-                <View style={styles.todaySummaryItem}>
-                  <Text style={[styles.healthStatValue, { color: hrvColor(healthData.hrv) }]}>
-                    {healthData.hrv}
-                  </Text>
-                  <Text style={[styles.todaySummaryItemLabel, isDark && styles.textSecDark]}>HRV</Text>
+                )}
+              </View>
+            )}
+            {todayLogged && healthConnected && healthData && recoveryData && (
+              <View style={[styles.healthRowDivider, isDark && styles.healthRowDividerDark]} />
+            )}
+            {recoveryData && (() => {
+              const items: { label: string; value: string; color: string }[] = [];
+              if (recoveryData.oxygen_saturation !== null)
+                items.push({ label: t('health.spo2'), value: `${recoveryData.oxygen_saturation}%`, color: spo2Color(recoveryData.oxygen_saturation) });
+              if (recoveryData.respiratory_rate !== null)
+                items.push({ label: t('health.resp_rate'), value: `${recoveryData.respiratory_rate}/min`, color: respColor(recoveryData.respiratory_rate) });
+              if (recoveryData.mindful_minutes !== null && recoveryData.mindful_minutes > 0)
+                items.push({ label: t('health.mindful'), value: `${recoveryData.mindful_minutes}m`, color: Colors.success });
+              if (items.length === 0) return null;
+              return (
+                <View style={styles.todaySummaryRow}>
+                  {items.map((item, i) => (
+                    <React.Fragment key={item.label}>
+                      <View style={styles.todaySummaryItem}>
+                        <Text style={[styles.healthStatValue, { color: item.color }]}>{item.value}</Text>
+                        <Text style={[styles.todaySummaryItemLabel, isDark && styles.textSecDark]}>{item.label}</Text>
+                      </View>
+                      {i < items.length - 1 && (
+                        <View style={[styles.todaySummaryDivider, isDark && styles.todaySummaryDividerDark]} />
+                      )}
+                    </React.Fragment>
+                  ))}
                 </View>
-              )}
-            </View>
+              );
+            })()}
           </View>
         )}
-
-        {/* Recovery signals — SpO2, respiratory rate, mindfulness */}
-        {recoveryData && <RecoverySignalsCard data={recoveryData} isDark={isDark} />}
 
         {/* Weather / barometric pressure */}
         {!pressureLoading && (
@@ -1433,6 +1410,14 @@ const styles = StyleSheet.create({
   healthCardDark: {
     backgroundColor: Colors.surfaceDark,
     borderColor: Colors.borderDark,
+  },
+  healthRowDivider: {
+    height: 1,
+    backgroundColor: Colors.border,
+    marginVertical: 4,
+  },
+  healthRowDividerDark: {
+    backgroundColor: Colors.borderDark,
   },
   healthStatValue: {
     fontSize: FontSize.xxl,

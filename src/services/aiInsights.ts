@@ -160,7 +160,7 @@ function buildDataSummary(
   // Diet summary
   const TRIGGER_LABELS: Record<string, string> = {
     alcohol: 'Alcohol', caffeine: 'Caffeine', processed: 'Processed food',
-    high_sugar: 'High sugar', dairy: 'Dairy', red_meat: 'Red meat', nightshades: 'Nightshades',
+    high_sugar: 'High sugar', dairy: 'Dairy', gluten: 'Gluten', nightshades: 'Nightshades', msg_additives: 'MSG/additives',
   };
   let dietSection = '';
   const dietLogs = logs.filter((l) => l.diet_quality !== null);
