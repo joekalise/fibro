@@ -143,102 +143,113 @@ function EditFlareModal({ visible, flare, onClose, onSave, onDelete, isDark, loc
 
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
-      <View style={styles.modalOverlay}>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        style={styles.modalOverlay}
+      >
         <View style={[styles.modalSheet, isDark && styles.modalSheetDark]}>
           <View style={styles.modalHandle} />
-          <Text style={[styles.modalTitle, isDark && styles.textPrimaryDark]}>Edit flare</Text>
+          <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+            <Text style={[styles.modalTitle, isDark && styles.textPrimaryDark]}>Edit flare</Text>
 
-          <Text style={[styles.modalSectionLabel, isDark && styles.textPrimaryDark]}>
-            {t('flares.flare_severity')}
-          </Text>
-          <View style={styles.chipRow}>
-            {SEVERITIES.map(sev => {
-              const selected = severity === sev;
-              const color = SEVERITY_COLOR[sev];
-              return (
-                <TouchableOpacity
-                  key={sev}
-                  onPress={() => setSeverity(sev)}
-                  style={[styles.chip, isDark && styles.chipDark, selected && { backgroundColor: color + '22', borderColor: color }]}
-                  activeOpacity={0.7}
-                >
-                  <Text style={[styles.chipText, isDark && styles.textSecDark, selected && { color, fontWeight: '700' }]}>
-                    {t(`flares.severity_${sev}`)}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-
-          <Text style={[styles.modalSectionLabel, isDark && styles.textPrimaryDark]}>Location</Text>
-          <View style={styles.chipRow}>
-            {locationOptions.map(loc => {
-              const selected = areas.includes(loc.value);
-              return (
-                <TouchableOpacity
-                  key={loc.value}
-                  onPress={() => toggleArea(loc.value)}
-                  style={[styles.chip, isDark && styles.chipDark, selected && styles.chipSelected]}
-                  activeOpacity={0.7}
-                >
-                  <Text style={[styles.chipText, isDark && styles.textSecDark, selected && styles.chipTextSelected]}>
-                    {loc.label}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-
-          <Text style={[styles.modalSectionLabel, isDark && styles.textPrimaryDark]}>Dates</Text>
-          <View style={styles.dateRow}>
-            <View style={{ flex: 1 }}>
-              <Text style={[styles.dateInputLabel, isDark && styles.textSecDark]}>Start</Text>
-              <TextInput
-                style={[styles.dateInput, isDark && styles.notesInputDark]}
-                value={startDate}
-                onChangeText={setStartDate}
-                placeholder="YYYY-MM-DD"
-                placeholderTextColor={isDark ? Colors.textSecondaryDark : Colors.textSecondary}
-                keyboardType="numbers-and-punctuation"
-              />
+            <Text style={[styles.modalSectionLabel, isDark && styles.textPrimaryDark]}>
+              {t('flares.flare_severity')}
+            </Text>
+            <View style={styles.chipRow}>
+              {SEVERITIES.map(sev => {
+                const selected = severity === sev;
+                const color = SEVERITY_COLOR[sev];
+                return (
+                  <TouchableOpacity
+                    key={sev}
+                    onPress={() => setSeverity(sev)}
+                    style={[styles.chip, isDark && styles.chipDark, selected && { backgroundColor: color + '22', borderColor: color }]}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={[styles.chipText, isDark && styles.textSecDark, selected && { color, fontWeight: '700' }]}>
+                      {t(`flares.severity_${sev}`)}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
             </View>
-            <View style={{ flex: 1 }}>
-              <Text style={[styles.dateInputLabel, isDark && styles.textSecDark]}>End (leave blank if ongoing)</Text>
-              <TextInput
-                style={[styles.dateInput, isDark && styles.notesInputDark]}
-                value={endDate}
-                onChangeText={setEndDate}
-                placeholder="YYYY-MM-DD"
-                placeholderTextColor={isDark ? Colors.textSecondaryDark : Colors.textSecondary}
-                keyboardType="numbers-and-punctuation"
-              />
+
+            <Text style={[styles.modalSectionLabel, isDark && styles.textPrimaryDark]}>Location</Text>
+            <View style={styles.chipRow}>
+              {locationOptions.map(loc => {
+                const selected = areas.includes(loc.value);
+                return (
+                  <TouchableOpacity
+                    key={loc.value}
+                    onPress={() => toggleArea(loc.value)}
+                    style={[styles.chip, isDark && styles.chipDark, selected && styles.chipSelected]}
+                    activeOpacity={0.7}
+                  >
+                    <Text style={[styles.chipText, isDark && styles.textSecDark, selected && styles.chipTextSelected]}>
+                      {loc.label}
+                    </Text>
+                  </TouchableOpacity>
+                );
+              })}
             </View>
-          </View>
 
-          <Text style={[styles.modalSectionLabel, isDark && styles.textPrimaryDark]}>
-            {t('flares.notes')}
-          </Text>
-          <TextInput
-            style={[styles.notesInput, isDark && styles.notesInputDark]}
-            placeholder={t('flares.notes_placeholder')}
-            placeholderTextColor={isDark ? Colors.textSecondaryDark : Colors.textSecondary}
-            value={notes}
-            onChangeText={setNotes}
-            multiline
-            numberOfLines={3}
-            textAlignVertical="top"
-          />
+            <Text style={[styles.modalSectionLabel, isDark && styles.textPrimaryDark]}>Dates</Text>
+            <View style={styles.dateRow}>
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.dateInputLabel, isDark && styles.textSecDark]}>Start</Text>
+                <TextInput
+                  style={[styles.dateInput, isDark && styles.notesInputDark]}
+                  value={startDate}
+                  onChangeText={setStartDate}
+                  placeholder="YYYY-MM-DD"
+                  placeholderTextColor={isDark ? Colors.textSecondaryDark : Colors.textSecondary}
+                  keyboardType="numbers-and-punctuation"
+                  returnKeyType="done"
+                  blurOnSubmit
+                />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={[styles.dateInputLabel, isDark && styles.textSecDark]}>End (leave blank if ongoing)</Text>
+                <TextInput
+                  style={[styles.dateInput, isDark && styles.notesInputDark]}
+                  value={endDate}
+                  onChangeText={setEndDate}
+                  placeholder="YYYY-MM-DD"
+                  placeholderTextColor={isDark ? Colors.textSecondaryDark : Colors.textSecondary}
+                  keyboardType="numbers-and-punctuation"
+                  returnKeyType="done"
+                  blurOnSubmit
+                />
+              </View>
+            </View>
 
-          <Button label={t('common.save_changes')} onPress={handleSave} isLoading={isSaving} style={styles.modalConfirmButton} />
-          <Button
-            label={t('common.delete_entry')}
-            onPress={handleDelete}
-            variant="ghost"
-            textStyle={{ color: Colors.error }}
-          />
-          <Button label={t('common.cancel')} onPress={onClose} variant="ghost" />
+            <Text style={[styles.modalSectionLabel, isDark && styles.textPrimaryDark]}>
+              {t('flares.notes')}
+            </Text>
+            <TextInput
+              style={[styles.notesInput, isDark && styles.notesInputDark]}
+              placeholder={t('flares.notes_placeholder')}
+              placeholderTextColor={isDark ? Colors.textSecondaryDark : Colors.textSecondary}
+              value={notes}
+              onChangeText={setNotes}
+              multiline
+              numberOfLines={3}
+              textAlignVertical="top"
+              returnKeyType="done"
+              blurOnSubmit
+            />
+
+            <Button label={t('common.save_changes')} onPress={handleSave} isLoading={isSaving} style={styles.modalConfirmButton} />
+            <Button
+              label={t('common.delete_entry')}
+              onPress={handleDelete}
+              variant="ghost"
+              textStyle={{ color: Colors.error }}
+            />
+            <Button label={t('common.cancel')} onPress={onClose} variant="ghost" />
+          </ScrollView>
         </View>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }
