@@ -32,7 +32,7 @@ export function computeFlareRisk(
 ): FlareRisk {
   // Already in a flare — no separate warning needed
   if (activeFlare) return { level: 'none', signals: [] };
-  if (logs.length < 1) return { level: 'none', signals: [] };
+  if (logs.length < 3) return { level: 'none', signals: [] };
 
   const sortedLogs = [...logs].sort((a, b) => a.date.localeCompare(b.date));
   const recentLogs = sortedLogs.slice(-3);
@@ -161,8 +161,8 @@ export function computeFlareRisk(
     if (recovery.respiratory_rate > 18) signals.push('elevated_resp_rate');
   }
 
-  if (signals.length >= 2) return { level: 'warning', signals };
-  if (signals.length >= 1) return { level: 'watch', signals };
+  if (signals.length >= 3) return { level: 'warning', signals };
+  if (signals.length >= 2) return { level: 'watch', signals };
   return { level: 'none', signals };
 }
 
