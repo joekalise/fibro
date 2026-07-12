@@ -1132,7 +1132,7 @@ export default function ProfileScreen() {
                   <Text style={[styles.settingsRowLabel, { color: textPrimary }]}>About me</Text>
                   {!editingAiContext && (
                     <Text style={[styles.settingsRowSub, { color: textSecondary }]} numberOfLines={1}>
-                      {aiContext || 'Personalise your AI's understanding'}
+                      {aiContext || "Personalise your AI's understanding"}
                     </Text>
                   )}
                 </View>
