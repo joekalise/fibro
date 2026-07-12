@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Alert } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { HealthData } from '@/types';
 import {
   isHealthKitAvailable,
@@ -11,6 +12,8 @@ import {
 } from '@/services/healthKit';
 import { saveHealthData, getTodayHealthData } from '@/services/database';
 import { useAuth } from '@/contexts/AuthContext';
+
+const healthCacheKey = (date: string) => `@fibro_health_cache_${date}`;
 
 export interface UseHealthDataResult {
   isAvailable: boolean;
@@ -29,6 +32,19 @@ export function useHealthData(): UseHealthDataResult {
   const [isConnected, setIsConnected] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [todayData, setTodayData] = useState<HealthSnapshot | null>(null);
+
+  // Load local cache immediately — no auth dependency, shows data before user resolves
+  useEffect(() => {
+    const today = new Date().toISOString().split('T')[0];
+    AsyncStorage.getItem(healthCacheKey(today))
+      .then((raw) => {
+        if (raw) {
+          setTodayData(JSON.parse(raw) as HealthSnapshot);
+          setIsConnected(true);
+        }
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -64,6 +80,7 @@ export function useHealthData(): UseHealthDataResult {
           if (hasData) {
             setTodayData(fresh);
             await saveHealthData(fresh as Omit<HealthData, 'id'>);
+            AsyncStorage.setItem(healthCacheKey(today), JSON.stringify(fresh)).catch(() => {});
           }
         } catch {}
       } finally {
@@ -114,6 +131,8 @@ export function useHealthData(): UseHealthDataResult {
     await disconnectHealth();
     setIsConnected(false);
     setTodayData(null);
+    const today = new Date().toISOString().split('T')[0];
+    AsyncStorage.removeItem(healthCacheKey(today)).catch(() => {});
   }, []);
 
   const recheck = useCallback(async () => {
