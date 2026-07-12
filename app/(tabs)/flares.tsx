@@ -492,6 +492,13 @@ export default function FlaresScreen() {
                   {activeFlare.areas_affected.map(a => a.replace(/_/g, ' ')).join(', ')}
                 </Text>
               )}
+              <TouchableOpacity
+                onPress={() => setEditingFlare(activeFlare)}
+                activeOpacity={0.7}
+                style={styles.activeFlareEditLink}
+              >
+                <Text style={[styles.historyEditLink, { color: Colors.primary }]}>Edit</Text>
+              </TouchableOpacity>
               <Button
                 label={t('flares.end_flare')}
                 onPress={handleEndFlare}
@@ -663,6 +670,11 @@ const styles = StyleSheet.create({
   endFlareButton: {
     marginTop: Spacing.xs,
     borderColor: Colors.error,
+  },
+  activeFlareEditLink: {
+    alignSelf: 'flex-end',
+    marginTop: Spacing.xs,
+    paddingVertical: 4,
   },
 
   screenTitleRow: {
