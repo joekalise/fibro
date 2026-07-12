@@ -466,6 +466,7 @@ function AddMedicationModal({
   profileMeds,
 }: AddMedicationModalProps) {
   const { height: screenHeight } = useWindowDimensions();
+  const { top: topInset } = useSafeAreaInsets();
   const { t } = useTranslation();
   const [name, setName] = useState('');
   const [dose, setDose] = useState('');
@@ -537,7 +538,7 @@ function AddMedicationModal({
         <View
           style={[
             styles.modalContainer,
-            { backgroundColor: cardBg, borderColor: cardBorder, maxHeight: screenHeight * 0.88 },
+            { backgroundColor: cardBg, borderColor: cardBorder, maxHeight: screenHeight - topInset - Spacing.md },
           ]}
         >
           <Text style={[styles.modalTitle, { color: textPrimary }]}>
@@ -655,7 +656,9 @@ function AddMedicationModal({
             style={{ width: '100%', height: 150 }}
           />
 
-          {/* Actions */}
+          </ScrollView>
+
+          {/* Actions — outside ScrollView so keyboard never buries them */}
           <View style={styles.modalActions}>
             <TouchableOpacity
               onPress={handleClose}
@@ -685,7 +688,6 @@ function AddMedicationModal({
               )}
             </TouchableOpacity>
           </View>
-          </ScrollView>
         </View>
       </KeyboardAvoidingView>
     </Modal>
@@ -1369,29 +1371,24 @@ export default function ProfileScreen() {
             <Text style={[styles.sectionLabel, { color: textSecondary }]}>Health data</Text>
             <View style={[styles.settingsCard, { backgroundColor: cardBg, borderColor: cardBorder }]}>
               <View style={styles.settingsRow}>
-                <Text style={[styles.settingsRowLabel, { color: textPrimary }]}>
-                  {Platform.OS === 'ios' ? 'Apple Health' : 'Health Connect'}
-                </Text>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.sm }}>
-                  {healthConnected && (
-                    <View style={[styles.healthConnectedBadge, { backgroundColor: Colors.success + '22' }]}>
-                      <Text style={[styles.healthConnectedBadgeText, { color: Colors.success }]}>Connected</Text>
-                    </View>
-                  )}
-                  <TouchableOpacity
-                    onPress={healthConnected ? disconnectHealthData : connectHealth}
-                    disabled={healthLoading}
-                    activeOpacity={0.8}
-                  >
-                    {healthLoading ? (
-                      <ActivityIndicator color={Colors.primary} size="small" />
-                    ) : (
-                      <Text style={[styles.healthSimpleAction, { color: healthConnected ? Colors.error : Colors.primary }]}>
-                        {healthConnected ? t('health.disconnect') : t('health.connect')}
-                      </Text>
-                    )}
-                  </TouchableOpacity>
+                <View style={styles.settingsRowLeft}>
+                  <Text style={[styles.settingsRowLabel, { color: textPrimary }]}>
+                    {Platform.OS === 'ios' ? 'Apple Health' : 'Health Connect'}
+                  </Text>
                 </View>
+                <TouchableOpacity
+                  onPress={healthConnected ? disconnectHealthData : connectHealth}
+                  disabled={healthLoading}
+                  activeOpacity={0.8}
+                >
+                  {healthLoading ? (
+                    <ActivityIndicator color={Colors.primary} size="small" />
+                  ) : (
+                    <Text style={[styles.settingsRowValue, { color: healthConnected ? Colors.error : Colors.primary }]}>
+                      {healthConnected ? t('health.disconnect') : t('health.connect')}
+                    </Text>
+                  )}
+                </TouchableOpacity>
               </View>
             </View>
           </>

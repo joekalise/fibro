@@ -577,7 +577,7 @@ function FiqCard({ isDark, userId }: { isDark: boolean; userId: string }) {
           <View style={styles.fiqCompactRow}>
             <View style={styles.fiqCompactLeft}>
               <Text style={[styles.fiqCompactLabel, { color: textSecondary }]}>FIQ Score</Text>
-              <Text style={[styles.fiqCompactScore, { color: textPrimary }]}>
+              <Text style={[styles.fiqCompactScore, { color: interp!.color }]}>
                 {latest.score.toFixed(0)}
                 <Text style={[styles.fiqCompactLabel, { color: textSecondary }]}>/100</Text>
               </Text>
