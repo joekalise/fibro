@@ -14,8 +14,9 @@ import {
   Linking,
   KeyboardAvoidingView,
   Platform,
+  useWindowDimensions,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTranslation } from 'react-i18next';
@@ -284,6 +285,7 @@ function EditSectionHeader({ label, color }: { label: string; color: string }) {
 
 function ProfileEditModal({ visible, onClose, profile, onSave, isDark }: ProfileEditModalProps) {
   const { t } = useTranslation();
+  const { top: topInset } = useSafeAreaInsets();
   const bg = isDark ? Colors.backgroundDark : Colors.background;
   const cardBorder = isDark ? Colors.borderDark : Colors.border;
   const textPrimary = isDark ? Colors.textPrimaryDark : Colors.textPrimary;
@@ -348,7 +350,7 @@ function ProfileEditModal({ visible, onClose, profile, onSave, isDark }: Profile
 
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
-      <SafeAreaView style={{ flex: 1, backgroundColor: bg }}>
+      <View style={{ flex: 1, backgroundColor: bg, paddingTop: topInset }}>
         <View style={[styles.editModalHeader, { borderBottomColor: cardBorder }]}>
           <Text style={[styles.editModalTitle, { color: textPrimary }]}>Edit profile</Text>
           <TouchableOpacity onPress={onClose} activeOpacity={0.8}>
@@ -434,7 +436,7 @@ function ProfileEditModal({ visible, onClose, profile, onSave, isDark }: Profile
             )}
           </TouchableOpacity>
         </ScrollView>
-      </SafeAreaView>
+      </View>
     </Modal>
   );
 }
@@ -463,6 +465,7 @@ function AddMedicationModal({
   isDark,
   profileMeds,
 }: AddMedicationModalProps) {
+  const { height: screenHeight } = useWindowDimensions();
   const { t } = useTranslation();
   const [name, setName] = useState('');
   const [dose, setDose] = useState('');
@@ -531,16 +534,16 @@ function AddMedicationModal({
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.modalOverlay}
       >
-        <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
         <View
           style={[
             styles.modalContainer,
-            { backgroundColor: cardBg, borderColor: cardBorder },
+            { backgroundColor: cardBg, borderColor: cardBorder, maxHeight: screenHeight * 0.88 },
           ]}
         >
           <Text style={[styles.modalTitle, { color: textPrimary }]}>
             {t('medications.add_title')}
           </Text>
+          <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
 
           {/* Quick-fill from profile treatment */}
           {profileMeds && profileMeds.filter((m) => m !== 'no_medication').length > 0 && (
@@ -682,8 +685,8 @@ function AddMedicationModal({
               )}
             </TouchableOpacity>
           </View>
+          </ScrollView>
         </View>
-        </ScrollView>
       </KeyboardAvoidingView>
     </Modal>
   );
@@ -1112,32 +1115,31 @@ export default function ProfileScreen() {
             onPress={() => setShowEditProfile(true)}
             activeOpacity={0.7}
           >
-            <View style={styles.settingsRowLeft}>
-              <Text style={[styles.settingsRowLabel, { color: textPrimary }]}>My fibromyalgia</Text>
-              <Text style={[styles.settingsRowSub, { color: textSecondary }]} numberOfLines={1}>
-                {profileRowSubtitle || 'Tap to fill in your profile'}
-              </Text>
-            </View>
+            <Text style={[styles.settingsRowLabel, { color: textPrimary }]}>Edit profile</Text>
             <Text style={[styles.chevron, { color: textSecondary }]}>›</Text>
           </TouchableOpacity>
 
-          <View style={[styles.rowDivider, { backgroundColor: cardBorder }]} />
+          {isSubscribed && (
+            <>
+              <View style={[styles.rowDivider, { backgroundColor: cardBorder }]} />
 
-          <TouchableOpacity
-            style={styles.settingsRow}
-            onPress={() => setEditingAiContext(!editingAiContext)}
-            activeOpacity={0.7}
-          >
-            <View style={styles.settingsRowLeft}>
-              <Text style={[styles.settingsRowLabel, { color: textPrimary }]}>AI context</Text>
-              {!editingAiContext && (
-                <Text style={[styles.settingsRowSub, { color: textSecondary }]} numberOfLines={1}>
-                  {aiContext || t('profile.ai_context_placeholder')}
-                </Text>
-              )}
-            </View>
-            {!editingAiContext && <Text style={[styles.chevron, { color: textSecondary }]}>›</Text>}
-          </TouchableOpacity>
+              <TouchableOpacity
+                style={styles.settingsRow}
+                onPress={() => setEditingAiContext(!editingAiContext)}
+                activeOpacity={0.7}
+              >
+                <View style={styles.settingsRowLeft}>
+                  <Text style={[styles.settingsRowLabel, { color: textPrimary }]}>About me</Text>
+                  {!editingAiContext && (
+                    <Text style={[styles.settingsRowSub, { color: textSecondary }]} numberOfLines={1}>
+                      {aiContext || 'Personalise your AI's understanding'}
+                    </Text>
+                  )}
+                </View>
+                {!editingAiContext && <Text style={[styles.chevron, { color: textSecondary }]}>›</Text>}
+              </TouchableOpacity>
+            </>
+          )}
 
           {editingAiContext && (
             <View style={styles.aiContextExpanded}>
@@ -1238,14 +1240,9 @@ export default function ProfileScreen() {
         <View style={[styles.settingsCard, { backgroundColor: cardBg, borderColor: cardBorder }]}>
           {/* Daily check-in */}
           <View style={styles.settingsRow}>
-            <View style={styles.settingsRowLeft}>
-              <Text style={[styles.settingsRowLabel, { color: textPrimary }]}>
-                {t('profile.daily_reminder')}
-              </Text>
-              <Text style={[styles.settingsRowSub, { color: textSecondary }]}>
-                {profile?.notification_time ?? '20:00'}
-              </Text>
-            </View>
+            <Text style={[styles.settingsRowLabel, { color: textPrimary }]}>
+              {t('profile.daily_reminder')}
+            </Text>
             <Switch
               value={reminderEnabled}
               onValueChange={handleToggleReminder}
@@ -1351,15 +1348,19 @@ export default function ProfileScreen() {
             ))
           )}
 
-          {/* Add medication */}
-          <View style={[styles.rowDivider, { backgroundColor: cardBorder }]} />
-          <TouchableOpacity
-            onPress={() => setShowAddMed(true)}
-            activeOpacity={0.7}
-            style={styles.settingsRow}
-          >
-            <Text style={[styles.settingsRowLabel, { color: Colors.primary }]}>+ Add medication</Text>
-          </TouchableOpacity>
+          {/* Add medication — only visible when tracking is on */}
+          {tracksMedication && (
+            <>
+              <View style={[styles.rowDivider, { backgroundColor: cardBorder }]} />
+              <TouchableOpacity
+                onPress={() => setShowAddMed(true)}
+                activeOpacity={0.7}
+                style={styles.settingsRow}
+              >
+                <Text style={[styles.settingsRowLabel, { color: Colors.primary }]}>+ Add medication</Text>
+              </TouchableOpacity>
+            </>
+          )}
         </View>
 
         {/* ── Health data ──────────────────────────────────────────────────── */}
@@ -1410,8 +1411,8 @@ export default function ProfileScreen() {
             />
           </View>
           <View style={[styles.rowDivider, { backgroundColor: cardBorder }]} />
-          <View style={[styles.settingsRow, { flexWrap: 'wrap', gap: Spacing.xs }]}>
-            <Text style={[styles.settingsRowSub, { color: textSecondary }]}>From last appointment:</Text>
+          <View style={[styles.settingsRow, { paddingVertical: Spacing.sm }]}>
+            <Text style={[styles.settingsRowSub, { color: textSecondary, flex: 1 }]}>From last appointment:</Text>
             {editingReportFromDate ? (
               <TextInput
                 style={[styles.reportDateInput, { color: textPrimary, borderColor: Colors.primary }]}
@@ -1427,7 +1428,7 @@ export default function ProfileScreen() {
             ) : (
               <TouchableOpacity onPress={() => setEditingReportFromDate(true)} activeOpacity={0.7}>
                 <Text style={[styles.reportDateValue, { color: reportFromDate ? textPrimary : Colors.primary }]}>
-                  {reportFromDate || 'Last 12 months (tap to set)'}
+                  {reportFromDate || 'Last 12 months'}
                 </Text>
               </TouchableOpacity>
             )}
@@ -1759,7 +1760,7 @@ const styles = StyleSheet.create({
   profileHeader: {
     alignItems: 'center',
     paddingVertical: Spacing.lg,
-    gap: Spacing.xs,
+    gap: Spacing.sm,
     marginBottom: Spacing.sm,
   },
   settingsCard: {

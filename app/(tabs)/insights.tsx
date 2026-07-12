@@ -575,19 +575,24 @@ function FiqCard({ isDark, userId }: { isDark: boolean; userId: string }) {
 
         {latest ? (
           <View style={styles.fiqCompactRow}>
-            <View style={{ flex: 1 }}>
+            <View style={styles.fiqCompactLeft}>
               <Text style={[styles.fiqCompactLabel, { color: textSecondary }]}>FIQ Score</Text>
-              <Text style={[styles.fiqCompactScore, { color: textPrimary }]}>{latest.score.toFixed(0)}<Text style={[styles.fiqCompactLabel, { color: textSecondary }]}>/100</Text></Text>
+              <Text style={[styles.fiqCompactScore, { color: textPrimary }]}>
+                {latest.score.toFixed(0)}
+                <Text style={[styles.fiqCompactLabel, { color: textSecondary }]}>/100</Text>
+              </Text>
+            </View>
+            <View style={styles.fiqCompactRight}>
               <Text style={[styles.fiqCompactInterp, { color: interp!.color }]}>{interp!.label}</Text>
               <Text style={[styles.fiqCompactDate, { color: textSecondary }]}>
                 {new Date(latest.date + 'T12:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
               </Text>
+              {canRetake && (
+                <TouchableOpacity onPress={() => setShowModal(true)} activeOpacity={0.8} style={[styles.fiqRetakeBtn, { borderColor: Colors.primary, marginTop: Spacing.xs }]}>
+                  <Text style={[styles.fiqRetakeBtnText, { color: Colors.primary }]}>Retake</Text>
+                </TouchableOpacity>
+              )}
             </View>
-            {canRetake && (
-              <TouchableOpacity onPress={() => setShowModal(true)} activeOpacity={0.8} style={[styles.fiqRetakeBtn, { borderColor: Colors.primary }]}>
-                <Text style={[styles.fiqRetakeBtnText, { color: Colors.primary }]}>Retake</Text>
-              </TouchableOpacity>
-            )}
           </View>
         ) : (
           <>
@@ -1682,7 +1687,14 @@ const styles = StyleSheet.create({
   fiqCompactRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: Spacing.sm,
+    justifyContent: 'space-between',
+    paddingTop: Spacing.xs,
+  },
+  fiqCompactLeft: {
+    flex: 1,
+  },
+  fiqCompactRight: {
+    alignItems: 'flex-end',
   },
   fiqCompactLabel: {
     fontSize: FontSize.xs,
@@ -1693,7 +1705,7 @@ const styles = StyleSheet.create({
     fontWeight: '900',
   },
   fiqCompactInterp: {
-    fontSize: FontSize.xs,
+    fontSize: FontSize.sm,
     fontWeight: '600',
   },
   fiqCompactDate: {
@@ -1701,6 +1713,8 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   fiqRetakeBtn: {
+    borderWidth: 1,
+    borderRadius: BorderRadius.sm,
     paddingHorizontal: Spacing.sm,
     paddingVertical: Spacing.xs,
   },

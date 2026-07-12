@@ -398,7 +398,7 @@ export default {
     share_report_generating: 'Building your report...',
     subscription_card_title: 'Fibro Premium',
     subscription_card_price: '€10 / month after free trial',
-    subscription_active: 'Fibro Premium ✓',
+    subscription_active: 'Fibro Premium',
     subscription_manage: 'Manage subscription',
     subscription_restore: 'Restore purchases',
     purchase_unavailable: 'Purchases are not available right now. Please try again later.',
