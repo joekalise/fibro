@@ -267,7 +267,7 @@ function FlareHistoryItem({ flare, isDark, onEdit }: { flare: Flare; isDark: boo
       <View style={styles.historyItemHeader}>
         <Text style={[styles.historyDateRange, isDark && styles.textPrimaryDark]}>
           {formatDate(flare.start_date)}
-          {flare.end_date ? ` – ${formatDate(flare.end_date)}` : ''}
+          {flare.end_date ? ` to ${formatDate(flare.end_date)}` : ''}
         </Text>
         <View style={styles.historyItemActions}>
           <SeverityBadge severity={flare.severity} isDark={isDark} />

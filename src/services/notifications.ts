@@ -285,7 +285,7 @@ export async function evaluateAndSendNudges(
   const highActivityDays = recent.filter((l) => l.activity_level === 'high').length;
   if (highActivityDays >= 2) {
     const message =
-      "You've had a lot of high-activity days recently. Fibromyalgia often causes a delayed crash after exertion — consider building in a lighter day to stay ahead of it.";
+      "You've had a lot of high-activity days recently. Fibromyalgia often causes a delayed crash after exertion. Try to build in a lighter day to stay ahead of it.";
     await sendNudge('Pacing check', message);
     await saveNudgeToDb(userId, 'pacing', message);
     return;
@@ -295,7 +295,7 @@ export async function evaluateAndSendNudges(
   const sensitivityDays = recent.filter((l) => l.high_sensitivity_day === true).length;
   if (sensitivityDays >= 2) {
     const message =
-      "You've flagged high sensitivity over the past couple of days. Your nervous system may be overloaded — try reducing stimulation where you can and be gentle with yourself.";
+      "You've flagged high sensitivity over the past couple of days. Your nervous system may be overloaded. Try to reduce stimulation where you can and go easy on yourself.";
     await sendNudge('Sensitivity check', message);
     await saveNudgeToDb(userId, 'sensitivity', message);
     return;
@@ -305,7 +305,7 @@ export async function evaluateAndSendNudges(
   const unrefreshedDays = recent.filter((l) => l.woke_rested === false).length;
   if (unrefreshedDays >= 3) {
     const message =
-      "You've woken unrefreshed for several mornings in a row. Non-restorative sleep is one of fibromyalgia's biggest drivers — it's worth reviewing your sleep habits or mentioning it to your doctor.";
+      "You've woken unrefreshed for several mornings in a row. Non-restorative sleep is one of fibromyalgia's biggest drivers. It's worth reviewing your sleep habits or bringing it up with your doctor.";
     await sendNudge('Sleep quality check', message);
     await saveNudgeToDb(userId, 'unrefreshed_sleep', message);
     return;
@@ -315,7 +315,7 @@ export async function evaluateAndSendNudges(
   if (recovery?.oxygen_saturation !== null && recovery?.oxygen_saturation !== undefined) {
     if (recovery.oxygen_saturation < 94) {
       const message =
-        `Your overnight SpO₂ was ${recovery.oxygen_saturation}% — lower than the normal range. Poor sleep oxygenation can worsen fibromyalgia pain and fatigue. It may be worth mentioning to your doctor.`;
+        `Your overnight SpO₂ was ${recovery.oxygen_saturation}%, which is below the normal range. Poor sleep oxygenation can worsen fibromyalgia pain and fatigue. It may be worth mentioning to your doctor.`;
       await sendNudge('Sleep oxygen check', message);
       await saveNudgeToDb(userId, 'low_spo2', message);
       return;
@@ -326,7 +326,7 @@ export async function evaluateAndSendNudges(
   if (recovery?.respiratory_rate !== null && recovery?.respiratory_rate !== undefined) {
     if (recovery.respiratory_rate > 20) {
       const message =
-        `Your respiratory rate during sleep was ${recovery.respiratory_rate} breaths/min — higher than normal. This can indicate your nervous system is under stress, which is common during fibromyalgia flares.`;
+        `Your respiratory rate during sleep was ${recovery.respiratory_rate} breaths/min, which is higher than normal. This can be a sign that your nervous system is under stress, which is common during fibromyalgia flares.`;
       await sendNudge('Recovery check', message);
       await saveNudgeToDb(userId, 'elevated_resp_rate', message);
       return;
