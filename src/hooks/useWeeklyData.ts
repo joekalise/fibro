@@ -7,6 +7,8 @@ export interface ScoreBreakdown {
   base: number;
   painPoints: number;
   fatiguePoints: number;
+  brainFogPoints: number;
+  stiffnessPoints: number;
   flarePenalty: number;
   consistencyBonus: number;
   moodPoints: number;
@@ -47,6 +49,22 @@ function fatigueContribution(avgFatigue: number): number {
   return Math.round(-((avgFatigue - 3) / 7) * 30);
 }
 
+// Brain fog 0–3: small bonus. 4–10: increasing penalty (max -25).
+function brainFogContribution(avgFog: number): number {
+  if (avgFog <= 3) return Math.round((3 - avgFog) * 2);
+  return Math.round(-((avgFog - 3) / 7) * 25);
+}
+
+// Morning stiffness: stepped penalty per day, averaged across the week.
+function stiffnessToPoints(duration: string | null): number {
+  switch (duration) {
+    case 'over_2_hours': return -12;
+    case '1_2_hours':   return -7;
+    case '30_60':       return -3;
+    default:            return 0;
+  }
+}
+
 function activeFlarePenalty(flare: Flare | null): number {
   if (!flare) return 0;
   switch (flare.severity) {
@@ -72,9 +90,14 @@ function computeScore(
     ? logs.reduce((sum, l) => sum + medicationToPoints(l.medications_taken), 0) / count
     : 0;
 
+  const avgBrainFog = logs.reduce((sum, l) => sum + (l.brain_fog_score ?? 0), 0) / count;
+  const avgStiffnessPts = logs.reduce((sum, l) => sum + stiffnessToPoints(l.stiffness_duration), 0) / count;
+
   const base = 75;
   const painPts = painContribution(avgPain);
   const fatiguePts = fatigueContribution(avgFatigue);
+  const brainFogPts = brainFogContribution(avgBrainFog);
+  const stiffnessPts = Math.round(avgStiffnessPts);
   const flarePen = activeFlarePenalty(activeFlare);
   const consistencyBonus = Math.round((count / 7) * 8);
   const moodPts = Math.round(avgMoodRaw * 0.5);
@@ -90,7 +113,7 @@ function computeScore(
 
   const score = Math.round(
     Math.min(100, Math.max(0,
-      base + painPts + fatiguePts - flarePen + consistencyBonus + moodPts + medPts + sleepRestorationPts + sensitivityPts
+      base + painPts + fatiguePts + brainFogPts + stiffnessPts - flarePen + consistencyBonus + moodPts + medPts + sleepRestorationPts + sensitivityPts
     ))
   );
 
@@ -98,6 +121,8 @@ function computeScore(
     base,
     painPoints: painPts,
     fatiguePoints: fatiguePts,
+    brainFogPoints: brainFogPts,
+    stiffnessPoints: stiffnessPts,
     flarePenalty: flarePen,
     consistencyBonus,
     moodPoints: moodPts,
