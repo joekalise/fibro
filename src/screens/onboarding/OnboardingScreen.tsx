@@ -141,7 +141,7 @@ export function OnboardingScreen() {
       insights: [
         'Consistent daily tracking is one of the most powerful tools for understanding your fibromyalgia patterns.',
         'Many people with fibromyalgia find that sleep quality is closely linked to next-day pain and brain fog levels.',
-        'Pacing your activity — not too much, not too little — is one of the most effective tools for managing fibromyalgia.',
+        'Pacing your activity (not too much, not too little) is one of the most effective tools for managing fibromyalgia.',
       ],
       watch_summary:
         "Fibro will monitor your daily symptom patterns, sleep, and activity levels to help you spot trends before they become flares.",
@@ -729,7 +729,7 @@ export function OnboardingScreen() {
           </View>
           <View style={styles.mockChatBubbleAI}>
             <Text style={[styles.mockChatTextAI, isDark && styles.mockTextSec]}>
-              You slept 7.5h on average — on those nights, your pain scores dropped by ~35%. Your medication adherence was also perfect this week.
+              You slept 7.5h on average. On those nights, your pain scores dropped by around 35%. Your medication adherence was also perfect this week.
             </Text>
           </View>
 

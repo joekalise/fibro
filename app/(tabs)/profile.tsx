@@ -70,14 +70,14 @@ function dateToTimeString(d: Date): string {
 
 function formatAgeRange(value: string | null | undefined): string {
   if (!value) return '—';
-  return value.replace('_', '–').replace('plus', '+').replace('under', 'Under ');
+  return value.replace('_', '-').replace('plus', '+').replace('under', 'Under ');
 }
 
 function formatDiagnosisYears(value: string | null | undefined): string {
   if (!value) return '—';
   if (value === 'under_1') return 'Under 1 year';
   if (value === '10_plus') return '10+ years';
-  return value.replace('_', '–') + ' years';
+  return value.replace('_', '-') + ' years';
 }
 
 function capitalize(s: string): string {
@@ -109,17 +109,17 @@ const BIOLOGICAL_SEX_LABELS: Record<string, string> = {
 
 const AGE_RANGE_LABELS: Record<string, string> = {
   under_25: 'Under 25',
-  '25_35': '25–35',
-  '35_45': '35–45',
-  '45_55': '45–55',
+  '25_35': '25-34',
+  '35_45': '35-44',
+  '45_55': '45-54',
   '55_plus': '55 and over',
 };
 
 const DIAGNOSIS_YEARS_LABELS: Record<string, string> = {
   under_1: 'Less than a year',
-  '1_3': '1–3 years',
-  '3_5': '3–5 years',
-  '5_10': '5–10 years',
+  '1_3': '1-3 years',
+  '3_5': '3-5 years',
+  '5_10': '5-10 years',
   '10_plus': '10+ years',
 };
 
@@ -166,8 +166,8 @@ const CONDITION_LABELS: Record<string, string> = {
 
 const MORNING_STIFFNESS_LABELS: Record<string, string> = {
   under_30: 'Under 30 min',
-  '30_60': '30–60 min',
-  '1_2_hours': '1–2 hours',
+  '30_60': '30-60 min',
+  '1_2_hours': '1-2 hours',
   over_2_hours: 'Over 2 hours',
 };
 
@@ -447,6 +447,9 @@ interface AddMedicationModalProps {
   visible: boolean;
   onClose: () => void;
   onSave: (med: Omit<MedicationReminder, 'id' | 'user_id'>) => Promise<void>;
+  onUpdate?: (id: string, updates: Partial<MedicationReminder>) => Promise<void>;
+  onOpenEditProfile?: () => void;
+  editingMed?: MedicationReminder | null;
   isDark: boolean;
   profileMeds?: string[];
 }
@@ -462,6 +465,9 @@ function AddMedicationModal({
   visible,
   onClose,
   onSave,
+  onUpdate,
+  onOpenEditProfile,
+  editingMed,
   isDark,
   profileMeds,
 }: AddMedicationModalProps) {
@@ -473,6 +479,8 @@ function AddMedicationModal({
   const [frequency, setFrequency] = useState<MedicationReminder['frequency']>('daily');
   const [reminderTime, setReminderTime] = useState('08:00');
   const [isSaving, setIsSaving] = useState(false);
+
+  const isEditing = !!editingMed;
 
   const cardBg = isDark ? Colors.surfaceDark : Colors.surface;
   const cardBorder = isDark ? Colors.borderDark : Colors.border;
@@ -487,6 +495,18 @@ function AddMedicationModal({
     setReminderTime('08:00');
   }
 
+  // Pre-fill when editing an existing medication
+  React.useEffect(() => {
+    if (visible && editingMed) {
+      setName(editingMed.name);
+      setDose(editingMed.dose ?? '');
+      setFrequency(editingMed.frequency);
+      setReminderTime(editingMed.reminder_time);
+    } else if (visible && !editingMed) {
+      reset();
+    }
+  }, [visible, editingMed]);
+
   async function handleSave() {
     if (!name.trim()) {
       Alert.alert('', t('profile_alerts.error_med_name'));
@@ -494,14 +514,23 @@ function AddMedicationModal({
     }
     setIsSaving(true);
     try {
-      await onSave({
-        name: name.trim(),
-        dose: dose.trim(),
-        frequency,
-        reminder_time: reminderTime,
-        active: true,
-      });
-      logEvent(Events.MEDICATION_ADDED).catch(() => {});
+      if (isEditing && editingMed && onUpdate) {
+        await onUpdate(editingMed.id!, {
+          name: name.trim(),
+          dose: dose.trim(),
+          frequency,
+          reminder_time: reminderTime,
+        });
+      } else {
+        await onSave({
+          name: name.trim(),
+          dose: dose.trim(),
+          frequency,
+          reminder_time: reminderTime,
+          active: true,
+        });
+        logEvent(Events.MEDICATION_ADDED).catch(() => {});
+      }
       reset();
       onClose();
     } catch (err) {
@@ -542,40 +571,58 @@ function AddMedicationModal({
           ]}
         >
           <Text style={[styles.modalTitle, { color: textPrimary }]}>
-            {t('medications.add_title')}
+            {isEditing ? 'Edit medication' : t('medications.add_title')}
           </Text>
           <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
 
-          {/* Quick-fill from profile treatment */}
-          {profileMeds && profileMeds.filter((m) => m !== 'no_medication').length > 0 && (
+          {/* Quick-fill from profile treatment — only shown when adding */}
+          {!isEditing && (
             <View style={{ marginBottom: Spacing.md }}>
-              <Text style={[styles.fieldLabel, { color: textSecondary }]}>From your treatment</Text>
-              <View style={styles.chipsRow}>
-                {profileMeds.filter((m) => m !== 'no_medication').map((med) => {
-                  const label = MEDICATION_LABELS[med] ?? capitalize(med);
-                  return (
-                    <TouchableOpacity
-                      key={med}
-                      onPress={() => setName(label)}
-                      activeOpacity={0.8}
-                      style={[
-                        styles.chip,
-                        {
-                          backgroundColor: name === label ? Colors.primary : inputBg,
-                          borderColor: name === label ? Colors.primary : cardBorder,
-                        },
-                      ]}
-                    >
-                      <Text style={[styles.chipText, { color: name === label ? '#FFFFFF' : textSecondary }]}>
-                        {label}
-                      </Text>
-                    </TouchableOpacity>
-                  );
-                })}
+              <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: Spacing.xs, marginTop: Spacing.sm }}>
+                <Text style={[styles.fieldLabel, { color: textSecondary, marginBottom: 0, marginTop: 0 }]}>From your treatment</Text>
+                {onOpenEditProfile && (
+                  <TouchableOpacity
+                    onPress={() => { handleClose(); onOpenEditProfile(); }}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={{ fontSize: FontSize.xs, color: Colors.primary, fontWeight: '600' }}>Edit treatment ›</Text>
+                  </TouchableOpacity>
+                )}
               </View>
-              <Text style={[styles.helperText, { color: textSecondary, marginBottom: 0, marginTop: 4 }]}>
-                Tap to pre-fill — then add dose and schedule below
-              </Text>
+              {profileMeds && profileMeds.filter((m) => m !== 'no_medication').length > 0 ? (
+                <>
+                  <View style={styles.chipsRow}>
+                    {profileMeds.filter((m) => m !== 'no_medication').map((med) => {
+                      const label = MEDICATION_LABELS[med] ?? capitalize(med);
+                      return (
+                        <TouchableOpacity
+                          key={med}
+                          onPress={() => setName(label)}
+                          activeOpacity={0.8}
+                          style={[
+                            styles.chip,
+                            {
+                              backgroundColor: name === label ? Colors.primary : inputBg,
+                              borderColor: name === label ? Colors.primary : cardBorder,
+                            },
+                          ]}
+                        >
+                          <Text style={[styles.chipText, { color: name === label ? '#FFFFFF' : textSecondary }]}>
+                            {label}
+                          </Text>
+                        </TouchableOpacity>
+                      );
+                    })}
+                  </View>
+                  <Text style={[styles.helperText, { color: textSecondary, marginBottom: 0, marginTop: 4 }]}>
+                    Tap to fill in the name, then set the dose and schedule below
+                  </Text>
+                </>
+              ) : (
+                <Text style={[styles.helperText, { color: textSecondary, marginBottom: 0 }]}>
+                  No treatment in your profile yet. Tap Edit treatment above to add yours.
+                </Text>
+              )}
             </View>
           )}
 
@@ -683,7 +730,7 @@ function AddMedicationModal({
                 <ActivityIndicator color="#FFFFFF" size="small" />
               ) : (
                 <Text style={styles.modalSaveText}>
-                  {t('medications.save')}
+                  {isEditing ? 'Save changes' : t('medications.save')}
                 </Text>
               )}
             </TouchableOpacity>
@@ -704,6 +751,7 @@ export default function ProfileScreen() {
     medications,
     isLoading: medsLoading,
     addMedication,
+    updateMedication,
     deleteMedication,
   } = useMedications();
   const { flares } = useFlares();
@@ -787,9 +835,11 @@ export default function ProfileScreen() {
     }
   }, [t]);
   const [showAddMed, setShowAddMed] = useState(false);
+  const [editingMed, setEditingMed] = useState<MedicationReminder | null>(null);
   const [isGeneratingReport, setIsGeneratingReport] = useState(false);
   const [reportFromDate, setReportFromDate] = useState<string>('');
-  const [editingReportFromDate, setEditingReportFromDate] = useState(false);
+  const [showReportDatePicker, setShowReportDatePicker] = useState(false);
+  const [pendingReportDate, setPendingReportDate] = useState<string>('');
   const [isPurchasing, setIsPurchasing] = useState(false);
   const [isRestoring, setIsRestoring] = useState(false);
 
@@ -1192,7 +1242,7 @@ export default function ProfileScreen() {
           isSubscribed ? (
             <View style={[styles.settingsCard, { backgroundColor: cardBg, borderColor: Colors.primary }]}>
               <View style={[styles.settingsRow, { paddingRight: Spacing.md }]}>
-                <Text style={[styles.settingsRowLabel, { color: textPrimary }]}>
+                <Text style={[styles.settingsRowLabel, { color: textPrimary, fontSize: FontSize.md }]}>
                   {t('profile.subscription_active')}
                 </Text>
                 <View style={styles.premiumBadge}>
@@ -1327,7 +1377,11 @@ export default function ProfileScreen() {
             medications.map((med) => (
               <React.Fragment key={med.id}>
                 <View style={[styles.rowDivider, { backgroundColor: cardBorder }]} />
-                <View style={styles.medListRow}>
+                <TouchableOpacity
+                  style={styles.medListRow}
+                  onPress={() => { setEditingMed(med); setShowAddMed(true); }}
+                  activeOpacity={0.7}
+                >
                   <View style={styles.medInfo}>
                     <Text style={[styles.medName, { color: textPrimary }]}>{med.name}</Text>
                     <View style={styles.medMeta}>
@@ -1345,7 +1399,7 @@ export default function ProfileScreen() {
                   >
                     <Text style={styles.deleteIcon}>✕</Text>
                   </TouchableOpacity>
-                </View>
+                </TouchableOpacity>
               </React.Fragment>
             ))
           )}
@@ -1355,7 +1409,7 @@ export default function ProfileScreen() {
             <>
               <View style={[styles.rowDivider, { backgroundColor: cardBorder }]} />
               <TouchableOpacity
-                onPress={() => setShowAddMed(true)}
+                onPress={() => { setEditingMed(null); setShowAddMed(true); }}
                 activeOpacity={0.7}
                 style={styles.settingsRow}
               >
@@ -1370,25 +1424,27 @@ export default function ProfileScreen() {
           <>
             <Text style={[styles.sectionLabel, { color: textSecondary }]}>Health data</Text>
             <View style={[styles.settingsCard, { backgroundColor: cardBg, borderColor: cardBorder }]}>
-              <View style={styles.settingsRow}>
-                <View style={styles.settingsRowLeft}>
+              <View style={[styles.settingsRow, { paddingRight: Spacing.md }]}>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: Spacing.xs }}>
                   <Text style={[styles.settingsRowLabel, { color: textPrimary }]}>
                     {Platform.OS === 'ios' ? 'Apple Health' : 'Health Connect'}
                   </Text>
+                  <InfoButton
+                    title="Apple Health"
+                    message={`Connecting Apple Health lets Fibro read data from your iPhone and Apple Watch, giving you a more complete picture of how your body is doing:\n\n• Steps and active energy (how much you moved)\n• Sleep duration (how rest affects your symptoms)\n• Heart rate variability (a useful recovery indicator)\n• Blood oxygen and respiratory rate (overnight recovery signals)\n• Mindful minutes (meditation and breathing sessions)\n\nAll data stays on your device and in your private account. Nothing is shared with third parties.`}
+                    color={textSecondary}
+                  />
                 </View>
-                <TouchableOpacity
-                  onPress={healthConnected ? disconnectHealthData : connectHealth}
-                  disabled={healthLoading}
-                  activeOpacity={0.8}
-                >
-                  {healthLoading ? (
-                    <ActivityIndicator color={Colors.primary} size="small" />
-                  ) : (
-                    <Text style={[styles.settingsRowValue, { color: healthConnected ? Colors.error : Colors.primary }]}>
-                      {healthConnected ? t('health.disconnect') : t('health.connect')}
-                    </Text>
-                  )}
-                </TouchableOpacity>
+                {healthLoading ? (
+                  <ActivityIndicator color={Colors.primary} size="small" />
+                ) : (
+                  <Switch
+                    value={healthConnected}
+                    onValueChange={(value) => value ? connectHealth() : disconnectHealthData()}
+                    trackColor={{ true: Colors.primary, false: cardBorder }}
+                    thumbColor="#FFFFFF"
+                  />
+                )}
               </View>
             </View>
           </>
@@ -1408,28 +1464,58 @@ export default function ProfileScreen() {
             />
           </View>
           <View style={[styles.rowDivider, { backgroundColor: cardBorder }]} />
-          <View style={[styles.settingsRow, { paddingVertical: Spacing.sm }]}>
-            <Text style={[styles.settingsRowSub, { color: textSecondary, flex: 1 }]}>From last appointment:</Text>
-            {editingReportFromDate ? (
-              <TextInput
-                style={[styles.reportDateInput, { color: textPrimary, borderColor: Colors.primary }]}
-                value={reportFromDate}
-                onChangeText={setReportFromDate}
-                onBlur={() => setEditingReportFromDate(false)}
-                placeholder="YYYY-MM-DD"
-                placeholderTextColor={textSecondary}
-                autoFocus
-                returnKeyType="done"
-                onSubmitEditing={() => setEditingReportFromDate(false)}
+          {!showReportDatePicker ? (
+            <TouchableOpacity
+              onPress={() => {
+                setPendingReportDate(reportFromDate);
+                setShowReportDatePicker(true);
+              }}
+              activeOpacity={0.7}
+              style={styles.settingsRow}
+            >
+              <Text style={[styles.settingsRowSub, { color: textSecondary }]}>From last appointment</Text>
+              <Text style={[styles.reportDateValue, { color: reportFromDate ? textPrimary : Colors.primary }]}>
+                {reportFromDate
+                  ? new Date(reportFromDate + 'T12:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+                  : 'Last 12 months'} ›
+              </Text>
+            </TouchableOpacity>
+          ) : (
+            <View style={{ paddingHorizontal: Spacing.md, paddingBottom: Spacing.sm }}>
+              <DateTimePicker
+                value={pendingReportDate ? new Date(pendingReportDate + 'T12:00:00') : new Date()}
+                mode="date"
+                display="spinner"
+                maximumDate={new Date()}
+                onChange={(_event, date) => {
+                  if (date) {
+                    const y = date.getFullYear();
+                    const m = String(date.getMonth() + 1).padStart(2, '0');
+                    const d = String(date.getDate()).padStart(2, '0');
+                    setPendingReportDate(`${y}-${m}-${d}`);
+                  }
+                }}
+                textColor={isDark ? Colors.textPrimaryDark : Colors.textPrimary}
+                style={{ width: '100%', height: 150 }}
               />
-            ) : (
-              <TouchableOpacity onPress={() => setEditingReportFromDate(true)} activeOpacity={0.7}>
-                <Text style={[styles.reportDateValue, { color: reportFromDate ? textPrimary : Colors.primary }]}>
-                  {reportFromDate || 'Last 12 months'}
-                </Text>
-              </TouchableOpacity>
-            )}
-          </View>
+              <View style={styles.timePickerActions}>
+                <TouchableOpacity
+                  onPress={() => setShowReportDatePicker(false)}
+                  style={[styles.timePickerCancel, { borderColor: cardBorder }]}
+                  activeOpacity={0.8}
+                >
+                  <Text style={{ color: textSecondary, fontWeight: '500' }}>Cancel</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  onPress={() => { setReportFromDate(pendingReportDate); setShowReportDatePicker(false); }}
+                  style={styles.timePickerSave}
+                  activeOpacity={0.8}
+                >
+                  <Text style={{ color: '#FFFFFF', fontWeight: '600' }}>Set</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          )}
           <View style={[styles.rowDivider, { backgroundColor: cardBorder }]} />
           <TouchableOpacity
             onPress={handleGenerateReport}
@@ -1626,8 +1712,11 @@ export default function ProfileScreen() {
 
       <AddMedicationModal
         visible={showAddMed}
-        onClose={() => setShowAddMed(false)}
+        onClose={() => { setShowAddMed(false); setEditingMed(null); }}
         onSave={addMedication}
+        onUpdate={updateMedication}
+        onOpenEditProfile={() => setShowEditProfile(true)}
+        editingMed={editingMed}
         isDark={isDark}
         profileMeds={profile?.medications}
       />

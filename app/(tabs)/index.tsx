@@ -306,15 +306,15 @@ function SevenDayOverview({
         <View style={styles.weekLegendRow}>
           <View style={styles.weekLegendItem}>
             <View style={[styles.weekLegendDot, { backgroundColor: Colors.success }]} />
-            <Text style={[styles.weekLegendText, { color: textSec }]}>Low (0–3)</Text>
+            <Text style={[styles.weekLegendText, { color: textSec }]}>Low (0-3)</Text>
           </View>
           <View style={styles.weekLegendItem}>
             <View style={[styles.weekLegendDot, { backgroundColor: Colors.warning }]} />
-            <Text style={[styles.weekLegendText, { color: textSec }]}>Moderate (4–6)</Text>
+            <Text style={[styles.weekLegendText, { color: textSec }]}>Moderate (4-6)</Text>
           </View>
           <View style={styles.weekLegendItem}>
             <View style={[styles.weekLegendDot, { backgroundColor: Colors.error }]} />
-            <Text style={[styles.weekLegendText, { color: textSec }]}>High (7–10)</Text>
+            <Text style={[styles.weekLegendText, { color: textSec }]}>High (7-10)</Text>
           </View>
         </View>
       )}
@@ -735,7 +735,7 @@ export default function HomeScreen() {
         ) : null}
 
         {/* Combined health card — activity (steps/sleep/HRV) + overnight recovery signals */}
-        {((todayLogged && healthConnected && healthData) || recoveryData) && (
+        {healthConnected && ((todayLogged && healthData) || recoveryData) && (
           <View style={[styles.healthCard, isDark && styles.healthCardDark]}>
             <Text style={[styles.sectionTitle, isDark && styles.textPrimaryDark]}>
               {t('health.today_context')}

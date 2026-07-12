@@ -514,7 +514,7 @@ function ChatDataCard({ isDark, onPress }: { isDark: boolean; onPress: () => voi
 // ─── FIQ Assessment ───────────────────────────────────────────────────────────
 
 const FIQ_QUESTIONS: Array<{ key: keyof Omit<FiqScore, 'id' | 'user_id' | 'date' | 'score'>; text: string; minLabel: string; maxLabel: string }> = [
-  { key: 'q_function',   text: 'How difficult was it to manage daily tasks — cooking, shopping, or self-care?', minLabel: 'No difficulty', maxLabel: 'Impossible' },
+  { key: 'q_function',   text: 'How difficult was it to manage daily tasks like cooking, shopping, or self-care?', minLabel: 'No difficulty', maxLabel: 'Impossible' },
   { key: 'q_work',       text: 'How much did fibromyalgia prevent you from working or doing your usual activities?', minLabel: 'No effect', maxLabel: 'Completely prevented' },
   { key: 'q_wellbeing',  text: 'How did you feel overall?', minLabel: 'Feeling good', maxLabel: 'Feeling terrible' },
   { key: 'q_pain',       text: 'How severe was your pain?', minLabel: 'No pain', maxLabel: 'Worst possible pain' },
@@ -568,7 +568,7 @@ function FiqCard({ isDark, userId }: { isDark: boolean; userId: string }) {
           <Text style={[styles.fiqPromptTitle, { color: textPrimary }]}>Monthly FIQ Assessment</Text>
           <InfoButton
             title="About the FIQ"
-            message="The Fibromyalgia Impact Questionnaire measures how fibromyalgia affects your daily life across 10 dimensions. Scores range from 0–100; higher scores indicate greater impact. Complete it monthly to track changes over time."
+            message="The Fibromyalgia Impact Questionnaire measures how fibromyalgia affects your daily life across 10 dimensions. Scores range from 0-100; higher scores mean greater impact. Complete it monthly to track how things change over time."
             color={textSecondary}
           />
         </View>
@@ -712,7 +712,7 @@ function FiqModal({ visible, isDark, userId, onDone }: { visible: boolean; isDar
                 <Text style={[styles.fiqScoreLabel, { color: textSecondary }]}>Your FIQ Score</Text>
                 <Text style={[styles.fiqScoreLarge, { color: interp.color }]}>{totalScore.toFixed(0)}<Text style={[styles.fiqScoreLabel, { color: textSecondary }]}> / 100</Text></Text>
                 <Text style={[styles.fiqInterpText, { color: interp.color }]}>{interp.label}</Text>
-                <Text style={[styles.fiqThresholdNote, { color: textSecondary }]}>0–39 mild · 40–59 moderate · 60–100 severe</Text>
+                <Text style={[styles.fiqThresholdNote, { color: textSecondary }]}>0-39 mild · 40-59 moderate · 60-100 severe</Text>
               </View>
 
               {/* Per-question breakdown */}

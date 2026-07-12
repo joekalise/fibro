@@ -42,7 +42,7 @@ function MockInsightCard({ isDark }: { isDark: boolean }) {
         <View style={mock.badge}><Text style={mock.badgeText}>AI</Text></View>
       </View>
       <Text style={[mock.body, { color: textSecondary }]}>
-        Your pain was lower on days you slept over 7 hours. Fatigue spiked mid-week — likely linked to Tuesday's longer walk.
+        Your pain was lower on days you slept over 7 hours. Fatigue spiked mid-week, likely linked to Tuesday's walk.
       </Text>
       <View style={mock.chipRow}>
         {['😴 Sleep → pain', '🚶 Activity', '📈 Trending up'].map(t => (
@@ -143,23 +143,23 @@ export function PremiumModal({
   const features: { icon: string; title: string; body: string }[] = [
     {
       icon: '📊',
-      title: 'Weekly AI insight report',
-      body: 'Every week, Fibro analyses your logs and surfaces the patterns driving your symptoms.',
+      title: 'Weekly insight report',
+      body: 'Every week, Fibro looks through your logs and picks out the patterns driving your symptoms.',
     },
     {
       icon: '💬',
       title: 'Chat with your data',
-      body: 'Ask anything — "why do I flare on weekends?" or "what helps my sleep?" — and get answers grounded in your own history.',
+      body: 'Ask anything like "why do I flare on weekends?" or "what helps my sleep?" and get answers based on your own data.',
     },
     {
       icon: '🔮',
       title: 'Flare prediction nudges',
-      body: 'When your patterns suggest a flare is building, Fibro lets you know early — so you can act before it peaks.',
+      body: 'When your patterns suggest a flare is building, Fibro gives you a heads-up early so you can act before it peaks.',
     },
     {
       icon: '🎯',
-      title: 'Extended personalisation',
-      body: 'The more context you give, the smarter your insights get. Premium unlocks full AI personalisation.',
+      title: 'Personalise your experience',
+      body: 'Add context about your day-to-day life so your insights are tailored to you, not just generic advice.',
     },
   ];
 

@@ -163,7 +163,7 @@ export function ProfileReadyScreen() {
               </TouchableOpacity>
             </View>
             <Text style={[styles.logHint, { color: textSecondary }]}>
-              Pre-filled from your answers — adjust if needed.
+              Pre-filled from your answers. Change anything that doesn't look right.
             </Text>
 
             <Text style={[styles.logLabel, { color: textSecondary }]}>Pain  <Text style={{ color: textPrimary, fontWeight: '700' }}>{painScore}/10</Text></Text>
