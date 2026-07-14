@@ -78,7 +78,7 @@ export function OnboardingScreen() {
   const { t } = useTranslation();
   const router = useRouter();
   const { saveProfile } = useProfile();
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
 
@@ -863,6 +863,14 @@ export function OnboardingScreen() {
   if (showWelcome) {
     return (
       <SafeAreaView style={[styles.screen, isDark && styles.screenDark]}>
+        <TouchableOpacity
+          onPress={() => signOut()}
+          style={styles.backButton}
+          activeOpacity={0.7}
+          hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+        >
+          <Text style={[styles.backButtonText, isDark && styles.textDark]}>‹ Back</Text>
+        </TouchableOpacity>
         <ScrollView
           contentContainerStyle={[styles.scrollContent, styles.welcomeScroll]}
           showsVerticalScrollIndicator={false}
@@ -1382,6 +1390,18 @@ const styles = StyleSheet.create({
     maxWidth: '88%',
     overflow: 'hidden',
     lineHeight: 19,
+  },
+
+  backButton: {
+    paddingHorizontal: Spacing.lg,
+    paddingTop: Spacing.sm,
+    paddingBottom: Spacing.xs,
+    alignSelf: 'flex-start',
+  },
+  backButtonText: {
+    fontSize: FontSize.md,
+    color: Colors.textSecondary,
+    fontWeight: '500',
   },
 
   // Welcome screen
