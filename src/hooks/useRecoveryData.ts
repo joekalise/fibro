@@ -1,9 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { RecoverySnapshot } from '@/types';
 import { isHealthConnected, fetchTodayRecoveryData, ensureLatestHealthPermissions } from '@/services/healthKit';
 
-export function useRecoveryData(): RecoverySnapshot | null {
+export function useRecoveryData(): { data: RecoverySnapshot | null; refresh: () => void } {
   const [data, setData] = useState<RecoverySnapshot | null>(null);
+  const [tick, setTick] = useState(0);
+
+  const refresh = useCallback(() => setTick(t => t + 1), []);
 
   useEffect(() => {
     let cancelled = false;
@@ -24,7 +27,7 @@ export function useRecoveryData(): RecoverySnapshot | null {
     }
     load();
     return () => { cancelled = true; };
-  }, []);
+  }, [tick]);
 
-  return data;
+  return { data, refresh };
 }

@@ -575,7 +575,7 @@ export default function HomeScreen() {
   const { activeFlare, flares, isLoading: flaresLoading } = useFlares();
   const { history: healthHistory } = useHealthHistory(7);
   const { isConnected: healthConnected, todayData: healthData, recheck: recheckHealth } = useHealthData();
-  const recoveryData = useRecoveryData();
+  const { data: recoveryData, refresh: refreshRecovery } = useRecoveryData();
   const flareRisk = useFlareRisk(logs, activeFlare, healthHistory, recoveryData);
   const { pressure, isLoading: pressureLoading, isFetching: pressureFetching, fetchError: pressureError, refresh: refreshPressure } = useWeatherPressure();
   // Refresh streak and weekly data when returning from Track tab; re-check health connection state
@@ -583,7 +583,8 @@ export default function HomeScreen() {
     refreshLog();
     refreshWeekly();
     recheckHealth();
-  }, [refreshLog, refreshWeekly, recheckHealth]));
+    refreshRecovery();
+  }, [refreshLog, refreshWeekly, recheckHealth, refreshRecovery]));
 
   // Review prompt — show to active users after 7 days
   const isActiveUser = streak > 0 || todayLogged;
@@ -735,12 +736,12 @@ export default function HomeScreen() {
         ) : null}
 
         {/* Combined health card — activity (steps/sleep/HRV) + overnight recovery signals */}
-        {healthConnected && ((todayLogged && healthData) || recoveryData) && (
+        {healthConnected && (healthData || recoveryData) && (
           <View style={[styles.healthCard, isDark && styles.healthCardDark]}>
             <Text style={[styles.sectionTitle, isDark && styles.textPrimaryDark]}>
               {t('health.today_context')}
             </Text>
-            {todayLogged && healthConnected && healthData && (
+            {healthConnected && healthData && (
               <View style={styles.todaySummaryRow}>
                 {healthData.steps !== null && (
                   <>
@@ -778,7 +779,7 @@ export default function HomeScreen() {
                 )}
               </View>
             )}
-            {todayLogged && healthConnected && healthData && recoveryData && (
+            {healthConnected && healthData && recoveryData && (
               <View style={[styles.healthRowDivider, isDark && styles.healthRowDividerDark]} />
             )}
             {recoveryData && (() => {

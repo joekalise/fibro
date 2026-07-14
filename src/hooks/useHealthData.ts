@@ -140,8 +140,11 @@ export function useHealthData(): UseHealthDataResult {
     if (!connected) {
       setIsConnected(false);
       setTodayData(null);
+    } else {
+      setIsConnected(true);
+      await sync();
     }
-  }, []);
+  }, [sync]);
 
   return { isAvailable, isConnected, isLoading, todayData, connect, sync, disconnect, recheck };
 }
