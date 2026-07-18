@@ -210,21 +210,23 @@ export function PremiumModal({
             ))}
           </View>
 
-          {/* Pricing */}
-          {monthlyPrice && !trialDays && (
+          {/* Pricing — price must be most prominent per App Store guideline 3.1.2(c) */}
+          {monthlyPrice && (
             <Text style={[styles.priceAmount, { color: textPrimary }]}>
               {monthlyPrice} / month
             </Text>
           )}
           {trialDays && (
             <Text style={[styles.trialLabel, { color: textSecondary }]}>
-              {t('subscription.trial_sublabel_days', { days: trialDays, price: monthlyPrice })}
+              {t('subscription.trial_sublabel', { days: trialDays })}
             </Text>
           )}
           <Text style={[styles.pricingNote, { color: textSecondary }]}>
-            {Platform.OS === 'ios'
-              ? t('subscription.cancel_note')
-              : t('subscription.cancel_note_android')}
+            {trialDays && monthlyPrice
+              ? `After your ${trialDays}-day free trial, ${monthlyPrice}/month is billed automatically. ${Platform.OS === 'ios' ? t('subscription.cancel_note') : t('subscription.cancel_note_android')}`
+              : Platform.OS === 'ios'
+                ? t('subscription.cancel_note')
+                : t('subscription.cancel_note_android')}
           </Text>
           <View style={styles.legalRow}>
             <Text
@@ -458,8 +460,9 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   trialLabel: {
-    fontSize: FontSize.sm,
-    marginBottom: 6,
+    fontSize: FontSize.xs,
+    marginBottom: 4,
+    fontWeight: '500',
   },
   pricingNote: {
     fontSize: FontSize.xs,
