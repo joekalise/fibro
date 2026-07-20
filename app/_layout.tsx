@@ -1,8 +1,17 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { View, useColorScheme, Platform } from 'react-native';
+import { View, Text, useColorScheme, Platform } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import {
+  useFonts,
+  PlusJakartaSans_400Regular,
+  PlusJakartaSans_500Medium,
+  PlusJakartaSans_600SemiBold,
+  PlusJakartaSans_700Bold,
+  PlusJakartaSans_800ExtraBold,
+} from '@expo-google-fonts/plus-jakarta-sans';
+import { FontFamily } from '@/constants/theme';
 import * as Notifications from 'expo-notifications';
 import * as SplashScreen from 'expo-splash-screen';
 import * as Updates from 'expo-updates';
@@ -154,7 +163,23 @@ function RootNavigator() {
   );
 }
 
-export default Sentry.wrap(function RootLayout() {
+function RootLayout() {
+  const [fontsLoaded] = useFonts({
+    PlusJakartaSans_400Regular,
+    PlusJakartaSans_500Medium,
+    PlusJakartaSans_600SemiBold,
+    PlusJakartaSans_700Bold,
+    PlusJakartaSans_800ExtraBold,
+  });
+
+  useEffect(() => {
+    if (!fontsLoaded) return;
+    (Text as any).defaultProps = (Text as any).defaultProps ?? {};
+    (Text as any).defaultProps.style = { fontFamily: FontFamily.regular };
+  }, [fontsLoaded]);
+
+  if (!fontsLoaded) return null;
+
   return (
     <SafeAreaProvider>
       <AuthProvider>
@@ -164,4 +189,6 @@ export default Sentry.wrap(function RootLayout() {
       </AuthProvider>
     </SafeAreaProvider>
   );
-});
+}
+
+export default Sentry.wrap(RootLayout);
