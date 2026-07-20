@@ -172,13 +172,11 @@ function RootLayout() {
     PlusJakartaSans_800ExtraBold,
   });
 
-  useEffect(() => {
-    if (!fontsLoaded) return;
-    (Text as any).defaultProps = (Text as any).defaultProps ?? {};
-    (Text as any).defaultProps.style = { fontFamily: FontFamily.regular };
-  }, [fontsLoaded]);
-
   if (!fontsLoaded) return null;
+
+  // Set synchronously before the tree renders so every Text picks it up
+  (Text as any).defaultProps = (Text as any).defaultProps ?? {};
+  (Text as any).defaultProps.style = { fontFamily: FontFamily.regular };
 
   return (
     <SafeAreaProvider>
