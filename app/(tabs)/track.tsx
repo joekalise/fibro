@@ -16,7 +16,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { DragSlider } from '@/components/common/DragSlider';
 import { useTranslation } from 'react-i18next';
 import { Colors } from '@/constants/colors';
-import { FontSize, Spacing, BorderRadius } from '@/constants/theme';
+import { FontSize, Spacing, BorderRadius, FontFamily } from '@/constants/theme';
 import { useDailyLog } from '@/hooks/useDailyLog';
 import { useHealthData } from '@/hooks/useHealthData';
 import { useMedicationTracking } from '@/hooks/useMedicationTracking';
@@ -108,7 +108,7 @@ function OptionRow({ options, selected, onSelect, isDark, accentColor = Colors.p
             <Text style={[
               styles.optionLabel,
               isDark && styles.textSecDark,
-              isSelected && { color: accentColor, fontWeight: '700' },
+              isSelected && { color: accentColor, fontWeight: '700', fontFamily: FontFamily.bold },
             ]}>
               {opt.label}
             </Text>
@@ -327,7 +327,7 @@ function DayLogForm({
                 activeOpacity={0.7}
               >
                 <Text style={styles.moodEmoji}>{opt.emoji}</Text>
-                <Text style={[styles.moodLabel, isDark && styles.textSecDark, selected && { color: opt.color, fontWeight: '700' }]}>
+                <Text style={[styles.moodLabel, isDark && styles.textSecDark, selected && { color: opt.color, fontWeight: '700', fontFamily: FontFamily.bold }]}>
                   {t(opt.labelKey)}
                 </Text>
               </TouchableOpacity>
@@ -380,7 +380,7 @@ function DayLogForm({
                 <Text style={[
                   styles.chipText,
                   isDark && !selected && styles.chipTextDark,
-                  selected && { color: opt.color, fontWeight: '700' },
+                  selected && { color: opt.color, fontWeight: '700', fontFamily: FontFamily.bold },
                 ]}>
                   {opt.label}
                 </Text>
@@ -410,7 +410,7 @@ function DayLogForm({
                 <Text style={[
                   styles.chipText,
                   isDark && !selected && styles.chipTextDark,
-                  selected && { color: '#DC2626', fontWeight: '700' },
+                  selected && { color: '#DC2626', fontWeight: '700', fontFamily: FontFamily.bold },
                 ]}>
                   {opt.label}
                 </Text>
@@ -496,7 +496,7 @@ function DayLogForm({
                 <Text style={[
                   styles.chipText,
                   isDark && !selected && styles.chipTextDark,
-                  selected && { color, fontWeight: '700' },
+                  selected && { color, fontWeight: '700', fontFamily: FontFamily.bold },
                 ]}>
                   {t(`tracker.activity_${level}`)}
                 </Text>
@@ -1149,6 +1149,7 @@ const styles = StyleSheet.create({
   healthStripLabel: {
     fontSize: FontSize.xs,
     fontWeight: '600',
+    fontFamily: FontFamily.semiBold,
     color: Colors.textSecondary,
   },
   healthStripStats: {
@@ -1175,12 +1176,14 @@ const styles = StyleSheet.create({
   logHeaderDate: {
     fontSize: FontSize.xl,
     fontWeight: '800',
+    fontFamily: FontFamily.extraBold,
     color: Colors.textPrimary,
   },
   logHeaderSubtitle: {
     fontSize: FontSize.sm,
     color: Colors.textSecondary,
     fontWeight: '500',
+    fontFamily: FontFamily.medium,
   },
   logHeaderYesterday: {
     fontSize: FontSize.xs,
@@ -1216,6 +1219,7 @@ const styles = StyleSheet.create({
     fontSize: FontSize.xl,
     color: Colors.success,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
   },
   loggedCardTextGroup: {
     flex: 1,
@@ -1223,6 +1227,7 @@ const styles = StyleSheet.create({
   loggedTitle: {
     fontSize: FontSize.md,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
     color: Colors.textPrimary,
   },
   loggedSubtitle: {
@@ -1240,6 +1245,7 @@ const styles = StyleSheet.create({
     color: '#FFF',
     fontSize: FontSize.sm,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
   },
   summaryRow: {
     flexDirection: 'row',
@@ -1263,6 +1269,7 @@ const styles = StyleSheet.create({
   summaryValue: {
     fontSize: FontSize.md,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
     color: Colors.textPrimary,
     marginTop: 2,
   },
@@ -1285,6 +1292,7 @@ const styles = StyleSheet.create({
   successText: {
     fontSize: FontSize.md,
     fontWeight: '600',
+    fontFamily: FontFamily.semiBold,
     color: Colors.success,
     textAlign: 'center',
   },
@@ -1305,6 +1313,7 @@ const styles = StyleSheet.create({
   sectionLabel: {
     fontSize: FontSize.md,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
     color: Colors.textPrimary,
   },
   hint: {
@@ -1328,6 +1337,7 @@ const styles = StyleSheet.create({
   symptomSubLabel: {
     fontSize: FontSize.sm,
     fontWeight: '600',
+    fontFamily: FontFamily.semiBold,
     color: Colors.textSecondary,
   },
   symptomDivider: {
@@ -1369,6 +1379,7 @@ const styles = StyleSheet.create({
     fontSize: FontSize.sm,
     color: Colors.textPrimary,
     fontWeight: '500',
+    fontFamily: FontFamily.medium,
     textAlign: 'center',
   },
   chipTextDark: {
@@ -1377,6 +1388,7 @@ const styles = StyleSheet.create({
   chipTextSelected: {
     color: '#FFFFFF',
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
   },
 
   // Mood
@@ -1412,6 +1424,7 @@ const styles = StyleSheet.create({
     color: Colors.textSecondary,
     textAlign: 'center',
     fontWeight: '500',
+    fontFamily: FontFamily.medium,
   },
 
   // Notes
@@ -1458,6 +1471,7 @@ const styles = StyleSheet.create({
   minutesPillText: {
     fontSize: FontSize.xs,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
   },
   dietQualityRow: {
     flexDirection: 'row',
@@ -1479,6 +1493,7 @@ const styles = StyleSheet.create({
   sectionSubLabel: {
     fontSize: FontSize.xs,
     fontWeight: '600',
+    fontFamily: FontFamily.semiBold,
     color: Colors.textSecondary,
     marginTop: Spacing.sm,
   },
@@ -1501,6 +1516,7 @@ const styles = StyleSheet.create({
   recentCardTitle: {
     fontSize: FontSize.md,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
     color: Colors.textPrimary,
     paddingHorizontal: Spacing.md,
     paddingTop: Spacing.md,
@@ -1524,6 +1540,7 @@ const styles = StyleSheet.create({
   recentDate: {
     fontSize: FontSize.sm,
     fontWeight: '600',
+    fontFamily: FontFamily.semiBold,
     color: Colors.textPrimary,
   },
   recentStats: {
@@ -1549,6 +1566,7 @@ const styles = StyleSheet.create({
   browseOlderText: {
     fontSize: FontSize.sm,
     fontWeight: '600',
+    fontFamily: FontFamily.semiBold,
     color: Colors.primary,
   },
 
@@ -1579,6 +1597,7 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: FontSize.md,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
     color: Colors.textPrimary,
     textAlign: 'center',
   },
@@ -1605,6 +1624,7 @@ const styles = StyleSheet.create({
   calMonthLabel: {
     fontSize: FontSize.lg,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
     color: Colors.textPrimary,
   },
   calDayHeaders: {
@@ -1616,6 +1636,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontSize: FontSize.xs,
     fontWeight: '600',
+    fontFamily: FontFamily.semiBold,
     color: Colors.textSecondary,
     paddingVertical: Spacing.xs,
   },
@@ -1639,6 +1660,7 @@ const styles = StyleSheet.create({
   calDayText: {
     fontSize: FontSize.md,
     fontWeight: '500',
+    fontFamily: FontFamily.medium,
     color: Colors.textPrimary,
   },
   calDayTextDisabled: {

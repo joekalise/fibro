@@ -14,7 +14,7 @@ import { useTranslation } from 'react-i18next';
 import { useRouter, useFocusEffect } from 'expo-router';
 import Svg, { Polyline, Circle } from 'react-native-svg';
 import { Colors } from '@/constants/colors';
-import { FontSize, Spacing, BorderRadius } from '@/constants/theme';
+import { FontSize, Spacing, BorderRadius, FontFamily } from '@/constants/theme';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/contexts/ProfileContext';
 import { useDailyLog } from '@/hooks/useDailyLog';
@@ -877,6 +877,7 @@ const styles = StyleSheet.create({
   greeting: {
     fontSize: FontSize.xl,
     fontWeight: '800',
+    fontFamily: FontFamily.extraBold,
     color: Colors.textPrimary,
     flex: 1,
     marginRight: Spacing.sm,
@@ -898,6 +899,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: FontSize.sm,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
   },
 
   // Active flare card — red
@@ -916,6 +918,7 @@ const styles = StyleSheet.create({
   activeFlareBadge: {
     fontSize: FontSize.sm,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
     color: Colors.error,
   },
   activeFlareDate: {
@@ -939,6 +942,7 @@ const styles = StyleSheet.create({
   checkInHeroTitle: {
     fontSize: FontSize.xxl,
     fontWeight: '900',
+    fontFamily: FontFamily.extraBold,
     color: '#FFFFFF',
     lineHeight: 30,
   },
@@ -958,6 +962,7 @@ const styles = StyleSheet.create({
   checkInHeroButtonText: {
     fontSize: FontSize.md,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
     color: '#FFFFFF',
   },
 
@@ -982,11 +987,13 @@ const styles = StyleSheet.create({
   todaySummaryLabel: {
     fontSize: FontSize.md,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
     color: Colors.textPrimary,
   },
   todaySummaryEdit: {
     fontSize: FontSize.sm,
     fontWeight: '600',
+    fontFamily: FontFamily.semiBold,
   },
   todaySummaryRow: {
     flexDirection: 'row',
@@ -1001,6 +1008,7 @@ const styles = StyleSheet.create({
   todaySummaryValue: {
     fontSize: FontSize.xxl,
     fontWeight: '900',
+    fontFamily: FontFamily.extraBold,
     lineHeight: 30,
   },
   todaySummaryMoodEmoji: {
@@ -1011,6 +1019,7 @@ const styles = StyleSheet.create({
     fontSize: FontSize.xs,
     color: Colors.textSecondary,
     fontWeight: '500',
+    fontFamily: FontFamily.medium,
   },
   todaySummaryDivider: {
     width: 1,
@@ -1036,6 +1045,7 @@ const styles = StyleSheet.create({
   checkInTitle: {
     fontSize: FontSize.md,
     fontWeight: '800',
+    fontFamily: FontFamily.extraBold,
     color: '#FFFFFF',
     marginBottom: 2,
   },
@@ -1047,6 +1057,7 @@ const styles = StyleSheet.create({
     fontSize: FontSize.xl,
     color: '#FFFFFF',
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
   },
 
   // Generic card
@@ -1065,6 +1076,7 @@ const styles = StyleSheet.create({
   sectionTitle: {
     fontSize: FontSize.md,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
     color: Colors.textPrimary,
   },
 
@@ -1090,11 +1102,13 @@ const styles = StyleSheet.create({
   scoreNumberLarge: {
     fontSize: 48,
     fontWeight: '900',
+    fontFamily: FontFamily.extraBold,
     lineHeight: 52,
   },
   scoreOutOf: {
     fontSize: FontSize.sm,
     fontWeight: '600',
+    fontFamily: FontFamily.semiBold,
     paddingBottom: 6,
   },
   scoreBarBlock: {
@@ -1117,6 +1131,7 @@ const styles = StyleSheet.create({
   scoreBarLabel: {
     fontSize: FontSize.sm,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
     marginTop: 2,
   },
   scoreHint: {
@@ -1136,11 +1151,13 @@ const styles = StyleSheet.create({
   scoreNumber: {
     fontSize: FontSize.xxxl,
     fontWeight: '900',
+    fontFamily: FontFamily.extraBold,
     lineHeight: 40,
   },
   scoreLabel: {
     fontSize: FontSize.sm,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
   },
   scoreRight: {
     flex: 1,
@@ -1164,6 +1181,7 @@ const styles = StyleSheet.create({
   breakdownTitle: {
     fontSize: FontSize.xs,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
     marginBottom: 4,
   },
   factorRow: {
@@ -1177,6 +1195,7 @@ const styles = StyleSheet.create({
   factorValue: {
     fontSize: FontSize.xs,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
   },
 
   // No data
@@ -1207,10 +1226,12 @@ const styles = StyleSheet.create({
   weekDotNumber: {
     fontSize: FontSize.sm,
     fontWeight: '800',
+    fontFamily: FontFamily.extraBold,
   },
   weekDotDay: {
     fontSize: 10,
     fontWeight: '600',
+    fontFamily: FontFamily.semiBold,
     textAlign: 'center',
   },
   weekLegendRow: {
@@ -1247,6 +1268,7 @@ const styles = StyleSheet.create({
     fontSize: FontSize.xs,
     color: Colors.textSecondary,
     fontWeight: '600',
+    fontFamily: FontFamily.semiBold,
   },
   miniChartEmpty: {
     alignItems: 'center',
@@ -1272,6 +1294,7 @@ const styles = StyleSheet.create({
   flareRecoveryText: {
     fontSize: FontSize.sm,
     fontWeight: '600',
+    fontFamily: FontFamily.semiBold,
     color: Colors.success,
   },
 
@@ -1285,6 +1308,7 @@ const styles = StyleSheet.create({
   flareRiskTitle: {
     fontSize: FontSize.sm,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
   },
   flareRiskBody: {
     fontSize: FontSize.sm,
@@ -1306,6 +1330,7 @@ const styles = StyleSheet.create({
   flareRiskChipText: {
     fontSize: FontSize.xs,
     fontWeight: '600',
+    fontFamily: FontFamily.semiBold,
   },
   reviewCard: {
     borderRadius: BorderRadius.lg,
@@ -1316,6 +1341,7 @@ const styles = StyleSheet.create({
   reviewTitle: {
     fontSize: FontSize.md,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
   },
   reviewBody: {
     fontSize: FontSize.sm,
@@ -1336,6 +1362,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: FontSize.sm,
     fontWeight: '600',
+    fontFamily: FontFamily.semiBold,
   },
   reviewBtnDismiss: {
     paddingVertical: Spacing.xs,
@@ -1359,6 +1386,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: FontSize.sm,
     fontWeight: '600',
+    fontFamily: FontFamily.semiBold,
   },
   flarePremiumBadge: {
     backgroundColor: Colors.primary,
@@ -1370,6 +1398,7 @@ const styles = StyleSheet.create({
     fontSize: FontSize.xs,
     color: '#FFFFFF',
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
   },
 
   // Unused flare info card styles kept for unused component compatibility
@@ -1388,6 +1417,7 @@ const styles = StyleSheet.create({
   flareInfoBadge: {
     fontSize: FontSize.sm,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
     color: Colors.error,
   },
   flareInfoText: {
@@ -1423,6 +1453,7 @@ const styles = StyleSheet.create({
   healthStatValue: {
     fontSize: FontSize.xxl,
     fontWeight: '900',
+    fontFamily: FontFamily.extraBold,
     lineHeight: 30,
     color: Colors.textPrimary,
   },
@@ -1441,11 +1472,13 @@ const styles = StyleSheet.create({
   recoveryValue: {
     fontSize: FontSize.lg,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
     marginBottom: 2,
   },
   recoveryLabel: {
     fontSize: FontSize.xs,
     fontWeight: '500',
+    fontFamily: FontFamily.medium,
   },
   pressurePromptRow: {
     flexDirection: 'row',
@@ -1466,6 +1499,7 @@ const styles = StyleSheet.create({
     color: Colors.primary,
     fontSize: 13,
     fontWeight: '600',
+    fontFamily: FontFamily.semiBold,
   },
   pressureHeaderRow: {
     flexDirection: 'row',
@@ -1480,6 +1514,7 @@ const styles = StyleSheet.create({
   pressureValue: {
     fontSize: FontSize.lg,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
   },
   pressureSubRow: {
     flexDirection: 'row',
@@ -1489,6 +1524,7 @@ const styles = StyleSheet.create({
   pressureLevel: {
     fontSize: 13,
     fontWeight: '600',
+    fontFamily: FontFamily.semiBold,
   },
   pressureTrend: {
     fontSize: 13,

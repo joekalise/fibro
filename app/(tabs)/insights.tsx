@@ -19,7 +19,7 @@ import { useTranslation } from 'react-i18next';
 import { useRouter, useFocusEffect } from 'expo-router';
 
 import { Colors } from '@/constants/colors';
-import { FontSize, Spacing, BorderRadius } from '@/constants/theme';
+import { FontSize, Spacing, BorderRadius, FontFamily } from '@/constants/theme';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/contexts/ProfileContext';
 import { getDailyLogs, getFlares, getStreak, saveFiqScore, getLatestFiqScore } from '@/services/database';
@@ -720,7 +720,7 @@ function FiqModal({ visible, isDark, userId, onDone }: { visible: boolean; isDar
                 {FIQ_QUESTIONS.map((q, i) => (
                   <View key={q.key} style={{ flexDirection: 'row', justifyContent: 'space-between', paddingVertical: 6, borderTopWidth: i === 0 ? 0 : 1, borderTopColor: isDark ? Colors.borderDark : Colors.border }}>
                     <Text style={[styles.fiqHint, { color: textSecondary, flex: 1, marginRight: 8 }]}>{q.minLabel.replace('Not ', '').replace('No ', '')}</Text>
-                    <Text style={[styles.fiqHint, { color: textPrimary, fontWeight: '600' }]}>{answers[q.key]}/10</Text>
+                    <Text style={[styles.fiqHint, { color: textPrimary, fontWeight: '600', fontFamily: FontFamily.semiBold }]}>{answers[q.key]}/10</Text>
                   </View>
                 ))}
               </View>
@@ -1225,6 +1225,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: FontSize.xxl,
     fontWeight: '800',
+    fontFamily: FontFamily.extraBold,
     flex: 1,
     marginRight: Spacing.sm,
   },
@@ -1243,6 +1244,7 @@ const styles = StyleSheet.create({
   periodBtnText: {
     fontSize: FontSize.xs,
     fontWeight: '600',
+    fontFamily: FontFamily.semiBold,
   },
 
   // Section divider
@@ -1268,6 +1270,7 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: FontSize.md,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
     marginBottom: Spacing.sm,
   },
   emptyText: {
@@ -1329,6 +1332,7 @@ const styles = StyleSheet.create({
   flareDate: {
     fontSize: FontSize.sm,
     fontWeight: '600',
+    fontFamily: FontFamily.semiBold,
   },
   flareDays: {
     fontSize: FontSize.xs,
@@ -1344,6 +1348,7 @@ const styles = StyleSheet.create({
     fontSize: FontSize.xs,
     color: '#FFFFFF',
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
     textTransform: 'capitalize',
   },
   statsGrid: {
@@ -1360,6 +1365,7 @@ const styles = StyleSheet.create({
   statValue: {
     fontSize: FontSize.sm,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
   },
 
   // Chat card — full card matching aiCard style
@@ -1387,6 +1393,7 @@ const styles = StyleSheet.create({
   chatRowArrow: {
     fontSize: FontSize.lg,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
   },
 
   // AI card styles
@@ -1412,6 +1419,7 @@ const styles = StyleSheet.create({
     fontSize: FontSize.xs,
     color: '#FFFFFF',
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
   },
   refreshBtn: {
     borderWidth: 1.5,
@@ -1423,6 +1431,7 @@ const styles = StyleSheet.create({
     fontSize: FontSize.xs,
     color: Colors.primary,
     fontWeight: '600',
+    fontFamily: FontFamily.semiBold,
   },
   generatingRow: {
     flexDirection: 'row',
@@ -1450,6 +1459,7 @@ const styles = StyleSheet.create({
     fontSize: FontSize.sm,
     color: Colors.error,
     fontWeight: '600',
+    fontFamily: FontFamily.semiBold,
   },
   insightText: {
     fontSize: FontSize.sm,

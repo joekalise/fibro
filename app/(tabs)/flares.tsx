@@ -15,7 +15,7 @@ import {
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useTranslation } from 'react-i18next';
 import { Colors } from '@/constants/colors';
-import { FontSize, Spacing, BorderRadius } from '@/constants/theme';
+import { FontSize, Spacing, BorderRadius, FontFamily } from '@/constants/theme';
 import { useFlares } from '@/hooks/useFlares';
 import { useProfile } from '@/contexts/ProfileContext';
 import { LoadingSpinner } from '@/components/common/LoadingSpinner';
@@ -166,7 +166,7 @@ function EditFlareModal({ visible, flare, onClose, onSave, onDelete, isDark, loc
                     style={[styles.chip, isDark && styles.chipDark, selected && { backgroundColor: color + '22', borderColor: color }]}
                     activeOpacity={0.7}
                   >
-                    <Text style={[styles.chipText, isDark && styles.textSecDark, selected && { color, fontWeight: '700' }]}>
+                    <Text style={[styles.chipText, isDark && styles.textSecDark, selected && { color, fontWeight: '700', fontFamily: FontFamily.bold }]}>
                       {t(`flares.severity_${sev}`)}
                     </Text>
                   </TouchableOpacity>
@@ -354,7 +354,7 @@ function StartFlareModal({ visible, onClose, onConfirm, isDark, title, locationO
                     style={[styles.chip, isDark && styles.chipDark, selected && { backgroundColor: color + '22', borderColor: color }]}
                     activeOpacity={0.7}
                   >
-                    <Text style={[styles.chipText, isDark && styles.textSecDark, selected && { color, fontWeight: '700' }]}>
+                    <Text style={[styles.chipText, isDark && styles.textSecDark, selected && { color, fontWeight: '700', fontFamily: FontFamily.bold }]}>
                       {t(`flares.severity_${sev}`)}
                     </Text>
                   </TouchableOpacity>
@@ -596,6 +596,7 @@ const styles = StyleSheet.create({
   groupCardTitle: {
     fontSize: FontSize.md,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
     color: Colors.textPrimary,
   },
   activeFlareInner: {
@@ -621,6 +622,7 @@ const styles = StyleSheet.create({
   historySubLabel: {
     fontSize: FontSize.sm,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
     color: Colors.textSecondary,
   },
 
@@ -651,6 +653,7 @@ const styles = StyleSheet.create({
   activeFlareTitle: {
     fontSize: FontSize.md,
     fontWeight: '800',
+    fontFamily: FontFamily.extraBold,
     color: Colors.error,
     flex: 1,
   },
@@ -686,6 +689,7 @@ const styles = StyleSheet.create({
   screenTitle: {
     fontSize: FontSize.xxl,
     fontWeight: '800',
+    fontFamily: FontFamily.extraBold,
     color: Colors.textPrimary,
     flex: 1,
     marginRight: Spacing.sm,
@@ -718,6 +722,7 @@ const styles = StyleSheet.create({
   statusText: {
     fontSize: FontSize.md,
     fontWeight: '600',
+    fontFamily: FontFamily.semiBold,
     color: Colors.textPrimary,
   },
   logFlareBtn: {
@@ -735,11 +740,13 @@ const styles = StyleSheet.create({
   sectionLabel: {
     fontSize: FontSize.xs,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
     color: Colors.textSecondary,
   },
   sectionActionLink: {
     fontSize: FontSize.sm,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
   },
   emptyStateText: {
     fontSize: FontSize.sm,
@@ -776,16 +783,19 @@ const styles = StyleSheet.create({
   historyEditLink: {
     fontSize: FontSize.xs,
     fontWeight: '600',
+    fontFamily: FontFamily.semiBold,
   },
   historyDateRange: {
     fontSize: FontSize.md,
     fontWeight: '600',
+    fontFamily: FontFamily.semiBold,
     color: Colors.textPrimary,
     flex: 1,
   },
   historyDuration: {
     fontSize: FontSize.md,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
     color: Colors.textPrimary,
   },
   historyAreas: {
@@ -804,6 +814,7 @@ const styles = StyleSheet.create({
   badgeText: {
     fontSize: FontSize.xs,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
   },
 
   // Empty state
@@ -853,10 +864,12 @@ const styles = StyleSheet.create({
     fontSize: FontSize.sm,
     color: Colors.textPrimary,
     fontWeight: '500',
+    fontFamily: FontFamily.medium,
   },
   chipTextSelected: {
     color: '#FFFFFF',
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
   },
 
   // Modal
@@ -887,12 +900,14 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: FontSize.xl,
     fontWeight: '800',
+    fontFamily: FontFamily.extraBold,
     color: Colors.textPrimary,
     marginBottom: Spacing.sm,
   },
   modalSectionLabel: {
     fontSize: FontSize.md,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
     color: Colors.textPrimary,
     marginTop: Spacing.xs,
   },
@@ -924,6 +939,7 @@ const styles = StyleSheet.create({
   dateInputLabel: {
     fontSize: FontSize.xs,
     fontWeight: '600',
+    fontFamily: FontFamily.semiBold,
     marginBottom: 4,
     color: Colors.textSecondary,
   },
@@ -952,6 +968,7 @@ const styles = StyleSheet.create({
     fontSize: FontSize.xs,
     color: Colors.error,
     fontWeight: '600',
+    fontFamily: FontFamily.semiBold,
     lineHeight: 18,
   },
 });

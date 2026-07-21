@@ -27,7 +27,7 @@ import { OptionCard } from '@/components/onboarding/OptionCard';
 import { MultiSelectCard } from '@/components/onboarding/MultiSelectCard';
 import { supabase } from '@/services/supabase';
 import { Colors } from '@/constants/colors';
-import { FontSize, Spacing, BorderRadius } from '@/constants/theme';
+import { FontSize, Spacing, BorderRadius, FontFamily } from '@/constants/theme';
 import { useAuth } from '@/contexts/AuthContext';
 import { useProfile } from '@/contexts/ProfileContext';
 import { useMedications } from '@/hooks/useMedications';
@@ -277,7 +277,7 @@ interface ProfileEditModalProps {
 
 function EditSectionHeader({ label, color }: { label: string; color: string }) {
   return (
-    <Text style={{ fontSize: FontSize.md, fontWeight: '700', color, marginTop: Spacing.xl, marginBottom: Spacing.sm }}>
+    <Text style={{ fontSize: FontSize.md, fontWeight: '700', fontFamily: FontFamily.bold, color, marginTop: Spacing.xl, marginBottom: Spacing.sm }}>
       {label}
     </Text>
   );
@@ -585,7 +585,7 @@ function AddMedicationModal({
                     onPress={() => { handleClose(); onOpenEditProfile(); }}
                     activeOpacity={0.8}
                   >
-                    <Text style={{ fontSize: FontSize.xs, color: Colors.primary, fontWeight: '600' }}>Edit treatment ›</Text>
+                    <Text style={{ fontSize: FontSize.xs, color: Colors.primary, fontWeight: '600', fontFamily: FontFamily.semiBold }}>Edit treatment ›</Text>
                   </TouchableOpacity>
                 )}
               </View>
@@ -1337,14 +1337,14 @@ export default function ProfileScreen() {
                   style={[styles.timePickerCancel, { borderColor: cardBorder }]}
                   activeOpacity={0.8}
                 >
-                  <Text style={{ color: textSecondary, fontWeight: '500' }}>Cancel</Text>
+                  <Text style={{ color: textSecondary, fontWeight: '500', fontFamily: FontFamily.medium }}>Cancel</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   onPress={handleSaveTime}
                   style={styles.timePickerSave}
                   activeOpacity={0.8}
                 >
-                  <Text style={{ color: '#FFFFFF', fontWeight: '600' }}>Save</Text>
+                  <Text style={{ color: '#FFFFFF', fontWeight: '600', fontFamily: FontFamily.semiBold }}>Save</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -1504,14 +1504,14 @@ export default function ProfileScreen() {
                   style={[styles.timePickerCancel, { borderColor: cardBorder }]}
                   activeOpacity={0.8}
                 >
-                  <Text style={{ color: textSecondary, fontWeight: '500' }}>Cancel</Text>
+                  <Text style={{ color: textSecondary, fontWeight: '500', fontFamily: FontFamily.medium }}>Cancel</Text>
                 </TouchableOpacity>
                 <TouchableOpacity
                   onPress={() => { setReportFromDate(pendingReportDate); setShowReportDatePicker(false); }}
                   style={styles.timePickerSave}
                   activeOpacity={0.8}
                 >
-                  <Text style={{ color: '#FFFFFF', fontWeight: '600' }}>Set</Text>
+                  <Text style={{ color: '#FFFFFF', fontWeight: '600', fontFamily: FontFamily.semiBold }}>Set</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -1870,6 +1870,7 @@ const styles = StyleSheet.create({
   settingsRowLabel: {
     fontSize: FontSize.sm,
     fontWeight: '600',
+    fontFamily: FontFamily.semiBold,
   },
   settingsRowSub: {
     fontSize: FontSize.xs,
@@ -1878,10 +1879,12 @@ const styles = StyleSheet.create({
   settingsRowValue: {
     fontSize: FontSize.sm,
     fontWeight: '600',
+    fontFamily: FontFamily.semiBold,
   },
   chevron: {
     fontSize: 20,
     fontWeight: '300',
+    fontFamily: FontFamily.regular,
   },
   rowDivider: {
     height: StyleSheet.hairlineWidth,
@@ -1896,6 +1899,7 @@ const styles = StyleSheet.create({
   sectionLabel: {
     fontSize: FontSize.xs,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
     textTransform: 'uppercase',
     letterSpacing: 0.5,
     marginBottom: Spacing.sm,
@@ -1910,6 +1914,7 @@ const styles = StyleSheet.create({
   title: {
     fontSize: FontSize.xxl,
     fontWeight: '800',
+    fontFamily: FontFamily.extraBold,
     marginBottom: Spacing.sm,
   },
 
@@ -1932,6 +1937,7 @@ const styles = StyleSheet.create({
   sectionHeaderLabel: {
     fontSize: FontSize.sm,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
     color: Colors.textSecondary,
   },
 
@@ -1955,15 +1961,18 @@ const styles = StyleSheet.create({
   avatarText: {
     fontSize: FontSize.xxl,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
     color: '#FFFFFF',
   },
   nameDisplay: {
     fontSize: FontSize.md,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
   },
   nameInput: {
     fontSize: FontSize.md,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
     borderBottomWidth: 1.5,
     paddingVertical: 2,
     paddingHorizontal: 4,
@@ -1988,11 +1997,13 @@ const styles = StyleSheet.create({
   cardTitle: {
     fontSize: FontSize.md,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
   },
   editLink: {
     fontSize: FontSize.sm,
     color: Colors.primary,
     fontWeight: '600',
+    fontFamily: FontFamily.semiBold,
   },
 
   // Summary section header
@@ -2010,6 +2021,7 @@ const styles = StyleSheet.create({
   summarySectionLabel: {
     fontSize: FontSize.xs,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
   },
 
   // Summary row
@@ -2028,6 +2040,7 @@ const styles = StyleSheet.create({
   summaryRowValue: {
     fontSize: FontSize.sm,
     fontWeight: '600',
+    fontFamily: FontFamily.semiBold,
     textAlign: 'right',
     flexShrink: 1,
     flex: 1,
@@ -2035,6 +2048,7 @@ const styles = StyleSheet.create({
   summaryValueFull: {
     fontSize: FontSize.sm,
     fontWeight: '600',
+    fontFamily: FontFamily.semiBold,
     paddingVertical: 3,
   },
 
@@ -2050,6 +2064,7 @@ const styles = StyleSheet.create({
   notifLabel: {
     fontSize: FontSize.sm,
     fontWeight: '600',
+    fontFamily: FontFamily.semiBold,
   },
   notifTime: {
     fontSize: FontSize.xs,
@@ -2065,6 +2080,7 @@ const styles = StyleSheet.create({
   updateTimeText: {
     fontSize: FontSize.sm,
     fontWeight: '600',
+    fontFamily: FontFamily.semiBold,
   },
   timePickerActions: {
     flexDirection: 'row',
@@ -2102,6 +2118,7 @@ const styles = StyleSheet.create({
   medName: {
     fontSize: FontSize.sm,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
   },
   medMeta: {
     flexDirection: 'row',
@@ -2123,6 +2140,7 @@ const styles = StyleSheet.create({
     fontSize: FontSize.xs,
     color: Colors.primaryDark,
     fontWeight: '600',
+    fontFamily: FontFamily.semiBold,
   },
   medTime: {
     fontSize: FontSize.xs,
@@ -2156,6 +2174,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: FontSize.sm,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
   },
   cancelContextBtn: {
     flex: 1,
@@ -2167,6 +2186,7 @@ const styles = StyleSheet.create({
   cancelContextText: {
     fontSize: FontSize.sm,
     fontWeight: '600',
+    fontFamily: FontFamily.semiBold,
   },
   aiContextReadOnly: {
     fontSize: FontSize.sm,
@@ -2191,6 +2211,7 @@ const styles = StyleSheet.create({
   accountRowLabel: {
     fontSize: FontSize.sm,
     fontWeight: '600',
+    fontFamily: FontFamily.semiBold,
     marginBottom: 2,
   },
   accountRowValue: {
@@ -2218,6 +2239,7 @@ const styles = StyleSheet.create({
   aiPrivacyTitle: {
     fontSize: FontSize.sm,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
     marginBottom: Spacing.xs,
   },
   aiPrivacyBody: {
@@ -2257,6 +2279,7 @@ const styles = StyleSheet.create({
   healthSimpleName: {
     fontSize: FontSize.sm,
     fontWeight: '600',
+    fontFamily: FontFamily.semiBold,
   },
   healthConnectedBadge: {
     paddingHorizontal: Spacing.sm,
@@ -2266,10 +2289,12 @@ const styles = StyleSheet.create({
   healthConnectedBadgeText: {
     fontSize: FontSize.xs,
     fontWeight: '600',
+    fontFamily: FontFamily.semiBold,
   },
   healthSimpleAction: {
     fontSize: FontSize.sm,
     fontWeight: '600',
+    fontFamily: FontFamily.semiBold,
   },
 
   // Share report card
@@ -2293,6 +2318,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: FontSize.sm,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
   },
   reportDateRow: {
     flexDirection: 'row',
@@ -2304,15 +2330,18 @@ const styles = StyleSheet.create({
   reportDateLabel: {
     fontSize: FontSize.xs,
     fontWeight: '600',
+    fontFamily: FontFamily.semiBold,
   },
   reportDateValue: {
     fontSize: FontSize.xs,
     fontWeight: '600',
+    fontFamily: FontFamily.semiBold,
     textDecorationLine: 'underline',
   },
   reportDateInput: {
     fontSize: FontSize.xs,
     fontWeight: '600',
+    fontFamily: FontFamily.semiBold,
     borderWidth: 1,
     borderRadius: BorderRadius.sm,
     paddingHorizontal: Spacing.xs,
@@ -2335,6 +2364,7 @@ const styles = StyleSheet.create({
   premiumTeaserTitle: {
     fontSize: FontSize.md,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
   },
   premiumTeaserBody: {
     fontSize: FontSize.sm,
@@ -2343,6 +2373,7 @@ const styles = StyleSheet.create({
   premiumTeaserArrow: {
     fontSize: 20,
     fontWeight: '600',
+    fontFamily: FontFamily.semiBold,
   },
   subHeader: {
     flexDirection: 'row',
@@ -2366,6 +2397,7 @@ const styles = StyleSheet.create({
     fontSize: FontSize.xs,
     color: '#FFFFFF',
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
   },
   subPrice: {
     fontSize: FontSize.sm,
@@ -2393,6 +2425,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: FontSize.sm,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
   },
   restoreBtn: {
     paddingVertical: Spacing.sm,
@@ -2402,6 +2435,7 @@ const styles = StyleSheet.create({
   restoreBtnText: {
     fontSize: FontSize.sm,
     fontWeight: '600',
+    fontFamily: FontFamily.semiBold,
   },
   manageSubBtn: {
     paddingVertical: Spacing.xs,
@@ -2410,6 +2444,7 @@ const styles = StyleSheet.create({
     fontSize: FontSize.sm,
     color: Colors.primary,
     fontWeight: '600',
+    fontFamily: FontFamily.semiBold,
   },
   // Modal
   modalOverlay: {
@@ -2427,11 +2462,13 @@ const styles = StyleSheet.create({
   modalTitle: {
     fontSize: FontSize.lg,
     fontWeight: '800',
+    fontFamily: FontFamily.extraBold,
     marginBottom: Spacing.md,
   },
   fieldLabel: {
     fontSize: FontSize.xs,
     fontWeight: '600',
+    fontFamily: FontFamily.semiBold,
     marginBottom: Spacing.xs,
     marginTop: Spacing.sm,
   },
@@ -2456,6 +2493,7 @@ const styles = StyleSheet.create({
   chipText: {
     fontSize: FontSize.xs,
     fontWeight: '600',
+    fontFamily: FontFamily.semiBold,
   },
   modalActions: {
     flexDirection: 'row',
@@ -2472,6 +2510,7 @@ const styles = StyleSheet.create({
   modalCancelText: {
     fontSize: FontSize.sm,
     fontWeight: '600',
+    fontFamily: FontFamily.semiBold,
   },
   modalSaveBtn: {
     flex: 2,
@@ -2484,11 +2523,13 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: FontSize.sm,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
   },
   // Medications card sections
   medSectionLabel: {
     fontSize: FontSize.xs,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
     marginBottom: Spacing.sm,
   },
   medTreatmentRow: {
@@ -2519,6 +2560,7 @@ const styles = StyleSheet.create({
   injectionMedName: {
     fontSize: FontSize.sm,
     fontWeight: '600',
+    fontFamily: FontFamily.semiBold,
   },
   injectionLastDate: {
     fontSize: FontSize.xs,
@@ -2539,10 +2581,12 @@ const styles = StyleSheet.create({
   editModalTitle: {
     fontSize: FontSize.lg,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
   },
   editModalClose: {
     fontSize: FontSize.sm,
     fontWeight: '600',
+    fontFamily: FontFamily.semiBold,
   },
   editModalContent: {
     padding: Spacing.lg,
@@ -2551,6 +2595,7 @@ const styles = StyleSheet.create({
   editFieldLabel: {
     fontSize: FontSize.sm,
     fontWeight: '600',
+    fontFamily: FontFamily.semiBold,
     marginBottom: Spacing.xs,
     marginTop: Spacing.md,
   },

@@ -14,7 +14,7 @@ import {
 import { useTranslation } from 'react-i18next';
 import { Colors } from '@/constants/colors';
 import { logEvent, Events } from '@/services/analytics';
-import { FontSize, Spacing, BorderRadius } from '@/constants/theme';
+import { FontSize, Spacing, BorderRadius, FontFamily } from '@/constants/theme';
 
 interface PremiumModalProps {
   visible: boolean;
@@ -294,6 +294,7 @@ const mock = StyleSheet.create({
   cardTitle: {
     fontSize: FontSize.md,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
     flex: 1,
   },
   badge: {
@@ -305,6 +306,7 @@ const mock = StyleSheet.create({
   badgeText: {
     fontSize: FontSize.xs,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
     color: Colors.primary,
   },
   body: {
@@ -326,6 +328,7 @@ const mock = StyleSheet.create({
   chipText: {
     fontSize: FontSize.xs,
     fontWeight: '600',
+    fontFamily: FontFamily.semiBold,
   },
   chatBubbleUser: {
     alignItems: 'flex-end',
@@ -391,6 +394,7 @@ const styles = StyleSheet.create({
   closeText: {
     fontSize: 20,
     fontWeight: '500',
+    fontFamily: FontFamily.medium,
   },
   scroll: {
     paddingHorizontal: Spacing.lg,
@@ -408,6 +412,7 @@ const styles = StyleSheet.create({
   headerTitle: {
     fontSize: 28,
     fontWeight: '800',
+    fontFamily: FontFamily.extraBold,
     marginBottom: Spacing.sm,
     textAlign: 'center',
   },
@@ -420,6 +425,7 @@ const styles = StyleSheet.create({
   sectionLabel: {
     fontSize: FontSize.xs,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
     letterSpacing: 0.8,
     textTransform: 'uppercase',
     marginBottom: Spacing.sm,
@@ -449,6 +455,7 @@ const styles = StyleSheet.create({
   featureTitle: {
     fontSize: FontSize.sm,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
   },
   featureBody: {
     fontSize: FontSize.sm,
@@ -457,12 +464,14 @@ const styles = StyleSheet.create({
   priceAmount: {
     fontSize: 28,
     fontWeight: '800',
+    fontFamily: FontFamily.extraBold,
     marginBottom: 4,
   },
   trialLabel: {
     fontSize: FontSize.xs,
     marginBottom: 4,
     fontWeight: '500',
+    fontFamily: FontFamily.medium,
   },
   pricingNote: {
     fontSize: FontSize.xs,
@@ -492,6 +501,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: FontSize.md,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
   },
   restoreBtn: {
     alignItems: 'center',

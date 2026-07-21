@@ -18,7 +18,7 @@ import { useTranslation } from 'react-i18next';
 import { useRouter } from 'expo-router';
 
 import { Colors } from '@/constants/colors';
-import { FontSize, Spacing, BorderRadius } from '@/constants/theme';
+import { FontSize, Spacing, BorderRadius, FontFamily } from '@/constants/theme';
 import { useWeeklyData } from '@/hooks/useWeeklyData';
 import { useFlares } from '@/hooks/useFlares';
 import { useSubscription } from '@/hooks/useSubscription';
@@ -61,7 +61,7 @@ function renderMarkdown(text: string, isDark: boolean): React.ReactElement {
         {parts.map((part, i) => {
           if (part.startsWith('**') && part.endsWith('**')) {
             return (
-              <Text key={i} style={{ fontWeight: '700', color: baseColor }}>
+              <Text key={i} style={{ fontWeight: '700', fontFamily: FontFamily.bold, color: baseColor }}>
                 {part.slice(2, -2)}
               </Text>
             );
@@ -87,7 +87,7 @@ function renderMarkdown(text: string, isDark: boolean): React.ReactElement {
     if (/^#{1,3} /.test(line)) {
       const headingText = line.replace(/^#{1,3} /, '');
       elements.push(
-        <Text key={key++} style={{ fontWeight: '700', fontSize: FontSize.sm, color: textColor, lineHeight: 20, marginTop: 4 }}>
+        <Text key={key++} style={{ fontWeight: '700', fontFamily: FontFamily.bold, fontSize: FontSize.sm, color: textColor, lineHeight: 20, marginTop: 4 }}>
           {headingText}
         </Text>
       );
@@ -551,15 +551,18 @@ const styles = StyleSheet.create({
   backText: {
     fontSize: FontSize.md,
     fontWeight: '600',
+    fontFamily: FontFamily.semiBold,
   },
   clearText: {
     fontSize: FontSize.sm,
     fontWeight: '500',
+    fontFamily: FontFamily.medium,
     textAlign: 'right',
   },
   headerTitle: {
     fontSize: FontSize.md,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
   },
   messagesList: {
     padding: Spacing.md,
@@ -624,6 +627,7 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: FontSize.sm,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
   },
   // Locked state
   lockedContainer: {
@@ -636,6 +640,7 @@ const styles = StyleSheet.create({
   lockedTitle: {
     fontSize: FontSize.xl,
     fontWeight: '800',
+    fontFamily: FontFamily.extraBold,
     textAlign: 'center',
   },
   lockedBody: {
@@ -654,5 +659,6 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     fontSize: FontSize.md,
     fontWeight: '700',
+    fontFamily: FontFamily.bold,
   },
 });
