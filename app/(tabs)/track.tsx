@@ -11,8 +11,6 @@ import {
   Alert,
   Modal,
   Switch,
-  KeyboardAvoidingView,
-  Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { DragSlider } from '@/components/common/DragSlider';
@@ -634,12 +632,12 @@ function DayLogModal({ date, initialLog, userId, tracksMedication, isFemale, isD
           </Text>
           <View style={styles.modalCancel} />
         </View>
-        <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <ScrollView
           style={styles.scroll}
           contentContainerStyle={[styles.scrollContent, { paddingTop: Spacing.md }]}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
+          automaticallyAdjustKeyboardInsets
         >
           <DayLogForm
             painScore={painScore} setPainScore={setPainScore}
@@ -664,7 +662,6 @@ function DayLogModal({ date, initialLog, userId, tracksMedication, isFemale, isD
           />
           <View style={styles.bottomPad} />
         </ScrollView>
-        </KeyboardAvoidingView>
       </SafeAreaView>
     </Modal>
   );
@@ -1000,16 +997,12 @@ export default function TrackScreen() {
 
   return (
     <SafeAreaView style={[styles.screen, isDark && styles.screenDark]}>
-      <KeyboardAvoidingView
-        style={{ flex: 1 }}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        keyboardVerticalOffset={0}
-      >
       <ScrollView
         style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
+        automaticallyAdjustKeyboardInsets
       >
         {/* Log header */}
         <View style={styles.logHeaderRow}>
@@ -1094,7 +1087,6 @@ export default function TrackScreen() {
 
         <View style={styles.bottomPad} />
       </ScrollView>
-      </KeyboardAvoidingView>
 
       {/* Edit modal for past entries */}
       {modalDate && user && (

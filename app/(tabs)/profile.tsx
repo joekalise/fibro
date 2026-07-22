@@ -1116,11 +1116,11 @@ export default function ProfileScreen() {
 
   return (
     <SafeAreaView style={[styles.screen, { backgroundColor: bg }]}>
-      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
+        automaticallyAdjustKeyboardInsets
       >
         {/* ── User header ─────────────────────────────────────────────────── */}
         <View style={styles.profileHeader}>
@@ -1710,7 +1710,6 @@ export default function ProfileScreen() {
           {t('profile.version', { version })}
         </Text>
       </ScrollView>
-      </KeyboardAvoidingView>
 
       <AddMedicationModal
         visible={showAddMed}

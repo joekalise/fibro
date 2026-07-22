@@ -842,7 +842,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: Spacing.xs,
-    marginBottom: Spacing.sm,
+    marginBottom: Spacing.xs,
   },
   chip: {
     paddingVertical: Spacing.xs,
@@ -909,7 +909,8 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     fontFamily: FontFamily.bold,
     color: Colors.textPrimary,
-    marginTop: Spacing.xs,
+    marginTop: Spacing.md,
+    marginBottom: Spacing.sm,
   },
   notesInput: {
     minHeight: 80,
@@ -922,7 +923,7 @@ const styles = StyleSheet.create({
     fontFamily: FontFamily.regular,
     color: Colors.textPrimary,
     lineHeight: 22,
-    marginBottom: Spacing.sm,
+    marginBottom: Spacing.md,
   },
   notesInputDark: {
     borderColor: Colors.borderDark,
