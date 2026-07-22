@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect, useMemo } from 'react';
+import React, { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import { useFocusEffect } from 'expo-router';
 import {
   View,
@@ -236,6 +236,7 @@ interface DayLogFormProps {
   t: (key: string, opts?: Record<string, unknown>) => string;
   isSaving: boolean;
   onSave: () => void;
+  onNotesFocus?: () => void;
 }
 
 function DayLogForm({
@@ -256,7 +257,7 @@ function DayLogForm({
   activityLevel, setActivityLevel,
   wokeRested, setWokeRested,
   highSensitivityDay, setHighSensitivityDay,
-  isDark, t, isSaving, onSave,
+  isDark, t, isSaving, onSave, onNotesFocus,
 }: DayLogFormProps) {
   const stiffnessOptions = STIFFNESS_OPTIONS.map((opt) => ({ value: opt.value, label: t(opt.labelKey) }));
   const medOptions = [
@@ -541,6 +542,7 @@ function DayLogForm({
           placeholderTextColor={isDark ? Colors.textSecondaryDark : Colors.textSecondary}
           value={notes}
           onChangeText={(v) => setNotes(v.slice(0, 500))}
+          onFocus={onNotesFocus}
           multiline
           numberOfLines={4}
           textAlignVertical="top"
@@ -567,6 +569,7 @@ interface DayLogModalProps {
 }
 
 function DayLogModal({ date, initialLog, userId, tracksMedication, isFemale, isDark, t, onSaved, onClose }: DayLogModalProps) {
+  const modalScrollRef = useRef<ScrollView>(null);
   const [painScore, setPainScore] = useState(initialLog?.pain_score ?? 0);
   const [fatigueScore, setFatigueScore] = useState(initialLog?.fatigue_score ?? 0);
   const [brainFogScore, setBrainFogScore] = useState<number | null>(initialLog?.brain_fog_score ?? 0);
@@ -633,6 +636,7 @@ function DayLogModal({ date, initialLog, userId, tracksMedication, isFemale, isD
           <View style={styles.modalCancel} />
         </View>
         <ScrollView
+          ref={modalScrollRef}
           style={styles.scroll}
           contentContainerStyle={[styles.scrollContent, { paddingTop: Spacing.md }]}
           showsVerticalScrollIndicator={false}
@@ -659,6 +663,7 @@ function DayLogModal({ date, initialLog, userId, tracksMedication, isFemale, isD
             highSensitivityDay={highSensitivityDay} setHighSensitivityDay={setHighSensitivityDay}
             isDark={isDark} t={t}
             isSaving={isSaving} onSave={handleSave}
+            onNotesFocus={() => modalScrollRef.current?.scrollToEnd({ animated: true })}
           />
           <View style={styles.bottomPad} />
         </ScrollView>
@@ -831,6 +836,7 @@ export default function TrackScreen() {
   const { user } = useAuth();
   const { profile } = useProfile();
   const isFemale = profile?.biological_sex === 'female';
+  const mainScrollRef = useRef<ScrollView>(null);
 
   const todayStr = localDateString(0);
 
@@ -998,6 +1004,7 @@ export default function TrackScreen() {
   return (
     <SafeAreaView style={[styles.screen, isDark && styles.screenDark]}>
       <ScrollView
+        ref={mainScrollRef}
         style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
@@ -1070,6 +1077,7 @@ export default function TrackScreen() {
             highSensitivityDay={highSensitivityDay} setHighSensitivityDay={setHighSensitivityDay}
             isDark={isDark} t={t}
             isSaving={isSaving} onSave={handleSaveToday}
+            onNotesFocus={() => mainScrollRef.current?.scrollToEnd({ animated: true })}
           />
         )}
 

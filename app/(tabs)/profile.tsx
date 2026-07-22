@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect, useMemo } from 'react';
+import React, { useState, useCallback, useEffect, useMemo, useRef } from 'react';
 import {
   View,
   Text,
@@ -768,6 +768,7 @@ export default function ProfileScreen() {
   } = useHealthData();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
+  const profileScrollRef = useRef<ScrollView>(null);
 
   const version = Constants.expoConfig?.version ?? '1.0.0';
 
@@ -1117,6 +1118,7 @@ export default function ProfileScreen() {
   return (
     <SafeAreaView style={[styles.screen, { backgroundColor: bg }]}>
       <ScrollView
+        ref={profileScrollRef}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
@@ -1209,6 +1211,7 @@ export default function ProfileScreen() {
                 value={aiContext}
                 onChangeText={setAiContext}
                 autoFocus
+                onFocus={() => profileScrollRef.current?.scrollToEnd({ animated: true })}
               />
               <Text style={[styles.helperText, { color: textSecondary }]}>
                 {t('profile.ai_context_helper')}
