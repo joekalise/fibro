@@ -14,6 +14,10 @@ android/
 # macOS
 .DS_Store
 
+# Vim swap files
+*.swp
+*.swo
+
 # Logs
 *.log
 npm-debug.log*
