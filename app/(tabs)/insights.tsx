@@ -145,6 +145,7 @@ function TrendChart({
               x={paddingLeft - 4}
               y={y + 4}
               fontSize={9}
+              fontFamily="PlusJakartaSans_400Regular"
               fill="#A8A29E"
               textAnchor="end"
             >
@@ -163,6 +164,7 @@ function TrendChart({
             x={xForIndex(i)}
             y={height - 4}
             fontSize={9}
+            fontFamily="PlusJakartaSans_400Regular"
             fill="#A8A29E"
             textAnchor="middle"
           >

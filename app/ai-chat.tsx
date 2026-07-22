@@ -611,6 +611,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: Spacing.md,
     paddingVertical: Spacing.sm,
     fontSize: FontSize.sm,
+    fontFamily: FontFamily.regular,
     minHeight: 40,
     maxHeight: 80,
   },

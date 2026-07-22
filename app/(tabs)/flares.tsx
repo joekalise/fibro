@@ -919,6 +919,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.background,
     padding: Spacing.sm,
     fontSize: FontSize.md,
+    fontFamily: FontFamily.regular,
     color: Colors.textPrimary,
     lineHeight: 22,
     marginBottom: Spacing.sm,
@@ -950,6 +951,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.background,
     padding: Spacing.sm,
     fontSize: FontSize.sm,
+    fontFamily: FontFamily.regular,
     color: Colors.textPrimary,
   },
 

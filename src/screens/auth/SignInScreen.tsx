@@ -353,6 +353,7 @@ const styles = StyleSheet.create({
   },
   input: {
     fontSize: FontSize.md,
+    fontFamily: FontFamily.regular,
     color: Colors.textPrimary,
     backgroundColor: Colors.surface,
     borderWidth: 1.5,

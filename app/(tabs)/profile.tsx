@@ -1116,6 +1116,7 @@ export default function ProfileScreen() {
 
   return (
     <SafeAreaView style={[styles.screen, { backgroundColor: bg }]}>
+      <KeyboardAvoidingView style={{ flex: 1 }} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
@@ -1709,6 +1710,7 @@ export default function ProfileScreen() {
           {t('profile.version', { version })}
         </Text>
       </ScrollView>
+      </KeyboardAvoidingView>
 
       <AddMedicationModal
         visible={showAddMed}
@@ -2155,6 +2157,7 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.sm,
     padding: Spacing.sm,
     fontSize: FontSize.sm,
+    fontFamily: FontFamily.regular,
     minHeight: 90,
     marginTop: Spacing.sm,
     marginBottom: Spacing.xs,
@@ -2226,6 +2229,7 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.sm,
     padding: Spacing.sm,
     fontSize: FontSize.sm,
+    fontFamily: FontFamily.regular,
     minHeight: 120,
     marginTop: Spacing.xs,
     marginBottom: Spacing.md,
@@ -2478,6 +2482,7 @@ const styles = StyleSheet.create({
     paddingVertical: Spacing.sm,
     paddingHorizontal: Spacing.md,
     fontSize: FontSize.sm,
+    fontFamily: FontFamily.regular,
   },
   chipsRow: {
     flexDirection: 'row',
