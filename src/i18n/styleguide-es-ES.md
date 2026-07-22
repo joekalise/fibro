@@ -54,7 +54,7 @@ Reference for translators working on `es-ES.json`. Read this before translating 
 | English | es-ES | Notes |
 |---|---|---|
 | Fibromyalgia | fibromialgia | Lowercase unless starting a sentence |
-| Flare / flare-up | **brote** | The established patient-community term in Spain. Never "llamarada" (literal, unused). Never "crisis" (that's the Latin American term). |
+| Flare / flare-up | **brote** | The established patient-community term in Spain. Never "llamarada" (literal, unused). Never "crisis". |
 | Active flare | brote activo | |
 | Flare trigger | desencadenante | "Detonante" is understood but "desencadenante" is more clinical and consistent |
 | Flare history | historial de brotes | |
@@ -95,7 +95,7 @@ Reference for translators working on `es-ES.json`. Read this before translating 
 | Medications | medicamentos | "Medicación" is acceptable as a section header |
 | Profile | perfil | |
 | AI context / About you | **sobre ti** | Don't use "contexto de IA" — too technical for the UI |
-| Share with my doctor | compartir con mi médico | Use "médico", not "doctor" — "doctor" is less formal and less common in Spain |
+| Share with my doctor | compartir con mi médico | Use "médico", not "doctor" — "doctor" is less formal and less common in this context |
 | Report (PDF) | informe | |
 | Diet triggers | alimentos desencadenantes | |
 | Score | puntuación | In Fibro Score context, keep "Fibro Score" but "tu puntuación" in running copy |
@@ -148,5 +148,5 @@ Reference for translators working on `es-ES.json`. Read this before translating 
 - **Never** use "cansancio" for fatigue
 - **Never** use "vosotros" — rephrase
 - **Never** add an article before Fibro ("la Fibro", "el Fibro")
-- **Never** use "crisis" for flare — that's the Latin American term; use "brote"
+- **Never** use "crisis" for flare — use "brote"
 - **Don't** over-punctuate UI strings with exclamation marks. The English has some; remove them in Spanish where they feel excessive.

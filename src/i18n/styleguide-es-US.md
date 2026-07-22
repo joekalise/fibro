@@ -55,7 +55,7 @@ Reference for translators working on `es-US.json`. This locale targets Spanish s
 | English | es-US | Notes |
 |---|---|---|
 | Fibromyalgia | fibromialgia | Lowercase unless starting a sentence |
-| Flare / flare-up | **crisis** or **episodio** | "Crisis" is the most widely understood term across Latin American communities. "Episodio" is slightly more clinical. Either is acceptable; pick one and be consistent within a screen. Never "llamarada" (literal, unused clinically) and never "brote" (that's the Spain term). |
+| Flare / flare-up | **crisis** or **episodio** | "Crisis" is the most widely understood term across Latin American communities. "Episodio" is slightly more clinical. Either is acceptable; pick one and be consistent within a screen. Never "llamarada" (literal, unused clinically). |
 | Active flare | crisis activa / episodio activo | Match whichever base term you chose |
 | Flare trigger | desencadenante | "Detonante" is also well understood in Latin American Spanish |
 | Flare history | historial de crisis | |
@@ -81,7 +81,7 @@ Reference for translators working on `es-US.json`. This locale targets Spanish s
 | English | es-US | Notes |
 |---|---|---|
 | Log (noun) | **registro** | "Registro diario" for the full daily log |
-| Log (verb) | **registrar** | "Anota cómo te sientes" works well in onboarding copy (note: "encuentras" → "sientes" reads more naturally in Latin American Spanish) |
+| Log (verb) | **registrar** | "Anota cómo te sientes" works well in onboarding copy |
 | Daily check-in | **registro diario** | Don't use "check-in" even in a US market — translate it |
 | Track (verb) | **monitorear** or **hacer seguimiento de** | "Monitorear" is widely used and natural in Latin American Spanish tech contexts |
 | Tracking | **seguimiento** or **monitoreo** | |
@@ -96,9 +96,9 @@ Reference for translators working on `es-US.json`. This locale targets Spanish s
 | Medications | medicamentos | |
 | Profile | perfil | |
 | AI context / About you | **sobre ti** | Don't use "contexto de IA" — too technical |
-| Share with my doctor | compartir con mi doctor | Use "doctor" — more natural than "médico" in US Latin American Spanish |
+| Share with my doctor | compartir con mi doctor | Use "doctor" — more natural than "médico" in this context |
 | Report (PDF) | informe | |
-| Diet triggers | alimentos desencadenantes | "Detonantes alimenticios" also works in es-US |
+| Diet triggers | alimentos desencadenantes | "Detonantes alimenticios" is also acceptable |
 | Score | puntuación | In Fibro Score context, keep "Fibro Score" but "tu puntuación" in running copy |
 
 ### Severity & scale labels
@@ -143,30 +143,12 @@ Reference for translators working on `es-US.json`. This locale targets Spanish s
 
 ---
 
-## Key differences from es-ES
-
-These are the points where es-US diverges from the Spain translation — check these carefully if reusing any es-ES copy:
-
-| Topic | es-ES | es-US |
-|---|---|---|
-| Flare term | brote | crisis / episodio |
-| Decimal separator | coma (7,2) | punto (7.2) |
-| Thousands separator | punto (1.000) | coma (1,000) |
-| Period (menstrual) | período (with accent) | periodo (no accent) |
-| Doctor | médico | doctor |
-| Track verb | hacer seguimiento de | monitorear |
-| Get started | Empezar | Comenzar |
-| Select all that apply | Selecciona todo lo que corresponda | Selecciona todo lo que aplique |
-| "encuentras" vs "sientes" | "cómo te encuentras" | "cómo te sientes" |
-
----
-
 ## Common mistakes to avoid
 
 - **Never** use "llamarada" for flare
 - **Never** use "cansancio" for fatigue
 - **Never** use "vosotros"
 - **Never** add an article before Fibro ("la Fibro", "el Fibro")
-- **Never** use "brote" for flare — that's the Spain term; use "crisis" or "episodio"
+- **Never** use "brote" for flare — use "crisis" or "episodio"
 - **Don't** over-punctuate UI strings with exclamation marks. The English has some; remove them in Spanish where they feel excessive.
 - **Don't** use anglicisms for medical terms just because it's a US market. "Brain fog" should still be "niebla mental", not left in English.
