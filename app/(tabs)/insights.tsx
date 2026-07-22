@@ -64,16 +64,16 @@ async function saveInsightCache(userId: string, insight: WeeklyInsight): Promise
   await AsyncStorage.setItem(insightCacheKey(userId), JSON.stringify(cache));
 }
 
-function cacheAgeLabel(generatedAt: string): string {
+function cacheAgeLabel(generatedAt: string, t: (key: string, opts?: Record<string, unknown>) => string): string {
   const ms = Date.now() - new Date(generatedAt).getTime();
   const mins = Math.floor(ms / 60000);
   const hours = Math.floor(ms / 3600000);
   const days = Math.floor(ms / 86400000);
-  if (mins < 2) return 'just now';
-  if (hours < 1) return `${mins} min ago`;
-  if (days < 1) return `${hours}h ago`;
-  if (days === 1) return 'yesterday';
-  return `${days} days ago`;
+  if (mins < 2) return t('insights_extra.cache_just_now');
+  if (hours < 1) return t('insights_extra.cache_mins_ago', { mins });
+  if (days < 1) return t('insights_extra.cache_hours_ago', { hours });
+  if (days === 1) return t('insights_extra.cache_yesterday');
+  return t('insights_extra.cache_days_ago', { days });
 }
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -303,7 +303,7 @@ function AIInsightCard({ logs, flares, profile, healthHistory, isDark }: AIInsig
             {t('insights.ai_insight_card_title')}
           </Text>
           <View style={styles.premiumBadge}>
-            <Text style={styles.premiumBadgeText}>Premium</Text>
+            <Text style={styles.premiumBadgeText}>{t('home_extra.premium_badge')}</Text>
           </View>
         </View>
         <TouchableOpacity
@@ -317,7 +317,7 @@ function AIInsightCard({ logs, flares, profile, healthHistory, isDark }: AIInsig
       </View>
       {generatedAt && !isGenerating && (
         <Text style={[styles.insightTimestamp, { color: textSecondary }]}>
-          Updated {cacheAgeLabel(generatedAt)}
+          {t('insights_extra.insight_updated', { age: cacheAgeLabel(generatedAt, t) })}
         </Text>
       )}
 
@@ -371,14 +371,14 @@ function AIInsightCard({ logs, flares, profile, healthHistory, isDark }: AIInsig
             {profile.welcome_message}
           </Text>
           <Text style={[styles.teaserText, { color: textSecondary, marginTop: Spacing.sm }]}>
-            Your personalised weekly insight will appear here once you have a few days of data.
+            {t('insights_extra.insight_weekly_teaser')}
           </Text>
         </View>
       ) : (
         <Text style={[styles.teaserText, { color: textSecondary }]}>
           {logs.length === 0
-            ? 'Log a few days and your insight will appear here.'
-            : 'Generating your insight...'}
+            ? t('insights_extra.insight_log_days')
+            : t('insights_extra.insight_generating')}
         </Text>
       )}
 
@@ -397,6 +397,7 @@ interface TrialPromptCardProps {
 }
 
 function TrialPromptCard({ isDark, onStartTrial }: TrialPromptCardProps) {
+  const { t } = useTranslation();
   const cardBg = isDark ? Colors.surfaceDark : Colors.surface;
   const textPrimary = isDark ? Colors.textPrimaryDark : Colors.textPrimary;
   const textSecondary = isDark ? Colors.textSecondaryDark : Colors.textSecondary;
@@ -409,13 +410,13 @@ function TrialPromptCard({ isDark, onStartTrial }: TrialPromptCardProps) {
     >
       <View style={styles.aiTitleRow}>
         <Text style={[styles.cardTitle, { color: textPrimary }]}>
-          You've been tracking for 2 weeks 🎉
+          {t('insights_extra.trial_prompt_title')}
         </Text>
       </View>
       <Text style={[styles.teaserText, { color: textSecondary }]}>
-        Your data is ready for its first AI analysis. See what patterns are driving your symptoms.
+        {t('insights_extra.trial_prompt_body')}
       </Text>
-      <Text style={[styles.teaserLink, { color: Colors.primary }]}>See what's included →</Text>
+      <Text style={[styles.teaserLink, { color: Colors.primary }]}>{t('insights_extra.trial_prompt_cta')}</Text>
     </TouchableOpacity>
   );
 }
@@ -490,9 +491,9 @@ function ChatDataCard({ isDark, onPress }: { isDark: boolean; onPress: () => voi
     >
       <View style={styles.chatCardHeader}>
         <View style={styles.aiTitleRow}>
-          <Text style={[styles.cardTitle, { color: textPrimary }]}>Chat with your data</Text>
+          <Text style={[styles.cardTitle, { color: textPrimary }]}>{t('insights_extra.chat_card_title')}</Text>
           <View style={styles.premiumBadge}>
-            <Text style={styles.premiumBadgeText}>Premium</Text>
+            <Text style={styles.premiumBadgeText}>{t('home_extra.premium_badge')}</Text>
           </View>
         </View>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
@@ -505,7 +506,7 @@ function ChatDataCard({ isDark, onPress }: { isDark: boolean; onPress: () => voi
         </View>
       </View>
       <Text style={[styles.chatCardSubtitle, { color: textSecondary }]}>
-        Ask about your patterns, trends, or symptoms
+        {t('insights_extra.chat_card_subtitle')}
       </Text>
     </TouchableOpacity>
   );
@@ -526,13 +527,14 @@ const FIQ_QUESTIONS: Array<{ key: keyof Omit<FiqScore, 'id' | 'user_id' | 'date'
   { key: 'q_memory',     text: 'How much did memory problems or brain fog affect you?', minLabel: 'Not at all', maxLabel: 'Severely' },
 ];
 
-function fiqInterpretation(score: number): { label: string; color: string } {
-  if (score < 40) return { label: 'Mild impact', color: '#22C55E' };
-  if (score < 60) return { label: 'Moderate impact', color: '#F59E0B' };
-  return { label: 'Severe impact', color: '#EF4444' };
+function fiqInterpretation(score: number, t: (key: string) => string): { label: string; color: string } {
+  if (score < 40) return { label: t('insights_extra.fiq_mild'), color: '#22C55E' };
+  if (score < 60) return { label: t('insights_extra.fiq_moderate'), color: '#F59E0B' };
+  return { label: t('insights_extra.fiq_severe'), color: '#EF4444' };
 }
 
 function FiqCard({ isDark, userId }: { isDark: boolean; userId: string }) {
+  const { t } = useTranslation();
   const cardBg = isDark ? '#2D1A0E' : '#FFF7ED';
   const surfaceBg = isDark ? Colors.surfaceDark : Colors.surface;
   const textPrimary = isDark ? Colors.textPrimaryDark : Colors.textPrimary;
@@ -557,7 +559,7 @@ function FiqCard({ isDark, userId }: { isDark: boolean; userId: string }) {
     return days >= 28;
   })();
 
-  const interp = latest ? fiqInterpretation(latest.score) : null;
+  const interp = latest ? fiqInterpretation(latest.score, t) : null;
 
   if (!loaded) return null;
 
@@ -565,10 +567,10 @@ function FiqCard({ isDark, userId }: { isDark: boolean; userId: string }) {
     <>
       <View style={[styles.fiqPromptCard, { backgroundColor: cardBg, borderColor: Colors.primary + '40' }]}>
         <View style={styles.fiqPromptTitleRow}>
-          <Text style={[styles.fiqPromptTitle, { color: textPrimary }]}>Monthly FIQ Assessment</Text>
+          <Text style={[styles.fiqPromptTitle, { color: textPrimary }]}>{t('insights_extra.fiq_title')}</Text>
           <InfoButton
-            title="About the FIQ"
-            message="The Fibromyalgia Impact Questionnaire measures how fibromyalgia affects your daily life across 10 dimensions. Scores range from 0-100; higher scores mean greater impact. Complete it monthly to track how things change over time."
+            title={t('insights_extra.fiq_about_title')}
+            message={t('insights_extra.fiq_about_message')}
             color={textSecondary}
           />
         </View>
@@ -576,7 +578,7 @@ function FiqCard({ isDark, userId }: { isDark: boolean; userId: string }) {
         {latest ? (
           <View style={styles.fiqCompactRow}>
             <View style={styles.fiqCompactLeft}>
-              <Text style={[styles.fiqCompactLabel, { color: textSecondary }]}>FIQ Score</Text>
+              <Text style={[styles.fiqCompactLabel, { color: textSecondary }]}>{t('insights_extra.fiq_score_label')}</Text>
               <Text style={[styles.fiqCompactScore, { color: interp!.color }]}>
                 {latest.score.toFixed(0)}
                 <Text style={[styles.fiqCompactLabel, { color: textSecondary }]}>/100</Text>
@@ -589,7 +591,7 @@ function FiqCard({ isDark, userId }: { isDark: boolean; userId: string }) {
               </Text>
               {canRetake && (
                 <TouchableOpacity onPress={() => setShowModal(true)} activeOpacity={0.8} style={[styles.fiqRetakeBtn, { borderColor: Colors.primary, marginTop: Spacing.xs }]}>
-                  <Text style={[styles.fiqRetakeBtnText, { color: Colors.primary }]}>Retake</Text>
+                  <Text style={[styles.fiqRetakeBtnText, { color: Colors.primary }]}>{t('insights_extra.fiq_retake')}</Text>
                 </TouchableOpacity>
               )}
             </View>
@@ -597,10 +599,10 @@ function FiqCard({ isDark, userId }: { isDark: boolean; userId: string }) {
         ) : (
           <>
             <Text style={[styles.fiqPromptBody, { color: textSecondary }]}>
-              10 questions · ~3 minutes · tracks how fibromyalgia is affecting your daily life
+              {t('insights_extra.fiq_prompt_body')}
             </Text>
             <TouchableOpacity onPress={() => setShowModal(true)} activeOpacity={0.8} style={styles.fiqTakeBtn}>
-              <Text style={styles.fiqTakeBtnText}>Take Assessment</Text>
+              <Text style={styles.fiqTakeBtnText}>{t('insights_extra.fiq_take_btn')}</Text>
             </TouchableOpacity>
           </>
         )}
@@ -620,6 +622,7 @@ function FiqCard({ isDark, userId }: { isDark: boolean; userId: string }) {
 }
 
 function FiqModal({ visible, isDark, userId, onDone }: { visible: boolean; isDark: boolean; userId: string; onDone: (saved: boolean) => void }) {
+  const { t } = useTranslation();
   const bg = isDark ? Colors.backgroundDark : Colors.background;
   const cardBg = isDark ? Colors.surfaceDark : Colors.surface;
   const textPrimary = isDark ? Colors.textPrimaryDark : Colors.textPrimary;
@@ -638,7 +641,7 @@ function FiqModal({ visible, isDark, userId, onDone }: { visible: boolean; isDar
   const totalScore = FIQ_QUESTIONS.reduce((sum, q) => sum + (answers[q.key] ?? 5), 0);
   const isLastQuestion = step === FIQ_QUESTIONS.length - 1;
   const isResultStep = step === FIQ_QUESTIONS.length;
-  const interp = fiqInterpretation(totalScore);
+  const interp = fiqInterpretation(totalScore, t);
 
   const handleSave = async () => {
     setSaving(true);
@@ -653,7 +656,7 @@ function FiqModal({ visible, isDark, userId, onDone }: { visible: boolean; isDar
       await saveFiqScore(scoreRow);
       onDone(true);
     } catch (e) {
-      Alert.alert('Error', 'Could not save your assessment. Please try again.');
+      Alert.alert('Error', t('insights_extra.fiq_error_save'));
     } finally {
       setSaving(false);
     }
@@ -666,9 +669,9 @@ function FiqModal({ visible, isDark, userId, onDone }: { visible: boolean; isDar
       <SafeAreaView style={{ flex: 1, backgroundColor: bg }}>
         {/* Header */}
         <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: Spacing.md, paddingVertical: Spacing.sm, borderBottomWidth: 1, borderBottomColor: isDark ? Colors.borderDark : Colors.border }}>
-          <Text style={[styles.fiqTitle, { color: textPrimary }]}>FIQ Assessment</Text>
+          <Text style={[styles.fiqTitle, { color: textPrimary }]}>{t('insights_extra.fiq_modal_title')}</Text>
           <TouchableOpacity onPress={() => onDone(false)} activeOpacity={0.7}>
-            <Text style={[styles.fiqCancelText, { color: textSecondary }]}>Cancel</Text>
+            <Text style={[styles.fiqCancelText, { color: textSecondary }]}>{t('common.cancel')}</Text>
           </TouchableOpacity>
         </View>
 
@@ -677,7 +680,7 @@ function FiqModal({ visible, isDark, userId, onDone }: { visible: boolean; isDar
             <View style={styles.fiqQuestion}>
               {/* Progress */}
               <Text style={[styles.fiqQuestionNum, { color: textSecondary }]}>
-                Question {step + 1} of {FIQ_QUESTIONS.length}
+                {t('insights_extra.fiq_question_num', { current: step + 1, total: FIQ_QUESTIONS.length })}
               </Text>
               <Text style={[styles.fiqQuestionText, { color: textPrimary }]}>{q.text}</Text>
 
@@ -702,17 +705,17 @@ function FiqModal({ visible, isDark, userId, onDone }: { visible: boolean; isDar
                   activeOpacity={0.8}
                   style={[styles.fiqStepBtn, { backgroundColor: Colors.primary, borderColor: Colors.primary }]}
                 >
-                  <Text style={[styles.fiqStepBtnText, { color: '#fff' }]}>{isLastQuestion ? 'See Result' : 'Next'}</Text>
+                  <Text style={[styles.fiqStepBtnText, { color: '#fff' }]}>{isLastQuestion ? t('insights_extra.fiq_see_result') : t('common.next')}</Text>
                 </TouchableOpacity>
               </View>
             </View>
           ) : (
             <View>
               <View style={[styles.fiqScoreCard, { backgroundColor: isDark ? Colors.surfaceDark : Colors.surface, borderColor: isDark ? Colors.borderDark : Colors.border }]}>
-                <Text style={[styles.fiqScoreLabel, { color: textSecondary }]}>Your FIQ Score</Text>
+                <Text style={[styles.fiqScoreLabel, { color: textSecondary }]}>{t('insights_extra.fiq_your_score')}</Text>
                 <Text style={[styles.fiqScoreLarge, { color: interp.color }]}>{totalScore.toFixed(0)}<Text style={[styles.fiqScoreLabel, { color: textSecondary }]}> / 100</Text></Text>
                 <Text style={[styles.fiqInterpText, { color: interp.color }]}>{interp.label}</Text>
-                <Text style={[styles.fiqThresholdNote, { color: textSecondary }]}>0-39 mild · 40-59 moderate · 60-100 severe</Text>
+                <Text style={[styles.fiqThresholdNote, { color: textSecondary }]}>{t('insights_extra.fiq_threshold_note')}</Text>
               </View>
 
               {/* Per-question breakdown */}
@@ -730,12 +733,12 @@ function FiqModal({ visible, isDark, userId, onDone }: { visible: boolean; isDar
                   <Text style={[styles.fiqStepBtnText, { color: textPrimary }]}>Back</Text>
                 </TouchableOpacity>
                 <TouchableOpacity onPress={handleSave} disabled={saving} activeOpacity={0.8} style={[styles.fiqSaveBtn, { flex: 2, opacity: saving ? 0.6 : 1 }]}>
-                  <Text style={styles.fiqSaveBtnText}>{saving ? 'Saving…' : 'Save Assessment'}</Text>
+                  <Text style={styles.fiqSaveBtnText}>{saving ? t('insights_extra.fiq_saving') : t('insights_extra.fiq_save')}</Text>
                 </TouchableOpacity>
               </View>
 
               <Text style={[styles.fiqHint, { color: textSecondary, textAlign: 'center', marginTop: Spacing.md }]}>
-                The FIQ is a clinical tool for tracking fibromyalgia impact over time, not a diagnostic instrument.
+                {t('insights_extra.fiq_clinical_note')}
               </Text>
             </View>
           )}
@@ -842,7 +845,7 @@ export default function InsightsScreen() {
     } catch (err) {
       const msg = err instanceof Error ? err.message : String(err);
       logEvent(Events.PURCHASE_ERROR, { message: msg }).catch(() => {});
-      Alert.alert('Purchase error', msg);
+      Alert.alert(t('insights_extra.purchase_error'), msg);
     } finally {
       setIsPurchasing(false);
     }
@@ -1013,7 +1016,7 @@ export default function InsightsScreen() {
               </Text>
               {allLogs.length < 7 && (
                 <Text style={[styles.chartHint, { color: textSecondary }]}>
-                  This chart fills out as you log more days.
+                  {t('insights_extra.chart_fills_out')}
                 </Text>
               )}
               <TrendChart
@@ -1075,7 +1078,7 @@ export default function InsightsScreen() {
                 style={[styles.card, { backgroundColor: cardBg, borderColor: cardBorder }]}
               >
                 <Text style={[styles.cardTitle, { color: textPrimary }]}>
-                  Brain Fog
+                  {t('insights_extra.brain_fog_title')}
                 </Text>
                 {allLogs.length < 7 && (
                   <Text style={[styles.chartHint, { color: textSecondary }]}>
@@ -1102,7 +1105,7 @@ export default function InsightsScreen() {
               </Text>
               {allLogs.length < 7 && (
                 <Text style={[styles.chartHint, { color: textSecondary }]}>
-                  Patterns become clearer as you log more days.
+                  {t('insights_extra.patterns_clearer')}
                 </Text>
               )}
               <View style={styles.statsGrid}>
@@ -1118,7 +1121,7 @@ export default function InsightsScreen() {
                 />
                 {avgBrainFog !== null && (
                   <StatRow
-                    label="Avg brain fog"
+                    label={t('insights_extra.avg_brain_fog')}
                     value={`${avgBrainFog}/10`}
                     isDark={isDark}
                   />
@@ -1152,7 +1155,7 @@ export default function InsightsScreen() {
                 {t('insights.ai_insight_title')}
               </Text>
               <View style={styles.premiumBadge}>
-                <Text style={styles.premiumBadgeText}>Premium</Text>
+                <Text style={styles.premiumBadgeText}>{t('home_extra.premium_badge')}</Text>
               </View>
             </View>
             <Text style={[styles.teaserText, { color: textSecondary }]}>
@@ -1163,7 +1166,7 @@ export default function InsightsScreen() {
         )}
 
         <Text style={[styles.disclaimer, { color: isDark ? Colors.textSecondaryDark : Colors.textSecondary }]}>
-          For informational purposes only. Not medical advice. Always consult your doctor or healthcare team about your symptoms and treatment.
+          {t('insights_extra.disclaimer')}
         </Text>
 
       </ScrollView>

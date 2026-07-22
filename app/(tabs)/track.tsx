@@ -131,32 +131,32 @@ const MOOD_OPTIONS: { value: Mood; emoji: string; labelKey: string; color: strin
 
 // ─── Diet constants ───────────────────────────────────────────────────────────
 
-const DIET_QUALITY_OPTIONS: { value: DietQuality; label: string; color: string }[] = [
-  { value: 'clean', label: 'Clean', color: '#16A34A' },
-  { value: 'mostly_clean', label: 'Mostly ok', color: '#65A30D' },
-  { value: 'mixed', label: 'Mixed', color: '#D97706' },
-  { value: 'poor', label: 'Poor', color: '#DC2626' },
+const DIET_QUALITY_OPTIONS: { value: DietQuality; labelKey: string; color: string }[] = [
+  { value: 'clean', labelKey: 'tracker_extra.diet_clean', color: '#16A34A' },
+  { value: 'mostly_clean', labelKey: 'tracker_extra.diet_mostly_ok', color: '#65A30D' },
+  { value: 'mixed', labelKey: 'tracker_extra.diet_mixed', color: '#D97706' },
+  { value: 'poor', labelKey: 'tracker_extra.diet_poor', color: '#DC2626' },
 ];
 
-const DIET_TRIGGER_OPTIONS: { value: DietTrigger; label: string }[] = [
-  { value: 'caffeine', label: 'Caffeine' },
-  { value: 'alcohol', label: 'Alcohol' },
-  { value: 'processed', label: 'Processed food' },
-  { value: 'high_sugar', label: 'High sugar' },
-  { value: 'dairy', label: 'Dairy' },
+const DIET_TRIGGER_OPTIONS: { value: DietTrigger; labelKey?: string; label?: string }[] = [
+  { value: 'caffeine', labelKey: 'tracker_extra.diet_trigger_caffeine' },
+  { value: 'alcohol', labelKey: 'tracker_extra.diet_trigger_alcohol' },
+  { value: 'processed', labelKey: 'tracker_extra.diet_trigger_processed' },
+  { value: 'high_sugar', labelKey: 'tracker_extra.diet_trigger_high_sugar' },
+  { value: 'dairy', labelKey: 'tracker_extra.diet_trigger_dairy' },
   { value: 'gluten', label: 'Gluten' },
-  { value: 'nightshades', label: 'Nightshades' },
-  { value: 'msg_additives', label: 'MSG / additives' },
+  { value: 'nightshades', labelKey: 'tracker_extra.diet_trigger_nightshades' },
+  { value: 'msg_additives', labelKey: 'tracker_extra.diet_trigger_msg' },
 ];
 
-const EXERCISE_TYPE_OPTIONS: { value: string; label: string }[] = [
-  { value: 'physio', label: 'Physio exercises' },
-  { value: 'swimming', label: 'Swimming' },
-  { value: 'walking', label: 'Walking' },
-  { value: 'yoga', label: 'Yoga / stretching' },
-  { value: 'cycling', label: 'Cycling' },
-  { value: 'gym', label: 'Gym' },
-  { value: 'other', label: 'Other' },
+const EXERCISE_TYPE_OPTIONS: { value: string; labelKey: string }[] = [
+  { value: 'physio', labelKey: 'tracker_extra.exercise_physio' },
+  { value: 'swimming', labelKey: 'tracker_extra.exercise_swimming' },
+  { value: 'walking', labelKey: 'tracker_extra.exercise_walking' },
+  { value: 'yoga', labelKey: 'tracker_extra.exercise_yoga' },
+  { value: 'cycling', labelKey: 'tracker_extra.exercise_cycling' },
+  { value: 'gym', labelKey: 'tracker_extra.exercise_gym' },
+  { value: 'other', labelKey: 'tracker_extra.exercise_other' },
 ];
 
 // ─── Log Summary ──────────────────────────────────────────────────────────────
@@ -269,7 +269,7 @@ function DayLogForm({
     <>
       {/* Symptoms card — pain + fatigue merged into ONE section */}
       <View style={[styles.section, isDark && styles.sectionDark]}>
-        <Text style={[styles.sectionLabel, isDark && styles.textPrimaryDark]}>Symptoms today</Text>
+        <Text style={[styles.sectionLabel, isDark && styles.textPrimaryDark]}>{t('tracker_extra.symptoms_today')}</Text>
 
         {/* Pain subsection */}
         <View style={styles.symptomSubSection}>
@@ -362,7 +362,7 @@ function DayLogForm({
 
       {/* Nutrition */}
       <View style={[styles.section, isDark && styles.sectionDark]}>
-        <Text style={[styles.sectionLabel, isDark && styles.textPrimaryDark]}>Nutrition today</Text>
+        <Text style={[styles.sectionLabel, isDark && styles.textPrimaryDark]}>{t('tracker_extra.nutrition_today')}</Text>
         <View style={styles.dietQualityRow}>
           {DIET_QUALITY_OPTIONS.map((opt) => {
             const selected = dietQuality === opt.value;
@@ -382,7 +382,7 @@ function DayLogForm({
                   isDark && !selected && styles.chipTextDark,
                   selected && { color: opt.color, fontWeight: '700', fontFamily: FontFamily.bold },
                 ]}>
-                  {opt.label}
+                  {t(opt.labelKey)}
                 </Text>
               </TouchableOpacity>
             );
@@ -412,7 +412,7 @@ function DayLogForm({
                   isDark && !selected && styles.chipTextDark,
                   selected && { color: '#DC2626', fontWeight: '700', fontFamily: FontFamily.bold },
                 ]}>
-                  {opt.label}
+                  {opt.labelKey ? t(opt.labelKey) : opt.label}
                 </Text>
               </TouchableOpacity>
             );
@@ -426,7 +426,7 @@ function DayLogForm({
       {/* Exercise */}
       <View style={[styles.section, isDark && styles.sectionDark]}>
         <View style={styles.exerciseHeaderRow}>
-          <Text style={[styles.sectionLabel, isDark && styles.textPrimaryDark]}>Exercise today</Text>
+          <Text style={[styles.sectionLabel, isDark && styles.textPrimaryDark]}>{t('tracker_extra.exercise_today')}</Text>
           <Switch
             value={exerciseDone}
             onValueChange={setExerciseDone}
@@ -447,14 +447,14 @@ function DayLogForm({
                     style={[styles.chip, isDark && styles.chipDark, selected && styles.chipSelected]}
                   >
                     <Text style={[styles.chipText, isDark && !selected && styles.chipTextDark, selected && styles.chipTextSelected]}>
-                      {opt.label}
+                      {t(opt.labelKey)}
                     </Text>
                   </TouchableOpacity>
                 );
               })}
             </View>
             <View style={styles.exerciseMinutesRow}>
-              <Text style={[styles.sectionSubLabel, isDark && styles.textSecDark, { marginTop: 0 }]}>Duration (minutes)</Text>
+              <Text style={[styles.sectionSubLabel, isDark && styles.textSecDark, { marginTop: 0 }]}>{t('tracker_extra.duration_minutes')}</Text>
               <View style={styles.minutesBtns}>
                 {[15, 30, 45, 60, 90].map((m) => {
                   const sel = exerciseMinutes === m;
@@ -625,7 +625,7 @@ function DayLogModal({ date, initialLog, userId, tracksMedication, isFemale, isD
       <SafeAreaView style={[styles.modalScreen, isDark && styles.screenDark]}>
         <View style={[styles.modalHeader, isDark && styles.modalHeaderDark]}>
           <TouchableOpacity onPress={onClose} style={styles.modalCancel}>
-            <Text style={[styles.modalCancelText, isDark && styles.textSecDark]}>Cancel</Text>
+            <Text style={[styles.modalCancelText, isDark && styles.textSecDark]}>{t('common.cancel')}</Text>
           </TouchableOpacity>
           <Text style={[styles.modalTitle, isDark && styles.textPrimaryDark]}>
             {dateLabelFull(date)}
@@ -676,6 +676,7 @@ interface DatePickerModalProps {
 }
 
 function DatePickerModal({ isDark, maxDate, onSelect, onClose }: DatePickerModalProps) {
+  const { t } = useTranslation();
   const today = new Date();
   const [year, setYear] = useState(today.getFullYear());
   const [month, setMonth] = useState(today.getMonth());
@@ -722,9 +723,9 @@ function DatePickerModal({ isDark, maxDate, onSelect, onClose }: DatePickerModal
       <SafeAreaView style={[styles.modalScreen, isDark && styles.screenDark]}>
         <View style={[styles.modalHeader, isDark && styles.modalHeaderDark]}>
           <TouchableOpacity onPress={onClose} style={styles.modalCancel}>
-            <Text style={[styles.modalCancelText, isDark && styles.textSecDark]}>Cancel</Text>
+            <Text style={[styles.modalCancelText, isDark && styles.textSecDark]}>{t('common.cancel')}</Text>
           </TouchableOpacity>
-          <Text style={[styles.modalTitle, isDark && styles.textPrimaryDark]}>Browse entries</Text>
+          <Text style={[styles.modalTitle, isDark && styles.textPrimaryDark]}>{t('tracker_extra.browse_entries')}</Text>
           <View style={styles.modalCancel} />
         </View>
 
@@ -781,9 +782,10 @@ interface RecentLogsCardProps {
 }
 
 function RecentLogsCard({ recentDays, logsByDate, isDark, hasOlderLogs, onOpenDay, onBrowseOlder }: RecentLogsCardProps) {
+  const { t } = useTranslation();
   return (
     <View style={[styles.recentCard, isDark && styles.recentCardDark]}>
-      <Text style={[styles.recentCardTitle, isDark && styles.textPrimaryDark]}>Recent check-ins</Text>
+      <Text style={[styles.recentCardTitle, isDark && styles.textPrimaryDark]}>{t('tracker_extra.recent_check_ins')}</Text>
 
       {recentDays.map((date) => {
         const log = logsByDate[date];
@@ -798,11 +800,11 @@ function RecentLogsCard({ recentDays, logsByDate, isDark, hasOlderLogs, onOpenDa
               <Text style={[styles.recentDate, isDark && styles.textPrimaryDark]}>{dateLabelShort(date)}</Text>
               {log ? (
                 <Text style={[styles.recentStats, isDark && styles.textSecDark]}>
-                  Pain {log.pain_score}/10 · Fatigue {log.fatigue_score}/10 · {moodEmoji(log.mood)}
+                  {t('tracker_extra.pain_fatigue_stats', { pain: log.pain_score, fatigue: log.fatigue_score, mood: moodEmoji(log.mood) })}
                   {log.diet_quality ? ` · ${dietQualityEmoji(log.diet_quality)}` : ''}
                 </Text>
               ) : (
-                <Text style={[styles.recentStats, { color: Colors.primary }]}>+ Log this day</Text>
+                <Text style={[styles.recentStats, { color: Colors.primary }]}>{t('tracker_extra.log_this_day')}</Text>
               )}
             </View>
             <Text style={[styles.recentChevron, isDark && styles.textSecDark]}>›</Text>
@@ -812,7 +814,7 @@ function RecentLogsCard({ recentDays, logsByDate, isDark, hasOlderLogs, onOpenDa
 
       {hasOlderLogs && (
         <TouchableOpacity style={styles.browseOlderBtn} onPress={onBrowseOlder} activeOpacity={0.7}>
-          <Text style={styles.browseOlderText}>Browse older entries</Text>
+          <Text style={styles.browseOlderText}>{t('tracker_extra.browse_older')}</Text>
         </TouchableOpacity>
       )}
     </View>
@@ -1007,7 +1009,7 @@ export default function TrackScreen() {
               {todayDateLabel}
             </Text>
             <Text style={[styles.logHeaderSubtitle, isDark && styles.textSecDark]}>
-              {todayLogged ? 'Logged today' : 'Log for today'}
+              {todayLogged ? t('tracker_extra.logged_today') : t('tracker_extra.log_for_today')}
             </Text>
           </View>
           <ProfileButton />

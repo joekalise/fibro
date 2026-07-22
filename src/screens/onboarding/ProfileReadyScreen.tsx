@@ -144,7 +144,7 @@ export function ProfileReadyScreen() {
         <View style={styles.header}>
           <FibroMark size={60} />
           <Text style={[styles.title, isDark && styles.titleDark]}>
-            Your profile is ready
+            {t('profile_ready.title')}
           </Text>
         </View>
 
@@ -159,7 +159,7 @@ export function ProfileReadyScreen() {
             <View style={styles.logHeader}>
               <Text style={[styles.logTitle, { color: textPrimary }]}>Log today while you're here</Text>
               <TouchableOpacity onPress={() => setLogSkipped(true)} activeOpacity={0.7}>
-                <Text style={[styles.skipLink, { color: textSecondary }]}>Skip</Text>
+                <Text style={[styles.skipLink, { color: textSecondary }]}>{t('common.skip')}</Text>
               </TouchableOpacity>
             </View>
             <Text style={[styles.logHint, { color: textSecondary }]}>
@@ -181,7 +181,7 @@ export function ProfileReadyScreen() {
         {/* ── Insights ────────────────────────────────────────────────────── */}
         {insights.length > 0 && (
           <View style={styles.section}>
-            <Text style={[styles.sectionLabel, { color: textSecondary }]}>A few things worth knowing</Text>
+            <Text style={[styles.sectionLabel, { color: textSecondary }]}>{t('profile_ready.insights_title')}</Text>
             {insights.map((insight, idx) => {
               const accent = ACCENT_COLORS[idx % ACCENT_COLORS.length];
               const icon = insightIcon(insight);
@@ -201,7 +201,7 @@ export function ProfileReadyScreen() {
         {/* ── Watch summary ───────────────────────────────────────────────── */}
         {watchSummary.length > 0 && (
           <View style={styles.section}>
-            <Text style={[styles.sectionLabel, { color: textSecondary }]}>What Fibro will watch for you</Text>
+            <Text style={[styles.sectionLabel, { color: textSecondary }]}>{t('profile_ready.watch_title')}</Text>
             <View style={[styles.watchCard, {
               backgroundColor: isDark ? Colors.surfaceDark : '#EFF6FF',
               borderColor: Colors.secondary + '50',

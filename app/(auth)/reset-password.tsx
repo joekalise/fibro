@@ -13,11 +13,13 @@ import {
 } from 'react-native';
 import * as Linking from 'expo-linking';
 import { useRouter } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { supabase } from '@/services/supabase';
 import { Colors } from '@/constants/colors';
 import { FontSize, Spacing, BorderRadius, FontFamily } from '@/constants/theme';
 
 export default function ResetPasswordScreen() {
+  const { t } = useTranslation();
   const router = useRouter();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
@@ -46,7 +48,7 @@ export default function ResetPasswordScreen() {
           refresh_token: refreshToken,
         });
         if (!error) setIsReady(true);
-        else setError('This reset link has expired. Please request a new one.');
+        else setError(t('reset_password.link_expired'));
       }
     };
 
@@ -58,11 +60,11 @@ export default function ResetPasswordScreen() {
   const handleUpdate = async () => {
     setError(null);
     if (password.length < 8) {
-      setError('Password must be at least 8 characters.');
+      setError(t('reset_password.password_short'));
       return;
     }
     if (password !== confirm) {
-      setError('Passwords do not match.');
+      setError(t('reset_password.passwords_mismatch'));
       return;
     }
     setIsSaving(true);
@@ -72,7 +74,7 @@ export default function ResetPasswordScreen() {
       setDone(true);
       setTimeout(() => router.replace('/(tabs)/'), 2000);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to update password. Please try again.');
+      setError(err instanceof Error ? err.message : t('reset_password.update_failed'));
     } finally {
       setIsSaving(false);
     }
@@ -95,24 +97,24 @@ export default function ResetPasswordScreen() {
             <View style={styles.logo}>
               <Text style={styles.logoText}>S</Text>
             </View>
-            <Text style={[styles.title, { color: textPrimary }]}>Set new password</Text>
+            <Text style={[styles.title, { color: textPrimary }]}>{t('reset_password.title')}</Text>
             <Text style={[styles.subtitle, { color: textSecondary }]}>
-              Choose a strong password for your Fibro account.
+              {t('reset_password.subtitle')}
             </Text>
           </View>
 
           {done ? (
             <View style={styles.doneCard}>
-              <Text style={styles.doneText}>Password updated.</Text>
+              <Text style={styles.doneText}>{t('reset_password.done_text')}</Text>
               <Text style={[styles.doneSubtext, { color: textSecondary }]}>
-                Taking you back to the app...
+                {t('reset_password.done_subtext')}
               </Text>
             </View>
           ) : !isReady ? (
             <View style={styles.loadingBlock}>
               <ActivityIndicator color={Colors.primary} />
               <Text style={[styles.loadingText, { color: textSecondary }]}>
-                Verifying reset link...
+                {t('reset_password.verifying')}
               </Text>
               {error && <Text style={styles.errorText}>{error}</Text>}
             </View>
@@ -122,7 +124,7 @@ export default function ResetPasswordScreen() {
               <TextInput
                 value={password}
                 onChangeText={setPassword}
-                placeholder="New password"
+                placeholder={t('reset_password.placeholder_new')}
                 placeholderTextColor={textSecondary}
                 secureTextEntry
                 autoComplete="new-password"
@@ -132,7 +134,7 @@ export default function ResetPasswordScreen() {
               <TextInput
                 value={confirm}
                 onChangeText={setConfirm}
-                placeholder="Confirm new password"
+                placeholder={t('reset_password.placeholder_confirm')}
                 placeholderTextColor={textSecondary}
                 secureTextEntry
                 autoComplete="new-password"
@@ -148,14 +150,14 @@ export default function ResetPasswordScreen() {
                 {isSaving ? (
                   <ActivityIndicator color="#FFFFFF" size="small" />
                 ) : (
-                  <Text style={styles.buttonText}>Update password</Text>
+                  <Text style={styles.buttonText}>{t('reset_password.update_btn')}</Text>
                 )}
               </TouchableOpacity>
             </View>
           )}
 
           <TouchableOpacity onPress={() => router.replace('/(auth)/sign-in')} style={styles.backRow}>
-            <Text style={[styles.backText, { color: textSecondary }]}>Back to sign in</Text>
+            <Text style={[styles.backText, { color: textSecondary }]}>{t('reset_password.back_to_sign_in')}</Text>
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>

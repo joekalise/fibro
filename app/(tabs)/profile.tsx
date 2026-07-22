@@ -352,9 +352,9 @@ function ProfileEditModal({ visible, onClose, profile, onSave, isDark }: Profile
     <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
       <View style={{ flex: 1, backgroundColor: bg, paddingTop: topInset }}>
         <View style={[styles.editModalHeader, { borderBottomColor: cardBorder }]}>
-          <Text style={[styles.editModalTitle, { color: textPrimary }]}>Edit profile</Text>
+          <Text style={[styles.editModalTitle, { color: textPrimary }]}>{t('profile_extra.edit_profile_title')}</Text>
           <TouchableOpacity onPress={onClose} activeOpacity={0.8}>
-            <Text style={[styles.editModalClose, { color: textSecondary }]}>Cancel</Text>
+            <Text style={[styles.editModalClose, { color: textSecondary }]}>{t('common.cancel')}</Text>
           </TouchableOpacity>
         </View>
 
@@ -363,62 +363,62 @@ function ProfileEditModal({ visible, onClose, profile, onSave, isDark }: Profile
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-          <EditSectionHeader label="About you" color={textSecondary} />
+          <EditSectionHeader label={t('profile_extra.section_about_you')} color={textSecondary} />
 
-          <Text style={[styles.editFieldLabel, { color: textSecondary }]}>Biological sex</Text>
+          <Text style={[styles.editFieldLabel, { color: textSecondary }]}>{t('profile_extra.field_biological_sex')}</Text>
           {(['male', 'female', 'prefer_not_to_say'] as BiologicalSex[]).map(v => (
             <OptionCard key={v} style={compactCard} label={BIOLOGICAL_SEX_LABELS[v]} isSelected={biologicalSex === v} onPress={() => setBiologicalSex(v)} />
           ))}
 
-          <Text style={[styles.editFieldLabel, { color: textSecondary }]}>Age range</Text>
+          <Text style={[styles.editFieldLabel, { color: textSecondary }]}>{t('profile_extra.field_age_range')}</Text>
           {(['under_25', '25_35', '35_45', '45_55', '55_plus'] as AgeRange[]).map(v => (
             <OptionCard key={v} style={compactCard} label={AGE_RANGE_LABELS[v]} isSelected={ageRange === v} onPress={() => setAgeRange(v)} />
           ))}
 
-          <Text style={[styles.editFieldLabel, { color: textSecondary }]}>Years with fibromyalgia</Text>
+          <Text style={[styles.editFieldLabel, { color: textSecondary }]}>{t('profile_extra.field_years_fibro')}</Text>
           {(['under_1', '1_3', '3_5', '5_10', '10_plus'] as DiagnosisYears[]).map(v => (
             <OptionCard key={v} style={compactCard} label={DIAGNOSIS_YEARS_LABELS[v]} isSelected={diagnosisYears === v} onPress={() => setDiagnosisYears(v)} />
           ))}
 
-          <Text style={[styles.editFieldLabel, { color: textSecondary }]}>Symptom severity</Text>
+          <Text style={[styles.editFieldLabel, { color: textSecondary }]}>{t('profile_extra.field_severity')}</Text>
           {(['mild', 'moderate', 'severe'] as Severity[]).map(v => (
             <OptionCard key={v} style={compactCard} label={SEVERITY_LABELS[v]} isSelected={severity === v} onPress={() => setSeverity(v)} />
           ))}
 
-          <Text style={[styles.editFieldLabel, { color: textSecondary }]}>Morning stiffness</Text>
+          <Text style={[styles.editFieldLabel, { color: textSecondary }]}>{t('profile_extra.field_morning_stiffness')}</Text>
           {(['under_30', '30_60', '1_2_hours', 'over_2_hours'] as MorningStiffness[]).map(v => (
             <OptionCard key={v} style={compactCard} label={MORNING_STIFFNESS_LABELS[v]} isSelected={morningStiffness === v} onPress={() => setMorningStiffness(v)} />
           ))}
 
-          <EditSectionHeader label="Symptoms" color={textSecondary} />
+          <EditSectionHeader label={t('profile_extra.section_symptoms')} color={textSecondary} />
 
-          <Text style={[styles.editFieldLabel, { color: textSecondary }]}>Pain locations</Text>
+          <Text style={[styles.editFieldLabel, { color: textSecondary }]}>{t('profile_extra.field_pain_locations')}</Text>
           {(['lower_back', 'upper_back', 'hips', 'knees', 'shoulders', 'neck', 'chest', 'jaw', 'hands_feet', 'widespread', 'other'] as PainLocation[]).map(v => (
             <MultiSelectCard key={v} style={compactCard} label={PAIN_LOCATION_LABELS[v]} isSelected={painLocations.includes(v)} onPress={() => setPainLocations(arr => toggle(arr, v))} />
           ))}
 
-          <Text style={[styles.editFieldLabel, { color: textSecondary }]}>Types of pain</Text>
+          <Text style={[styles.editFieldLabel, { color: textSecondary }]}>{t('profile_extra.field_pain_types')}</Text>
           {(['stiffness', 'sharp_pain', 'burning', 'aching', 'tingling', 'hypersensitivity', 'fatigue'] as PainType[]).map(v => (
             <MultiSelectCard key={v} style={compactCard} label={PAIN_TYPE_LABELS[v]} isSelected={painTypes.includes(v)} onPress={() => setPainTypes(arr => toggle(arr, v))} />
           ))}
 
-          <EditSectionHeader label="Conditions" color={textSecondary} />
+          <EditSectionHeader label={t('profile_extra.section_conditions')} color={textSecondary} />
 
-          <Text style={[styles.editFieldLabel, { color: textSecondary }]}>Associated conditions</Text>
+          <Text style={[styles.editFieldLabel, { color: textSecondary }]}>{t('profile_extra.field_conditions')}</Text>
           {(['sleep_disorder', 'ibs', 'restless_legs', 'headaches', 'tmj', 'anxiety_depression', 'brain_fog', 'fatigue'] as AssociatedCondition[]).map(v => (
             <MultiSelectCard key={v} style={compactCard} label={CONDITION_LABELS[v]} isSelected={conditions.includes(v)} onPress={() => setConditions(arr => toggle(arr, v))} />
           ))}
 
-          <EditSectionHeader label="Lifestyle" color={textSecondary} />
+          <EditSectionHeader label={t('profile_extra.section_lifestyle')} color={textSecondary} />
 
-          <Text style={[styles.editFieldLabel, { color: textSecondary }]}>Life challenges</Text>
+          <Text style={[styles.editFieldLabel, { color: textSecondary }]}>{t('profile_extra.field_challenges')}</Text>
           {(['sleep', 'exercise', 'work', 'social_life', 'mental_health'] as LifestyleChallenge[]).map(v => (
             <MultiSelectCard key={v} style={compactCard} label={CHALLENGE_LABELS[v]} isSelected={challenges.includes(v)} onPress={() => setChallenges(arr => toggle(arr, v))} />
           ))}
 
-          <EditSectionHeader label="Treatment" color={textSecondary} />
+          <EditSectionHeader label={t('profile_extra.section_treatment')} color={textSecondary} />
 
-          <Text style={[styles.editFieldLabel, { color: textSecondary }]}>Current treatment</Text>
+          <Text style={[styles.editFieldLabel, { color: textSecondary }]}>{t('profile_extra.field_current_treatment')}</Text>
           {(['duloxetine', 'pregabalin', 'milnacipran', 'amitriptyline', 'low_dose_naltrexone', 'nsaids_only', 'no_medication', 'other'] as Medication[]).map(v => (
             <MultiSelectCard key={v} style={compactCard} label={MEDICATION_LABELS[v]} isSelected={medications.includes(v)} onPress={() => setMedications(arr => toggle(arr, v))} />
           ))}
@@ -432,7 +432,7 @@ function ProfileEditModal({ visible, onClose, profile, onSave, isDark }: Profile
             {isSaving ? (
               <ActivityIndicator color="#FFFFFF" size="small" />
             ) : (
-              <Text style={styles.modalSaveText}>Save changes</Text>
+              <Text style={styles.modalSaveText}>{t('common.save_changes')}</Text>
             )}
           </TouchableOpacity>
         </ScrollView>
@@ -571,7 +571,7 @@ function AddMedicationModal({
           ]}
         >
           <Text style={[styles.modalTitle, { color: textPrimary }]}>
-            {isEditing ? 'Edit medication' : t('medications.add_title')}
+            {isEditing ? t('profile_extra.edit_medication_title') : t('medications.add_title')}
           </Text>
           <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
 
@@ -579,13 +579,13 @@ function AddMedicationModal({
           {!isEditing && (
             <View style={{ marginBottom: Spacing.md }}>
               <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: Spacing.xs, marginTop: Spacing.sm }}>
-                <Text style={[styles.fieldLabel, { color: textSecondary, marginBottom: 0, marginTop: 0 }]}>From your treatment</Text>
+                <Text style={[styles.fieldLabel, { color: textSecondary, marginBottom: 0, marginTop: 0 }]}>{t('profile_extra.from_your_treatment')}</Text>
                 {onOpenEditProfile && (
                   <TouchableOpacity
                     onPress={() => { handleClose(); onOpenEditProfile(); }}
                     activeOpacity={0.8}
                   >
-                    <Text style={{ fontSize: FontSize.xs, color: Colors.primary, fontWeight: '600', fontFamily: FontFamily.semiBold }}>Edit treatment ›</Text>
+                    <Text style={{ fontSize: FontSize.xs, color: Colors.primary, fontWeight: '600', fontFamily: FontFamily.semiBold }}>{t('profile_extra.edit_treatment_link')}</Text>
                   </TouchableOpacity>
                 )}
               </View>
@@ -615,12 +615,12 @@ function AddMedicationModal({
                     })}
                   </View>
                   <Text style={[styles.helperText, { color: textSecondary, marginBottom: 0, marginTop: 4 }]}>
-                    Tap to fill in the name, then set the dose and schedule below
+                    {t('profile_extra.tap_to_fill')}
                   </Text>
                 </>
               ) : (
                 <Text style={[styles.helperText, { color: textSecondary, marginBottom: 0 }]}>
-                  No treatment in your profile yet. Tap Edit treatment above to add yours.
+                  {t('profile_extra.no_treatment_yet')}
                 </Text>
               )}
             </View>
@@ -730,7 +730,7 @@ function AddMedicationModal({
                 <ActivityIndicator color="#FFFFFF" size="small" />
               ) : (
                 <Text style={styles.modalSaveText}>
-                  {isEditing ? 'Save changes' : t('medications.save')}
+                  {isEditing ? t('common.save_changes') : t('medications.save')}
                 </Text>
               )}
             </TouchableOpacity>
@@ -860,7 +860,7 @@ export default function ProfileScreen() {
   const inputBg = isDark ? Colors.backgroundDark : Colors.background;
 
   const handleSignOut = useCallback(() => {
-    Alert.alert(t('auth.sign_out'), 'Sign out of Fibro?', [
+    Alert.alert(t('auth.sign_out'), t('profile_extra.sign_out_confirm'), [
       { text: t('common.cancel'), style: 'cancel' },
       {
         text: t('auth.sign_out'),
@@ -881,21 +881,21 @@ export default function ProfileScreen() {
 
   const handleDeleteAccount = useCallback(() => {
     Alert.alert(
-      'Delete all data',
-      'This permanently deletes all your logs, flares, medications, and profile data. It cannot be undone.',
+      t('profile_extra.delete_all_title'),
+      t('profile_extra.delete_all_body'),
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: t('common.cancel'), style: 'cancel' },
         {
-          text: 'Delete everything',
+          text: t('profile_extra.delete_confirm_btn'),
           style: 'destructive',
           onPress: () => {
             Alert.alert(
-              'Are you absolutely sure?',
-              'All your data will be deleted and cannot be recovered.',
+              t('profile_extra.delete_confirm_title'),
+              t('profile_extra.delete_confirm_body'),
               [
-                { text: 'Cancel', style: 'cancel' },
+                { text: t('common.cancel'), style: 'cancel' },
                 {
-                  text: 'Yes, delete everything',
+                  text: t('profile_extra.delete_confirm_yes'),
                   style: 'destructive',
                   onPress: async () => {
                     if (!user) return;
@@ -979,11 +979,11 @@ export default function ProfileScreen() {
     (id: string, name: string) => {
       Alert.alert(
         name,
-        'Remove this medication reminder?',
+        t('profile_extra.remove_med_body'),
         [
           { text: t('common.cancel'), style: 'cancel' },
           {
-            text: 'Remove',
+            text: t('profile_extra.remove_med_btn'),
             style: 'destructive',
             onPress: async () => {
               try {

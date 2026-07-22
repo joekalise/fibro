@@ -77,12 +77,10 @@ export function SignUpScreen() {
             <Text style={styles.logoText}>S</Text>
           </View>
           <Text style={[styles.successTitle, isDark && styles.titleDark]}>
-            Check your email
+            {t('sign_up_extra.check_email_title')}
           </Text>
           <Text style={[styles.successSubtitle, isDark && styles.subtitleDark]}>
-            We sent a confirmation link to{' '}
-            <Text style={styles.emailHighlight}>{email}</Text>. Click it to
-            activate your account.
+            {t('sign_up_extra.check_email_body', { email })}
           </Text>
           <Button
             label={t('auth.sign_in')}

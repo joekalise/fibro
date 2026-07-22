@@ -2,11 +2,13 @@ import React, { useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as Updates from 'expo-updates';
+import { useTranslation } from 'react-i18next';
 import { Colors } from '@/constants/colors';
 import { FontSize, Spacing, BorderRadius, FontFamily } from '@/constants/theme';
 import { logEvent, Events } from '@/services/analytics';
 
 export function UpdateBanner() {
+  const { t } = useTranslation();
   const { isUpdateAvailable, isUpdatePending } = Updates.useUpdates();
   const { top } = useSafeAreaInsets();
   const [isApplying, setIsApplying] = useState(false);
@@ -31,15 +33,15 @@ export function UpdateBanner() {
   return (
     <View style={[styles.banner, { paddingTop: top + Spacing.sm }]}>
       <View style={styles.left}>
-        <Text style={styles.title}>Update available</Text>
-        <Text style={styles.subtitle}>Tap to get the latest version</Text>
+        <Text style={styles.title}>{t('update_banner.title')}</Text>
+        <Text style={styles.subtitle}>{t('update_banner.subtitle')}</Text>
       </View>
       <View style={styles.right}>
         <TouchableOpacity onPress={handleUpdate} disabled={isApplying} style={styles.updateBtn} activeOpacity={0.8}>
           {isApplying ? (
             <ActivityIndicator color="#FFFFFF" size="small" />
           ) : (
-            <Text style={styles.updateText}>Update</Text>
+            <Text style={styles.updateText}>{t('update_banner.update_btn')}</Text>
           )}
         </TouchableOpacity>
         <TouchableOpacity onPress={() => setDismissed(true)} style={styles.dismissBtn} activeOpacity={0.7}>

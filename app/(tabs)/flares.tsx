@@ -127,10 +127,10 @@ function EditFlareModal({ visible, flare, onClose, onSave, onDelete, isDark, loc
 
   const handleDelete = () => {
     if (!flare?.id) return;
-    Alert.alert('Delete flare', 'This will permanently remove this entry.', [
-      { text: 'Cancel', style: 'cancel' },
+    Alert.alert(t('flares_extra.delete_flare_title'), t('flares_extra.delete_flare_body'), [
+      { text: t('common.cancel'), style: 'cancel' },
       {
-        text: 'Delete', style: 'destructive',
+        text: t('flares_extra.delete_confirm'), style: 'destructive',
         onPress: async () => {
           try { await onDelete(flare.id!); onClose(); }
           catch { Alert.alert(t('errors.save_failed')); }
@@ -174,7 +174,7 @@ function EditFlareModal({ visible, flare, onClose, onSave, onDelete, isDark, loc
               })}
             </View>
 
-            <Text style={[styles.modalSectionLabel, isDark && styles.textPrimaryDark]}>Location</Text>
+            <Text style={[styles.modalSectionLabel, isDark && styles.textPrimaryDark]}>{t('flares_extra.location_label')}</Text>
             <View style={styles.chipRow}>
               {locationOptions.map(loc => {
                 const selected = areas.includes(loc.value);
@@ -186,7 +186,7 @@ function EditFlareModal({ visible, flare, onClose, onSave, onDelete, isDark, loc
                     activeOpacity={0.7}
                   >
                     <Text style={[styles.chipText, isDark && styles.textSecDark, selected && styles.chipTextSelected]}>
-                      {loc.label}
+                      {t(`flares_extra.location_${loc.value}`, { defaultValue: loc.label })}
                     </Text>
                   </TouchableOpacity>
                 );
@@ -363,7 +363,7 @@ function StartFlareModal({ visible, onClose, onConfirm, isDark, title, locationO
             </View>
 
             <Text style={[styles.modalSectionLabel, isDark && styles.textPrimaryDark]}>
-              Location (optional)
+              {t('flares_extra.location_optional')}
             </Text>
             <View style={styles.chipRow}>
               {locationOptions.map((loc) => {
@@ -376,7 +376,7 @@ function StartFlareModal({ visible, onClose, onConfirm, isDark, title, locationO
                     activeOpacity={0.7}
                   >
                     <Text style={[styles.chipText, isDark && styles.textSecDark, selected && styles.chipTextSelected]}>
-                      {loc.label}
+                      {t(`flares_extra.location_${loc.value}`, { defaultValue: loc.label })}
                     </Text>
                   </TouchableOpacity>
                 );

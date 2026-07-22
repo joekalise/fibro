@@ -275,9 +275,9 @@ export default function AIChatScreen() {
       t('common.clear_history'),
       undefined,
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: t('common.cancel'), style: 'cancel' },
         {
-          text: 'Clear',
+          text: t('ai_chat_extra.clear'),
           style: 'destructive',
           onPress: async () => {
             if (user) {
@@ -419,7 +419,7 @@ export default function AIChatScreen() {
           activeOpacity={0.8}
           style={styles.backBtn}
         >
-          <Text style={[styles.clearText, { color: textSecondary }]}>Clear</Text>
+          <Text style={[styles.clearText, { color: textSecondary }]}>{t('ai_chat_extra.clear')}</Text>
         </TouchableOpacity>
       </View>
 

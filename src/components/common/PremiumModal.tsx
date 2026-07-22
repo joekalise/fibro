@@ -31,6 +31,7 @@ interface PremiumModalProps {
 // ─── Mock renders ─────────────────────────────────────────────────────────────
 
 function MockInsightCard({ isDark }: { isDark: boolean }) {
+  const { t } = useTranslation();
   const cardBg = isDark ? '#2D1A0E' : '#FFF7ED';
   const textPrimary = isDark ? Colors.textPrimaryDark : Colors.textPrimary;
   const textSecondary = isDark ? Colors.textSecondaryDark : Colors.textSecondary;
@@ -38,16 +39,16 @@ function MockInsightCard({ isDark }: { isDark: boolean }) {
   return (
     <View style={[mock.card, { backgroundColor: cardBg, borderColor: Colors.primary + '40' }]}>
       <View style={mock.row}>
-        <Text style={[mock.cardTitle, { color: textPrimary }]}>Your weekly insight</Text>
+        <Text style={[mock.cardTitle, { color: textPrimary }]}>{t('premium_modal.mock_insight_title')}</Text>
         <View style={mock.badge}><Text style={mock.badgeText}>AI</Text></View>
       </View>
       <Text style={[mock.body, { color: textSecondary }]}>
-        Your pain was lower on days you slept over 7 hours. Fatigue spiked mid-week, likely linked to Tuesday's walk.
+        {t('premium_modal.mock_insight_body')}
       </Text>
       <View style={mock.chipRow}>
-        {['😴 Sleep → pain', '🚶 Activity', '📈 Trending up'].map(t => (
-          <View key={t} style={[mock.chip, { borderColor: Colors.primary + '60' }]}>
-            <Text style={[mock.chipText, { color: Colors.primary }]}>{t}</Text>
+        {[t('premium_modal.mock_insight_chip_1'), t('premium_modal.mock_insight_chip_2'), t('premium_modal.mock_insight_chip_3')].map(chip => (
+          <View key={chip} style={[mock.chip, { borderColor: Colors.primary + '60' }]}>
+            <Text style={[mock.chipText, { color: Colors.primary }]}>{chip}</Text>
           </View>
         ))}
       </View>
@@ -56,6 +57,7 @@ function MockInsightCard({ isDark }: { isDark: boolean }) {
 }
 
 function MockChatCard({ isDark }: { isDark: boolean }) {
+  const { t } = useTranslation();
   const cardBg = isDark ? Colors.surfaceDark : Colors.surface;
   const textPrimary = isDark ? Colors.textPrimaryDark : Colors.textPrimary;
   const textSecondary = isDark ? Colors.textSecondaryDark : Colors.textSecondary;
@@ -65,25 +67,26 @@ function MockChatCard({ isDark }: { isDark: boolean }) {
   return (
     <View style={[mock.card, { backgroundColor: cardBg, borderColor: isDark ? Colors.borderDark : Colors.border }]}>
       <View style={mock.row}>
-        <Text style={[mock.cardTitle, { color: textPrimary }]}>Chat with your data</Text>
+        <Text style={[mock.cardTitle, { color: textPrimary }]}>{t('premium_modal.mock_chat_title')}</Text>
         <View style={mock.badge}><Text style={mock.badgeText}>AI</Text></View>
       </View>
       <View style={mock.chatBubbleUser}>
         <Text style={[mock.chatText, { color: '#FFFFFF', backgroundColor: userBg }]}>
-          Why do I tend to flare on weekends?
+          {t('premium_modal.mock_chat_user')}
         </Text>
       </View>
       <View style={mock.chatBubbleAi}>
         <Text style={[mock.chatText, { color: textPrimary, backgroundColor: aiBg }]}>
-          Your data shows sleep is shorter on Friday nights, and you're 3× more active on Saturdays. Both are correlated with flares in your history.
+          {t('premium_modal.mock_chat_ai')}
         </Text>
       </View>
-      <Text style={[mock.chatPrompt, { color: textSecondary }]}>Ask anything about your health data…</Text>
+      <Text style={[mock.chatPrompt, { color: textSecondary }]}>{t('premium_modal.mock_chat_prompt')}</Text>
     </View>
   );
 }
 
 function MockFlareCard({ isDark }: { isDark: boolean }) {
+  const { t } = useTranslation();
   const cardBg = isDark ? '#1a1200' : '#FFFBEB';
   const textPrimary = isDark ? Colors.textPrimaryDark : Colors.textPrimary;
   const textSecondary = isDark ? Colors.textSecondaryDark : Colors.textSecondary;
@@ -95,9 +98,9 @@ function MockFlareCard({ isDark }: { isDark: boolean }) {
   return (
     <View style={[mock.card, { backgroundColor: cardBg, borderColor: Colors.warning + '60' }]}>
       <View style={mock.row}>
-        <Text style={[mock.cardTitle, { color: textPrimary }]}>Flare risk</Text>
+        <Text style={[mock.cardTitle, { color: textPrimary }]}>{t('premium_modal.mock_flare_title')}</Text>
         <View style={[mock.badge, { backgroundColor: Colors.warning + '20' }]}>
-          <Text style={[mock.badgeText, { color: Colors.warning }]}>⚠ Elevated</Text>
+          <Text style={[mock.badgeText, { color: Colors.warning }]}>{t('premium_modal.mock_flare_elevated')}</Text>
         </View>
       </View>
       <View style={mock.chartRow}>
@@ -114,7 +117,7 @@ function MockFlareCard({ isDark }: { isDark: boolean }) {
         ))}
       </View>
       <Text style={[mock.body, { color: textSecondary, marginTop: Spacing.xs }]}>
-        Stiffness has been trending up for 3 days. Based on your patterns, take it easy this weekend.
+        {t('premium_modal.mock_flare_body')}
       </Text>
     </View>
   );
@@ -143,23 +146,23 @@ export function PremiumModal({
   const features: { icon: string; title: string; body: string }[] = [
     {
       icon: '📊',
-      title: 'Weekly insight report',
-      body: 'Every week, Fibro looks through your logs and picks out the patterns driving your symptoms.',
+      title: t('premium_modal.feature_1_title'),
+      body: t('premium_modal.feature_1_body'),
     },
     {
       icon: '💬',
-      title: 'Chat with your data',
-      body: 'Ask anything like "why do I flare on weekends?" or "what helps my sleep?" and get answers based on your own data.',
+      title: t('premium_modal.feature_2_title'),
+      body: t('premium_modal.feature_2_body'),
     },
     {
       icon: '🔮',
-      title: 'Flare prediction nudges',
-      body: 'When your patterns suggest a flare is building, Fibro gives you a heads-up early so you can act before it peaks.',
+      title: t('premium_modal.feature_3_title'),
+      body: t('premium_modal.feature_3_body'),
     },
     {
       icon: '🎯',
-      title: 'Personalise your experience',
-      body: 'Add context about your day-to-day life so your insights are tailored to you, not just generic advice.',
+      title: t('premium_modal.feature_4_title'),
+      body: t('premium_modal.feature_4_body'),
     },
   ];
 
@@ -184,20 +187,20 @@ export function PremiumModal({
           {/* Header */}
           <View style={styles.header}>
             <Text style={styles.headerEmoji}>✦</Text>
-            <Text style={[styles.headerTitle, { color: textPrimary }]}>Fibro Premium</Text>
+            <Text style={[styles.headerTitle, { color: textPrimary }]}>{t('premium_modal.header_title')}</Text>
             <Text style={[styles.headerSubtitle, { color: textSecondary }]}>
-              Understand your fibromyalgia like never before. Let your data tell the story.
+              {t('premium_modal.header_subtitle')}
             </Text>
           </View>
 
           {/* Mock screenshots */}
-          <Text style={[styles.sectionLabel, { color: textSecondary }]}>See it in action</Text>
+          <Text style={[styles.sectionLabel, { color: textSecondary }]}>{t('premium_modal.section_see_in_action')}</Text>
           <MockInsightCard isDark={isDark} />
           <MockChatCard isDark={isDark} />
           <MockFlareCard isDark={isDark} />
 
           {/* Feature list */}
-          <Text style={[styles.sectionLabel, { color: textSecondary }]}>What's included</Text>
+          <Text style={[styles.sectionLabel, { color: textSecondary }]}>{t('premium_modal.section_whats_included')}</Text>
           <View style={[styles.featureCard, { backgroundColor: cardBg, borderColor: cardBorder }]}>
             {features.map((f, i) => (
               <View key={f.title} style={[styles.featureRow, i < features.length - 1 && { borderBottomWidth: 1, borderBottomColor: cardBorder }]}>
@@ -213,7 +216,7 @@ export function PremiumModal({
           {/* Pricing — price must be most prominent per App Store guideline 3.1.2(c) */}
           {monthlyPrice && (
             <Text style={[styles.priceAmount, { color: textPrimary }]}>
-              {monthlyPrice} / month
+              {monthlyPrice}{t('premium_modal.price_per_month')}
             </Text>
           )}
           {trialDays && (
@@ -254,7 +257,7 @@ export function PremiumModal({
             {isPurchasing ? (
               <ActivityIndicator color="#FFFFFF" />
             ) : (
-              <Text style={styles.primaryBtnText}>Start free trial</Text>
+              <Text style={styles.primaryBtnText}>{t('premium_modal.start_free_trial')}</Text>
             )}
           </TouchableOpacity>
 
@@ -267,7 +270,7 @@ export function PremiumModal({
             {isRestoring ? (
               <ActivityIndicator color={Colors.primary} size="small" />
             ) : (
-              <Text style={[styles.restoreText, { color: textSecondary }]}>Restore purchases</Text>
+              <Text style={[styles.restoreText, { color: textSecondary }]}>{t('premium_modal.restore_purchases')}</Text>
             )}
           </TouchableOpacity>
         </ScrollView>

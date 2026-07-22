@@ -81,12 +81,12 @@ function hrvColor(hrv: number): string {
   return Colors.success;
 }
 
-function flareEndedLabel(endDate: string): string {
+function flareEndedLabel(endDate: string, t: (key: string, opts?: Record<string, unknown>) => string): string {
   const ms = Date.now() - new Date(endDate).getTime();
   const days = Math.floor(ms / (1000 * 60 * 60 * 24));
-  if (days === 0) return 'Flare ended today';
-  if (days === 1) return 'Flare ended yesterday';
-  return `Flare ended ${days} days ago`;
+  if (days === 0) return t('home_extra.flare_ended_today');
+  if (days === 1) return t('home_extra.flare_ended_yesterday');
+  return t('home_extra.flare_ended_days_ago', { days });
 }
 
 // ─── Fibro Score Card — horizontal design ─────────────────────────────────────
@@ -155,10 +155,12 @@ function FibroScoreCard({
                 />
               </View>
               <Text style={[styles.scoreBarLabel, { color }]}>
-                {score >= 70 ? 'Managing well' : score >= 40 ? 'Moderate symptoms' : 'High symptom load'}
+                {score >= 70 ? t('home_extra.score_label_good') : score >= 40 ? t('home_extra.score_label_moderate') : t('home_extra.score_label_high')}
               </Text>
               <Text style={[styles.scoreHint, { color: textSec }]}>
-                Based on {breakdown?.logCount ?? 0} day{(breakdown?.logCount ?? 0) !== 1 ? 's' : ''} this week
+                {(breakdown?.logCount ?? 0) === 1
+                  ? t('home_extra.score_based_on_one', { count: breakdown?.logCount ?? 0 })
+                  : t('home_extra.score_based_on_many', { count: breakdown?.logCount ?? 0 })}
               </Text>
             </View>
           </View>
@@ -183,8 +185,8 @@ function FibroScoreCard({
           {logs.length === 0
             ? t('home.fibro_score_no_data')
             : logs.length === 1
-            ? 'Log 2 more days to see your score'
-            : 'Log 1 more day to see your score'}
+            ? t('home_extra.score_log_more', { count: 2 })
+            : t('home_extra.score_log_one_more')}
         </Text>
       )}
     </View>
@@ -306,15 +308,15 @@ function SevenDayOverview({
         <View style={styles.weekLegendRow}>
           <View style={styles.weekLegendItem}>
             <View style={[styles.weekLegendDot, { backgroundColor: Colors.success }]} />
-            <Text style={[styles.weekLegendText, { color: textSec }]}>Low (0-3)</Text>
+            <Text style={[styles.weekLegendText, { color: textSec }]}>{t('home_extra.pain_legend_low')}</Text>
           </View>
           <View style={styles.weekLegendItem}>
             <View style={[styles.weekLegendDot, { backgroundColor: Colors.warning }]} />
-            <Text style={[styles.weekLegendText, { color: textSec }]}>Moderate (4-6)</Text>
+            <Text style={[styles.weekLegendText, { color: textSec }]}>{t('home_extra.pain_legend_moderate')}</Text>
           </View>
           <View style={styles.weekLegendItem}>
             <View style={[styles.weekLegendDot, { backgroundColor: Colors.error }]} />
-            <Text style={[styles.weekLegendText, { color: textSec }]}>High (7-10)</Text>
+            <Text style={[styles.weekLegendText, { color: textSec }]}>{t('home_extra.pain_legend_high')}</Text>
           </View>
         </View>
       )}
@@ -435,7 +437,7 @@ function PressureCard({
       </View>
       <View style={styles.pressureSubRow}>
         <Text style={[styles.pressureLevel, { color: levelColor }]}>{levelLabel}</Text>
-        <Text style={[styles.pressureTrend, { color: textSec }]}>  {trendIcon} Pressure {trendLabel}</Text>
+        <Text style={[styles.pressureTrend, { color: textSec }]}>  {trendIcon}{t('home_extra.pressure_trend_prefix')}{trendLabel}</Text>
       </View>
     </View>
   );
@@ -476,6 +478,7 @@ function FlareRiskCard({
   isPremium: boolean;
   onChatPress: () => void;
 }) {
+  const { t } = useTranslation();
   const isWarning = level === 'warning';
   const accentColor = isWarning ? Colors.error : Colors.warning;
   const bgColor = isWarning
@@ -486,12 +489,12 @@ function FlareRiskCard({
   return (
     <View style={[styles.flareRiskCard, { backgroundColor: bgColor, borderColor }]}>
       <Text style={[styles.flareRiskTitle, { color: accentColor }]}>
-        {isWarning ? '⚠️ Possible flare building' : '👀 Symptoms to watch'}
+        {isWarning ? t('home_extra.flare_risk_warning_title') : t('home_extra.flare_risk_watch_title')}
       </Text>
       <Text style={[styles.flareRiskBody, isDark && styles.textSecDark]}>
         {isWarning
-          ? 'Several signals suggest a flare could be building. Rest up and check your medications.'
-          : 'A couple of signals worth watching. Keep an eye on how you feel over the next day or two.'}
+          ? t('home_extra.flare_risk_warning_body')
+          : t('home_extra.flare_risk_watch_body')}
       </Text>
       <View style={styles.flareRiskSignals}>
         {signals.map((s) => (
@@ -509,10 +512,10 @@ function FlareRiskCard({
             style={[styles.flareChatBtn, { backgroundColor: accentColor }]}
             activeOpacity={0.8}
           >
-            <Text style={styles.flareChatBtnText}>Chat about this</Text>
+            <Text style={styles.flareChatBtnText}>{t('home_extra.flare_risk_chat')}</Text>
           </TouchableOpacity>
           <View style={styles.flarePremiumBadge}>
-            <Text style={styles.flarePremiumBadgeText}>Premium</Text>
+            <Text style={styles.flarePremiumBadgeText}>{t('home_extra.premium_badge')}</Text>
           </View>
         </View>
       )}
@@ -531,6 +534,7 @@ function ReviewPromptCard({
   onReview: () => void;
   onDismiss: () => void;
 }) {
+  const { t } = useTranslation();
   const cardBg = isDark ? Colors.surfaceDark : Colors.surface;
   const cardBorder = isDark ? Colors.borderDark : Colors.border;
   const textPrimary = isDark ? Colors.textPrimaryDark : Colors.textPrimary;
@@ -538,9 +542,9 @@ function ReviewPromptCard({
 
   return (
     <View style={[styles.reviewCard, { backgroundColor: cardBg, borderColor: cardBorder }]}>
-      <Text style={[styles.reviewTitle, { color: textPrimary }]}>Enjoying Fibro?</Text>
+      <Text style={[styles.reviewTitle, { color: textPrimary }]}>{t('home_extra.review_title')}</Text>
       <Text style={[styles.reviewBody, { color: textSec }]}>
-        Your review helps more people with fibromyalgia find the app. It only takes a moment.
+        {t('home_extra.review_body')}
       </Text>
       <View style={styles.reviewButtons}>
         <TouchableOpacity
@@ -548,10 +552,10 @@ function ReviewPromptCard({
           onPress={onReview}
           activeOpacity={0.8}
         >
-          <Text style={styles.reviewBtnPrimaryText}>Leave a review ⭐</Text>
+          <Text style={styles.reviewBtnPrimaryText}>{t('home_extra.review_cta')}</Text>
         </TouchableOpacity>
         <TouchableOpacity onPress={onDismiss} activeOpacity={0.7} style={styles.reviewBtnDismiss}>
-          <Text style={[styles.reviewBtnDismissText, { color: textSec }]}>Not now</Text>
+          <Text style={[styles.reviewBtnDismissText, { color: textSec }]}>{t('home_extra.review_dismiss')}</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -683,16 +687,16 @@ export default function HomeScreen() {
               <Text style={styles.checkInHeroTitle}>{t('home.check_in_card_title')}</Text>
               <Text style={styles.checkInHeroSubtitle}>{t('home.check_in_card_subtitle')}</Text>
               <View style={styles.checkInHeroButton}>
-                <Text style={styles.checkInHeroButtonText}>Start check-in →</Text>
+                <Text style={styles.checkInHeroButtonText}>{t('home_extra.start_check_in')}</Text>
               </View>
             </View>
           </TouchableOpacity>
         ) : todayLog ? (
           <View style={[styles.todaySummaryCard, isDark && styles.todaySummaryCardDark]}>
             <View style={styles.todaySummaryHeader}>
-              <Text style={[styles.sectionTitle, isDark && styles.textPrimaryDark]}>Today's log</Text>
+              <Text style={[styles.sectionTitle, isDark && styles.textPrimaryDark]}>{t('home_extra.todays_log')}</Text>
               <TouchableOpacity onPress={() => router.push('/(tabs)/track')} hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}>
-                <Text style={[styles.todaySummaryEdit, { color: Colors.primary }]}>Edit</Text>
+                <Text style={[styles.todaySummaryEdit, { color: Colors.primary }]}>{t('home_extra.edit')}</Text>
               </TouchableOpacity>
             </View>
             <View style={styles.todaySummaryRow}>
@@ -831,7 +835,7 @@ export default function HomeScreen() {
         {!activeFlare && recentEndedFlare?.end_date && (
           <View style={[styles.flareRecoveryCard, isDark && styles.flareRecoveryCardDark]}>
             <Text style={[styles.flareRecoveryText, isDark && styles.textSecDark]}>
-              ✓ {flareEndedLabel(recentEndedFlare.end_date)}
+              ✓ {flareEndedLabel(recentEndedFlare.end_date, t)}
             </Text>
           </View>
         )}
