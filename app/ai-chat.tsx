@@ -205,7 +205,7 @@ function chatStorageKey(userId: string): string {
 }
 
 export default function AIChatScreen() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const router = useRouter();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === 'dark';
@@ -361,6 +361,7 @@ export default function AIChatScreen() {
           onboarding_complete: true,
         },
         aiContext: profile?.ai_context ?? undefined,
+        language: i18n.language,
       });
 
       const assistantMsg: Message = {

@@ -23,7 +23,7 @@ async function callClaude(body: object): Promise<string> {
   return data.text;
 }
 
-function buildOnboardingPrompt(data: OnboardingData): string {
+function buildOnboardingPrompt(data: OnboardingData, language?: string): string {
   const medicationLabels: Record<string, string> = {
     duloxetine: 'Duloxetine (Cymbalta)',
     pregabalin: 'Pregabalin (Lyrica)',
@@ -87,7 +87,8 @@ function buildOnboardingPrompt(data: OnboardingData): string {
     ? `- Biological sex: ${data.biological_sex}${data.biological_sex === 'female' ? ' (note: fibromyalgia is more prevalent in females; hormonal fluctuations may significantly affect symptom severity and flare patterns)' : ''}\n`
     : '';
 
-  return `You are a warm, knowledgeable companion for someone living with fibromyalgia.
+  const langInstruction = language && language !== 'en-GB' ? `\nRespond in ${language}. Write all text content in ${language} — JSON keys must remain in English.` : '';
+  return `You are a warm, knowledgeable companion for someone living with fibromyalgia.${langInstruction}
 
 Here is their profile:
 ${sexLine}- Age range: ${ageLabels[data.age_range ?? ''] ?? 'unknown'}
@@ -121,9 +122,10 @@ Rules:
 }
 
 export async function generateWelcomeContent(
-  data: OnboardingData
+  data: OnboardingData,
+  language?: string
 ): Promise<WelcomeContent> {
-  const prompt = buildOnboardingPrompt(data);
+  const prompt = buildOnboardingPrompt(data, language);
 
   const text = await callClaude({
     model: 'claude-sonnet-4-6',

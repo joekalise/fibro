@@ -216,7 +216,7 @@ interface AIInsightCardProps {
 }
 
 function AIInsightCard({ logs, flares, profile, healthHistory, isDark }: AIInsightCardProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const { user } = useAuth();
   const router = useRouter();
 
@@ -265,6 +265,7 @@ function AIInsightCard({ logs, flares, profile, healthHistory, isDark }: AIInsig
           ai_context: '',
           onboarding_complete: true,
         },
+        language: i18n.language,
       });
       setInsight(result);
       const now = new Date().toISOString();

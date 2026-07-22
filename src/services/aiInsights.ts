@@ -336,10 +336,12 @@ export async function generateWeeklyInsight(params: {
   pressureData?: { pressure: number; trend: string } | null;
   recoveryData?: RecoverySnapshot | null;
   aiContext?: string;
+  language?: string;
 }): Promise<WeeklyInsight> {
-  const { logs, flares, profile, healthHistory, pressureData, recoveryData, aiContext } = params;
+  const { logs, flares, profile, healthHistory, pressureData, recoveryData, aiContext, language } = params;
+  const langInstruction = language && language !== 'en-GB' ? `\nRespond in ${language}. Write all text content in ${language} — JSON keys must remain in English.` : '';
 
-  const systemPrompt = `You are Fibro, a data analyst for someone managing fibromyalgia. Your role is to find the strongest correlations and patterns in their tracking data — not to reassure them, but to help them actually understand what's happening.
+  const systemPrompt = `You are Fibro, a data analyst for someone managing fibromyalgia. Your role is to find the strongest correlations and patterns in their tracking data — not to reassure them, but to help them actually understand what's happening.${langInstruction}
 
 Respond with a JSON object in exactly this structure:
 {
@@ -414,10 +416,12 @@ export async function sendChatMessage(params: {
   pressureData?: { pressure: number; trend: string } | null;
   recoveryData?: RecoverySnapshot | null;
   aiContext?: string;
+  language?: string;
 }): Promise<string> {
-  const { messages, logs, flares, profile, healthHistory, pressureData, recoveryData, aiContext } = params;
+  const { messages, logs, flares, profile, healthHistory, pressureData, recoveryData, aiContext, language } = params;
+  const langInstruction = language && language !== 'en-GB' ? `\nRespond in ${language}.` : '';
 
-  const systemPrompt = `You are Fibro, a knowledgeable companion for someone managing fibromyalgia — think of yourself as a friend who also has fibromyalgia, who happens to have read all the research and can see all their tracking data.
+  const systemPrompt = `You are Fibro, a knowledgeable companion for someone managing fibromyalgia — think of yourself as a friend who also has fibromyalgia, who happens to have read all the research and can see all their tracking data.${langInstruction}
 
 You have the user's full symptom log, flare history, health data, and profile. When a question relates to their patterns or history, answer using their actual data — real numbers, not generic advice.
 
