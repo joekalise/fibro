@@ -1,0 +1,38 @@
+{
+  "onboarding": {
+    "subtitle": "A few questions to personalize your experience",
+    "ai_consent": {
+      "title": "AI-powered personalization",
+      "subtitle": "Fibro uses Claude AI (by Anthropic, Inc.) to generate your personalized insights and welcome message."
+    }
+  },
+  "insights": {
+    "ai_insight_generating": "Analyzing your data...",
+    "ai_off_body": "To use insights and chat, turn on AI personalization in your profile settings."
+  },
+  "profile": {
+    "subscription_feature_4": "Personalize your experience"
+  },
+  "subscription": {
+    "trial_prompt_subtitle": "Unlock your personalized insight report, free for 14 days",
+    "feature_ai_context": "Extended personalization"
+  },
+  "profile_privacy": {
+    "ai_consent_toggle_label": "AI personalization",
+    "ai_consent_alert_title": "Enable AI personalization"
+  },
+  "ai_chat": {
+    "consent_off_body": "Enable AI personalization in Profile to use this feature. Your data stays yours. We just need your permission first."
+  },
+  "insights_extra": {
+    "insight_weekly_teaser": "Your personalized weekly insight will appear here once you have a few days of data."
+  },
+  "profile_extra": {
+    "about_me_sub": "Personalize your AI's understanding"
+  },
+  "premium_modal": {
+    "feature_1_body": "Every week, Fibro analyzes your logs and surfaces the patterns driving your symptoms.",
+    "feature_4_title": "Extended personalization",
+    "feature_4_body": "The more context you give, the smarter your insights get. Premium unlocks full AI personalization."
+  }
+}
